@@ -29,7 +29,7 @@ class EPP:
         try:
             self.logout()
             self.socket.close()
-        except TypeError:
+        except EPPError:
             """ Will occur when not properly connected """
             pass
 
@@ -60,17 +60,13 @@ class EPP:
         soup = BeautifulStoneSoup(self.read())
         response = soup.find('response')
         result = soup.find('result')
-        try:
-            code = int(result.get('code'))
-        except AttributeError:
-            print "\nERROR: Could not get result code, exiting."
-            exit(1)
+        code = int(result['code'])
+        response_code = int(response.result['code'])
+        if response_code >= 2000:
+            raise EPPError(response_code, response.result.msg.text)
+
         if not silent or code not in (1000, 1300, 1500):
             print("- [%d] %s" % (code, result.msg.text))
-        if code == 2308:
-            return False
-        if code == 2502:
-            return False
         return response
 
     def read(self):
@@ -250,3 +246,13 @@ class Nameserver(EPPObject):
         cmd = commands.nameserver % self.nameserver
         res = self.epp.cmd(cmd)
         return res.resdata.find('host:addr').text
+
+
+class EPPError(RuntimeError):
+    """
+    Error response returned by the server.
+    """
+    def __init__(self, code, message):
+        super(EPPError, self).__init__(message)
+        self.code = code
+        self.message = message
