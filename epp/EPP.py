@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse
+import logging
 import socket
 import ssl
 import struct
@@ -7,6 +7,7 @@ from BeautifulSoup import BeautifulStoneSoup
 import commands
 from commands import contact
 
+logger = logging.getLogger(__name__)
 
 
 class EPP(object):
@@ -20,9 +21,8 @@ class EPP(object):
         try:
             self.ssl = ssl.wrap_socket(self.socket)
         except socket.error:
-            print "ERROR: Could not setup a secure connection."
-            print "Check whether your IP is allowed to connect to the host."
-            exit(1)
+            logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
+            raise
         self.format_32 = self.format_32()
         self.login()
 
@@ -67,7 +67,8 @@ class EPP(object):
             raise EPPError(response_code, response.result.msg.text)
 
         if not silent or code not in (1000, 1300, 1500):
-            print("- [%d] %s" % (code, result.msg.text))
+            logger.info("- [%d] %s", code, result.msg.text)
+
         return response
 
     def read(self):
@@ -85,14 +86,14 @@ class EPP(object):
         return self.ssl.send(epp_as_string + "\r\n")
 
     def login(self):
-        """ Read greeting """
+        # Read greeting
         greeting = self.read()
         soup = BeautifulStoneSoup(greeting)
         svid = soup.find('svid')
         version = soup.find('version')
-        print("Connected to %s (v%s)\n" % (svid.text, version.text))
+        logger.info("Connected to %s (v%s)\n", svid.text, version.text)
 
-        """ Login """
+        # Login
         xml = commands.login % self.config
         if not self.cmd(xml, silent=True):
             exit(1)
