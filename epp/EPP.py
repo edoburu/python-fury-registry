@@ -8,7 +8,8 @@ import commands
 from commands import contact
 
 
-class EPP:
+
+class EPP(object):
 
     def __init__(self, **kwargs):
         self.config = kwargs
@@ -105,7 +106,7 @@ class EPP:
         return self.cmd(cmd)
 
 
-class EPPObject:
+class EPPObject(object):
     def __init__(self, epp):
         self.epp = epp
 
@@ -121,7 +122,7 @@ class EPPObject:
 
 class Contact(EPPObject):
     def __init__(self, epp, handle=False, **kwargs):
-        self.epp = epp
+        super(Contact, self).__init__(epp)
         self.handle = handle
         for k, v in kwargs.items():
             setattr(self, k, v)
