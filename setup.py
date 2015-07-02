@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='Python-EPP',
-    version='0.1.0',
+    version='0.2.0.dev0',  # PEP 440
     author='Jochem Oosterveen',
     author_email='jochem@oosterveen.net',
     packages=['epp'],
