@@ -4,6 +4,7 @@ import socket
 import ssl
 import struct
 from BeautifulSoup import BeautifulStoneSoup  # TODO: replace this horrable class. It even case insensitive
+import re
 import commands
 from commands import contact
 
@@ -57,7 +58,8 @@ class EPP(object):
         return struct.pack(self.format_32, value)
 
     def cmd(self, cmd, silent=False):
-        logger.debug("SIDN request: %s", cmd)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("SIDN request: %s", _mask_sensitive_fields(cmd))
         self.write(cmd)
         raw_response = self.read()
         logger.debug("SIDN Response: %s", raw_response)
@@ -261,3 +263,11 @@ class EPPError(RuntimeError):
         super(EPPError, self).__init__(message)
         self.code = code
         self.message = message
+
+
+RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
+RE_PW = re.compile(r'<pw>[^<]+</pw>')
+def _mask_sensitive_fields(cmd):
+    cmd = RE_CL_ID.sub('<clID>***</clID>', cmd)
+    cmd = RE_PW.sub('<pw>***</pw>', cmd)
+    return cmd
