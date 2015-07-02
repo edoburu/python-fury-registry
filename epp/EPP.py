@@ -99,8 +99,7 @@ class EPP(object):
 
         # Login
         xml = commands.login % self.config
-        if not self.cmd(xml, silent=True):
-            exit(1)
+        return self.cmd(xml, silent=True)
 
     def logout(self):
         cmd = commands.logout
