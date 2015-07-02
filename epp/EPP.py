@@ -3,7 +3,7 @@ import logging
 import socket
 import ssl
 import struct
-from BeautifulSoup import BeautifulStoneSoup
+from BeautifulSoup import BeautifulStoneSoup  # TODO: replace this horrable class. It even case insensitive
 import commands
 from commands import contact
 
