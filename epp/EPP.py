@@ -39,11 +39,11 @@ class EPP(object):
         # Get the size of C integers. We need 32 bits unsigned.
         format_32 = ">I"
         if struct.calcsize(format_32) < 4:
-            format_32 = ">L"              
+            format_32 = ">L"
             if struct.calcsize(format_32) != 4:
                 raise Exception("Cannot find a 32 bits integer")
         elif struct.calcsize(format_32) > 4:
-            format_32 = ">H"                
+            format_32 = ">H"
             if struct.calcsize(format_32) != 4:
                 raise Exception("Cannot find a 32 bits integer")
         else:
@@ -57,8 +57,12 @@ class EPP(object):
         return struct.pack(self.format_32, value)
 
     def cmd(self, cmd, silent=False):
+        logger.debug("SIDN request: %s", cmd)
         self.write(cmd)
-        soup = BeautifulStoneSoup(self.read())
+        raw_response = self.read()
+        logger.debug("SIDN Response: %s", raw_response)
+
+        soup = BeautifulStoneSoup(raw_response)
         response = soup.find('response')
         result = soup.find('result')
         code = int(result['code'])
