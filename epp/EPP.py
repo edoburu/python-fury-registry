@@ -5,8 +5,7 @@ import ssl
 import struct
 from BeautifulSoup import BeautifulStoneSoup  # TODO: replace this horrable class. It even case insensitive
 import re
-import commands
-from commands import contact
+from . import commands
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +126,7 @@ class EPPObject(object):
 
 
 class Contact(EPPObject):
-    def __init__(self, epp, handle=False, **kwargs):
+    def __init__(self, epp, handle='', **kwargs):
         super(Contact, self).__init__(epp)
         self.handle = handle
         for k, v in kwargs.items():
@@ -146,7 +145,7 @@ class Contact(EPPObject):
         return res.resdata.find('contact:id').get('avail') == 'true'
 
     def create(self):
-        cmd = commands.contact.create % self
+        cmd = commands.contact.create(self.__dict__)
         res = self.epp.cmd(cmd).resdata
         return res.find('contact:id').text
 
@@ -171,7 +170,7 @@ class Contact(EPPObject):
         return self
 
     def update(self):
-        cmd = commands.contact.update % self
+        cmd = commands.contact.update(self.__dict__)
         return self.epp.cmd(cmd)
 
 
