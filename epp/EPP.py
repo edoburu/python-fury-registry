@@ -145,7 +145,9 @@ class Contact(EPPObject):
         return res.resdata.find('contact:id').get('avail') == 'true'
 
     def create(self):
-        cmd = commands.contact.create(self.__dict__)
+        fields = self.__dict__.copy()
+        del fields['epp']
+        cmd = commands.contact.create(fields)
         res = self.epp.cmd(cmd).resdata
         return res.find('contact:id').text
 
@@ -170,7 +172,10 @@ class Contact(EPPObject):
         return self
 
     def update(self):
-        cmd = commands.contact.update(self.__dict__)
+        fields = self.__dict__.copy()
+        del fields['epp']
+
+        cmd = commands.contact.update(fields)
         return self.epp.cmd(cmd)
 
 

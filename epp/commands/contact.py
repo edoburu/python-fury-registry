@@ -135,7 +135,7 @@ def _fix_phone(value):
 
 
 def _xml_format(xml, data):
-    data = _xml_format(data)
+    data = _xml_escape(data)
     return xml.format(**data)
 
 def _xml_escape(data):
