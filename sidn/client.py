@@ -61,7 +61,6 @@ class EPP(object):
         # Write and read
         self._write(cmd)
         raw_response = self._read()
-        logger.debug("SIDN Response: %s", raw_response)
 
         # Convert to response objects
         response = self._parse_response(raw_response)
@@ -103,11 +102,19 @@ class EPP(object):
     def _read(self):
         # The first 4 bytes indicate the size.
         # Read then, then read N bytes.
-        length = self.ssl.read(4)
-        if length:
-            i = int32_from_net(length) - 4
-            xml_bytes = self.ssl.read(i)
+        size_field = self.ssl.read(4)
+        if size_field:
+            size = int32_from_net(size_field) - 4
+            remaining = size
+            xml_bytes = ''
+            while remaining > 0:
+                xml_bytes += self.ssl.read(remaining)
+                remaining = size - len(xml_bytes)
+
+            logger.debug("SIDN Response: %s", xml_bytes)
             return xml_bytes.decode('utf-8')
+        else:
+            return None
 
     def _write(self, xml):
         # Convert to the raw data to be send.

@@ -51,13 +51,13 @@ def _get_int32_format():
     """
     # http://www.bortzmeyer.org/4934.html
     # Get the size of C integers. We need 32 bits unsigned.
-    format_32 = ">I"
+    format_32 = ">I"  # big endian unsigned int
     if struct.calcsize(format_32) < 4:
-        format_32 = ">L"
+        format_32 = ">L"  # big endian unsigned long
         if struct.calcsize(format_32) != 4:
             raise Exception("Cannot find a 32 bits integer")
     elif struct.calcsize(format_32) > 4:
-        format_32 = ">H"
+        format_32 = ">H"  # big endian unsigned short
         if struct.calcsize(format_32) != 4:
             raise Exception("Cannot find a 32 bits integer")
     else:
