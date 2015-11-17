@@ -9,6 +9,9 @@ from . import commands
 
 logger = logging.getLogger(__name__)
 
+RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
+RE_PW = re.compile(r'<pw>[^<]+</pw>')
+
 
 class EPP(object):
 
@@ -34,33 +37,14 @@ class EPP(object):
             """ Will occur when not properly connected """
             pass
 
-    # http://www.bortzmeyer.org/4934.html
-    def format_32(self):
-        # Get the size of C integers. We need 32 bits unsigned.
-        format_32 = ">I"
-        if struct.calcsize(format_32) < 4:
-            format_32 = ">L"
-            if struct.calcsize(format_32) != 4:
-                raise Exception("Cannot find a 32 bits integer")
-        elif struct.calcsize(format_32) > 4:
-            format_32 = ">H"
-            if struct.calcsize(format_32) != 4:
-                raise Exception("Cannot find a 32 bits integer")
-        else:
-            pass
-        return format_32
-
-    def int_from_net(self, data):
-        return struct.unpack(self.format_32, data)[0]
-
-    def int_to_net(self, value):
-        return struct.pack(self.format_32, value)
-
     def cmd(self, cmd, silent=False):
+        """
+        Execute a command on the server.
+        """
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("SIDN request: %s", _mask_sensitive_fields(cmd))
-        self.write(cmd)
-        raw_response = self.read()
+        self._write(cmd)
+        raw_response = self._read()
         logger.debug("SIDN Response: %s", raw_response)
 
         soup = BeautifulStoneSoup(raw_response)
@@ -76,23 +60,28 @@ class EPP(object):
 
         return response
 
-    def read(self):
+    def _read(self):
+        # The first 4 bytes indicate the size.
+        # Read then, then read N bytes.
         length = self.ssl.read(4)
         if length:
-            i = self.int_from_net(length)-4
+            i = _int32_from_net(length) - 4
             return self.ssl.read(i)
 
-    def write(self, xml):
+    def _write(self, xml):
         epp_as_string = xml
         # +4 for the length field itself (section 4 mandates that)
         # +2 for the CRLF at the end
-        length = self.int_to_net(len(epp_as_string) + 4 + 2)
+        length = _int32_to_net(len(epp_as_string) + 4 + 2)
         self.ssl.send(length)
         return self.ssl.send(epp_as_string + "\r\n")
 
     def login(self):
+        """
+        Perform the login.
+        """
         # Read greeting
-        greeting = self.read()
+        greeting = self._read()
         soup = BeautifulStoneSoup(greeting)
         svid = soup.find('svid')
         version = soup.find('version')
@@ -121,10 +110,38 @@ class EPPError(RuntimeError):
         self.message = message
 
 
-
-RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
-RE_PW = re.compile(r'<pw>[^<]+</pw>')
 def _mask_sensitive_fields(cmd):
     cmd = RE_CL_ID.sub('<clID>***</clID>', cmd)
     cmd = RE_PW.sub('<pw>***</pw>', cmd)
     return cmd
+
+
+def _get_int32_format():
+    """
+    Get the struct pack/unpack syntax for 32 bit integers.
+    """
+    # http://www.bortzmeyer.org/4934.html
+    # Get the size of C integers. We need 32 bits unsigned.
+    format_32 = ">I"
+    if struct.calcsize(format_32) < 4:
+        format_32 = ">L"
+        if struct.calcsize(format_32) != 4:
+            raise Exception("Cannot find a 32 bits integer")
+    elif struct.calcsize(format_32) > 4:
+        format_32 = ">H"
+        if struct.calcsize(format_32) != 4:
+            raise Exception("Cannot find a 32 bits integer")
+    else:
+        pass
+    return format_32
+
+
+INT32_FORMAT = _get_int32_format()
+
+
+def _int32_from_net(data):
+    return struct.unpack(INT32_FORMAT, data)[0]
+
+
+def _int32_to_net(value):
+    return struct.pack(INT32_FORMAT, value)
