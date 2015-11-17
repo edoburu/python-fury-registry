@@ -1,153 +1,108 @@
 import logging
-from . import commands
 
 logger = logging.getLogger(__name__)
 
 
-class EPPObject(object):
-    def __init__(self, epp):
-        self.epp = epp
+class Contact(object):
+    """
+    Contact data object
+    """
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __getitem__(self, key):
-        try:
-            return getattr(self, key)
-        except AttributeError:
-            pass
-
-
-class Contact(EPPObject):
-    def __init__(self, epp, handle='', **kwargs):
-        super(Contact, self).__init__(epp)
+    def __init__(self, handle, roid, status, name, org, street, city, pc, cc, voice, fax, email):
         self.handle = handle
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        self.roid = roid
+        self.status = status
+        self.name = name
+        self.org = org
+        self.street = street
+        self.city = city
+        self.pc = pc
+        self.cc = cc
+        self.voice = voice
+        self.fax = fax
+        self.email = email
 
     def __unicode__(self):
-        try:
-            self.name != ''
-            return "[%(handle)s] %(name)s, %(street)s, %(pc)s %(city)s (%(cc)s)" % self
-        except:
-            return self.handle
+        return "[{handle}] {name}, {street}, {pc} {city} ({cc})".format(
+            handle=self.handle,
+            name=self.name,
+            street=self.street,
+            pc=self.pc,
+            city=self.city,
+            cc=self.cc
+        )
 
-    def available(self):
-        cmd = commands.contact.available % self
-        res = self.epp.cmd(cmd, silent=True)
-        return res.resdata.find('contact:id').get('avail') == 'true'
+    @property
+    def postcode(self):
+        return self.pc
 
-    def create(self):
-        fields = self.__dict__.copy()
-        del fields['epp']
-        cmd = commands.contact.create(fields)
-        res = self.epp.cmd(cmd).resdata
-        return res.find('contact:id').text
+    @property
+    def country_code(self):
+        return self.cc
 
-    def info(self):
-        cmd = commands.contact.info % self
-        res = self.epp.cmd(cmd).resdata
-        self.roid = res.find('contact:roid').text
-        self.status = res.find('contact:status').get('s')
-        self.name = res.find('contact:name').text
-        try:
-            self.street = res.find('contact:street').text
-        except AttributeError:
-            pass
-        self.city = res.find('contact:city').text
-        try:
-            self.pc = res.find('contact:pc').text
-        except AttributeError:
-            pass
-        self.cc = res.find('contact:cc').text
-        self.voice = res.find('contact:voice').text
-        self.email = res.find('contact:email').text
-        return self
-
-    def update(self):
-        fields = self.__dict__.copy()
-        del fields['epp']
-
-        cmd = commands.contact.update(fields)
-        return self.epp.cmd(cmd)
+    @property
+    def telephone(self):
+        return self.voice
 
 
-class Domain(EPPObject):
-    def __init__(self, epp, domain):
-        self.domain = domain
-        self.epp = epp
-        self.roid = ""
-        self.status = ""
-        #self.ns = Nameserver(epp)
+class Domain(object):
+    """
+    Domain data object
+    """
+
+    def __init__(self, name, pw, roid, status, registrant, admin, tech, ns, clid, crid, crdate, exdate):
+        # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
+        # Before all parameters were magically assigned, making it really hard to use it from other code.
+        self.name = name
+        self.pw = pw
+        self.roid = roid
+        self.status = status
+        self.registrant = registrant
+        self.admin = admin
+        self.tech = tech
+        self.ns = ns
+        self.clid = clid
+        self.crid = crid
+        self.crdate = crdate
+        self.exdate = exdate
+
+        # Can be assigned by handler
+        self.epp = None
 
     def __unicode__(self):
-        return "[%(domain)s] status: %(status)s, registrant: %(registrant)s, admin: %(admin)s, tech: %(tech)s" % self
+        return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
+            domain=self.name,
+            status=self.status,
+            registrant=self.registrant,
+            admin=self.admin,
+            tech=self.tech
+        )
 
-    def available(self):
-        cmd = commands.available % self.domain
-        res = self.epp.cmd(cmd)
-        if not res:
-            return False
-        else:
-            status = res.resdata.find('domain:name').get('avail')
-            return status in ('1', 'true')
-
-    def create(self, contacts, ns):
-        cmd = commands.create % {
-            'domain': self.domain,
-            'ns': ns[0],
-            'registrant': contacts['registrant'],
-            'admin': contacts['admin'],
-            'tech': contacts['tech'],
-        }
-        return self.epp.cmd(cmd)
-
-    def delete(self, undo=False):
-        if undo:
-            cmd = commands.canceldelete % self.domain
-        else:
-            cmd = commands.delete % self.domain
-        return self.epp.cmd(cmd)
-
-    def info(self):
-        cmd = commands.info % self.domain
-        res = self.epp.cmd(cmd).resdata
-        self.roid = res.find('domain:roid').text
-        self.status = res.find('domain:status').get('s')
-        self.registrant = Contact(self.epp, res.find('domain:registrant').text)
-        self.admin = Contact(self.epp, res.find('domain:contact', type='admin').text)
-        self.tech = Contact(self.epp, res.find('domain:contact', type='tech').text)
-        self.ns = []
-        for ns in res.findAll('domain:hostobj'):
-            self.ns.append(ns.text)
-        fields = ['clid', 'crid', 'crdate', 'exdate']
-        for f in fields:
-            v = res.find('domain:%s' % f).text
-            setattr(self, f, v)
-        return self
-
+    @property
     def token(self):
-        cmd = commands.info % self.domain
-        res = self.epp.cmd(cmd)
-        return res.resdata.find('domain:pw').text
+        return self.pw
 
-    def transfer(self, token):
-        cmd = commands.transfer % {
-            'domain': self.domain,
-            'token': token,
-        }
-        return self.epp.cmd(cmd)
+    @property
+    def registrant_contact(self):
+        return self.epp.contacts.get(self.registrant)
+
+    @property
+    def admin_contact(self):
+        return self.epp.contacts.get(self.admin)
+
+    @property
+    def tech_contact(self):
+        return self.epp.contacts.get(self.tech)
 
 
-class Nameserver(EPPObject):
-    def __init__(self, epp, nameserver=False):
-        self.nameserver = nameserver
-        self.epp = epp
+class Host(object):
+    """
+    Host data object (e.g. for nameservers)
+    """
+
+    def __init__(self, name, addr):
+        self.name = name
+        self.addr = addr
 
     def __unicode__(self):
-        return self.nameserver
-
-    def get_ip(self):
-        cmd = commands.nameserver % self.nameserver
-        res = self.epp.cmd(cmd)
-        return res.resdata.find('host:addr').text
+        return self.name

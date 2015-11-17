@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import logging
 import re
 import socket
@@ -6,6 +5,7 @@ import ssl
 import struct
 from BeautifulSoup import BeautifulStoneSoup  # TODO: replace this horrable class. It even case insensitive
 from . import commands
+from . import handlers
 
 logger = logging.getLogger(__name__)
 
@@ -14,19 +14,33 @@ RE_PW = re.compile(r'<pw>[^<]+</pw>')
 
 
 class EPP(object):
+    """
+    The EPP client
+    """
 
-    def __init__(self, host, port, user, password, certfile=None):
-        self.connected = False
+    def __init__(self, host, port=700, username=None, password=None, certfile=None, timeout=2):
+        """
+        Initialize the client.
+        This establishes a connection to the SIDN DRS5 system via EPP.
+
+        :raises socket.error: In case the connection failed.
+        """
+        # Add handlers
+        self.domains = handlers.DomainHandler(self)
+        self.contacts = handlers.ContactHandler(self)
+        self.hosts = handlers.HostHandler(self)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(2)
+        self.socket.settimeout(timeout)
         self.socket.connect((host, port))
         try:
             self.ssl = ssl.wrap_socket(self.socket, certfile=certfile)
         except socket.error:
             logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
             raise
-        self.format_32 = self.format_32()
-        self.login(user, password)
+
+        if username and password:
+            self.login(username, password)
 
     def __del__(self):
         try:
@@ -34,11 +48,10 @@ class EPP(object):
             self.socket.close()
         except EPPError:
             """ Will occur when not properly connected """
-            pass
 
     def cmd(self, cmd, silent=False):
         """
-        Execute a command on the server.
+        Execute a raw request on the server.
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("SIDN request: %s", _mask_sensitive_fields(cmd))
@@ -77,7 +90,7 @@ class EPP(object):
         self.ssl.send(length)
         return self.ssl.send(xml_bytes)
 
-    def login(self, user, password):
+    def login(self, username, password):
         """
         Perform the login.
         """
@@ -89,15 +102,15 @@ class EPP(object):
         logger.info("Connected to %s (v%s)\n", svid.text, version.text)
 
         # Login
-        xml = commands.login % dict(user=user, password=password)
+        xml = commands.epp.login % dict(user=username, password=password)
         return self.cmd(xml, silent=True)
 
     def logout(self):
-        cmd = commands.logout
+        cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
-    def poll(self):
-        cmd = commands.poll
+    def poll(self, transaction_id=None):
+        cmd = commands.epp.poll.format(clTRID=transaction_id or '')
         return self.cmd(cmd)
 
 
