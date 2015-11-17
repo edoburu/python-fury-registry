@@ -24,11 +24,6 @@ class EPP(object):
 
         :raises socket.error: In case the connection failed.
         """
-        # Add handlers
-        self.domains = handlers.DomainHandler(self)
-        self.contacts = handlers.ContactHandler(self)
-        self.hosts = handlers.HostHandler(self)
-
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(timeout)
         self.socket.connect((host, port))
@@ -43,11 +38,13 @@ class EPP(object):
             self.login(username, password)
 
     def __del__(self):
+        # Auto logout on instance destruction.
+        # This is important, to avoid overflowing the max allowed sessions.
         try:
             self.logout()
-            self.socket.close()
         except EPPError:
-            """ Will occur when not properly connected """
+            pass  # Will occur when not properly connected
+        self.socket.close()
 
     def cmd(self, cmd, silent=False):
         """
@@ -161,6 +158,20 @@ class EPP(object):
     def poll(self, transaction_id=None):
         cmd = commands.epp.poll(transaction_id)
         return self.cmd(cmd)
+
+    @property
+    def domains(self):
+        # These are not assigned to the class, to avoid circular references.
+        # Only keep references temporary, so __del__ will be called.
+        return handlers.DomainHandler(self)
+
+    @property
+    def contacts(self):
+        return handlers.ContactHandler(self)
+
+    @property
+    def hosts(self):
+        return handlers.HostHandler(self)
 
 
 class EPPResponse(object):
