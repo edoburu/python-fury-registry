@@ -15,13 +15,13 @@ RE_PW = re.compile(r'<pw>[^<]+</pw>')
 
 class EPP(object):
 
-    def __init__(self, host, port, user, password):
+    def __init__(self, host, port, user, password, certfile=None):
         self.connected = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(2)
         self.socket.connect((host, port))
         try:
-            self.ssl = ssl.wrap_socket(self.socket)
+            self.ssl = ssl.wrap_socket(self.socket, certfile=certfile)
         except socket.error:
             logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
             raise
