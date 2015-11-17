@@ -65,15 +65,17 @@ class EPP(object):
         length = self.ssl.read(4)
         if length:
             i = _int32_from_net(length) - 4
-            return self.ssl.read(i)
+            xml_bytes = self.ssl.read(i)
+            return xml_bytes.decode('utf-8')
 
     def _write(self, xml):
-        epp_as_string = xml
+        # Convert to the raw data to be send.
+        # utf-8 may take multiple bytes per character.
+        xml_bytes = xml.encode('utf-8') + "\r\n"
         # +4 for the length field itself (section 4 mandates that)
-        # +2 for the CRLF at the end
-        length = _int32_to_net(len(epp_as_string) + 4 + 2)
+        length = _int32_to_net(len(xml_bytes) + 4)
         self.ssl.send(length)
-        return self.ssl.send(epp_as_string + "\r\n")
+        return self.ssl.send(xml_bytes)
 
     def login(self, user, password):
         """
