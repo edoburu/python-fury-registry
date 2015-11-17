@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='Python-EPP',
     version='0.2.0.dev0',  # PEP 440
     author='Jochem Oosterveen',
     author_email='jochem@oosterveen.net',
-    packages=['epp'],
+    packages=find_packages(),
     description='Python EPP client',
     long_description=(
         "Python-EPP provides an interface to the Extensible Provisioning "
