@@ -125,4 +125,5 @@ EPP_AUTH_FAILED_CLOSING = 2501
 EPP_AUTH_SESSION_LIMIT = 2502
 
 
-
+# The specified handle is not associated with this account.
+SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'

@@ -1,13 +1,28 @@
 """
 All specialized commands are performed by these handlers.
 """
+from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
 from . import commands
 from . import objects
 import dateutil.parser
 
+NS = {
+    # Possible namespaces in the response
+    # See greeting message for all possible supported extensions
+    'epp': 'urn:ietf:params:xml:ns:epp-1.0',
+    'contact': 'urn:ietf:params:xml:ns:contact-1.0',
+    'domain': 'urn:ietf:params:xml:ns:domain-1.0',
+    'host': 'urn:ietf:params:xml:ns:host-1.0',
+    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',
+}
+
+
 
 class BaseHandler(object):
     def __init__(self, epp):
+        """
+        :type epp: sidn.client.EPP
+        """
         self.epp = epp
 
     def _build_command(self, command, contents, transaction_id=None):
@@ -24,11 +39,14 @@ class BaseHandler(object):
         )
 
 
-def _get_xml_text(node, name, **attributes):
+def _get_xml_text(node, name):
+    """
+    :type node: xml.etree.ElementTree.Element
+    """
     if node is None:
         return None
     # Handling of optional fields
-    node = node.find(name, **attributes)
+    node = node.find(name, NS)
     return node.text if node is not None else None
 
 
@@ -42,31 +60,35 @@ class DomainHandler(BaseHandler):
         Request the info of a domain
         """
         cmd = self._build_command('info', commands.domain.info_part(name=domain_name))
-        resdata = self.epp.cmd(cmd).resdata
-        status = resdata.find('domain:status')
-        authinfo = status.find('domain:authInfo')
+        resData = self.epp.cmd(cmd).resData
+        domain = self._parse_info(resData)
+        domain.epp = self.epp  # Sneak it in
+        return domain
+
+    @staticmethod
+    def _parse_info(resData):
+        infData = resData.find('domain:infData', NS)
+        authInfo = infData.find('domain:authInfo', NS)
 
         ns = []
-        for hostobj in status.find('domain:ns').findAll('domain:hostObj'):
+        for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
             ns.append(hostobj.text)
 
-        domain = objects.Domain(
-            name=_get_xml_text(resdata, 'domain:name'),
-            roid=_get_xml_text(resdata, 'domain:roid'),  # Repository object identifier (assigned on creation)
-            status=status.get('s'),
-            registrant=_get_xml_text(status, 'domain:registrant'),
-            admin=_get_xml_text(status, 'domain:contact', type='admin'),
-            tech=_get_xml_text(status, 'domain:contact', type='tech'),
+        return objects.Domain(
+            name=_get_xml_text(infData, 'domain:name'),
+            roid=_get_xml_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
+            status=infData.find('domain:status', NS).attrib['s'],
+            registrant=_get_xml_text(infData, 'domain:registrant'),
+            admin=_get_xml_text(infData, "domain:contact[@type='admin']"),
+            tech=_get_xml_text(infData, "domain:contact[@type='tech']"),
             ns=ns,
-            cl_id=_get_xml_text(status, 'domain:clID'),  # current registrar
-            cr_id=_get_xml_text(status, 'domain:crID'),  # initial registrar
-            created_date=_parse_iso_date(_get_xml_text(status, 'domain:crDate')),
-            modified_date=_parse_iso_date(_get_xml_text(status, 'domain:upDate')),
-            expire_date=_parse_iso_date(_get_xml_text(status, 'domain:exDate')),
-            pw=_get_xml_text(authinfo, 'domain:pw'),
+            cl_id=_get_xml_text(infData, 'domain:clID'),  # current registrar
+            cr_id=_get_xml_text(infData, 'domain:crID'),  # initial registrar
+            created_date=_parse_iso_date(_get_xml_text(infData, 'domain:crDate')),
+            modified_date=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
+            expire_date=_parse_iso_date(_get_xml_text(infData, 'domain:exDate')),
+            pw=_get_xml_text(authInfo, 'domain:pw'),
         )
-        domain.epp = self.epp
-        return domain
 
     def is_available(self, domain_name):
         """
@@ -74,11 +96,8 @@ class DomainHandler(BaseHandler):
         """
         cmd = self._build_command('check', commands.domain.check_part(name=domain_name))
         res = self.epp.cmd(cmd)
-        if not res:
-            return False
-        else:
-            status = res.resdata.find('domain:name').get('avail')
-            return status in ('1', 'true')
+        status = res.resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail']
+        return status in ('1', 'true')
 
     def create(self, name, registrant, contacts, ns):
         """
@@ -139,12 +158,20 @@ class ContactHandler(BaseHandler):
         Check if a given handle is available.
         """
         cmd = self._build_command('check', commands.contact.check_part(handle))
-        res = self.epp.cmd(cmd)
-        if not res:
-            return False
-        else:
-            status = res.resdata.find('contact:id').get('avail')
-            return status in ('1', 'true')
+
+        from sidn.client import EPPError
+        try:
+            res = self.epp.cmd(cmd)
+        except EPPError as e:
+            if e.code == EPP_DATA_MGMT_POLICY and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED:
+                return False
+            raise
+        return self._parse_avail(res.resData)
+
+    @staticmethod
+    def _parse_avail(resData):
+        status = resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail']
+        return status in ('1', 'true')
 
     def create(self, name, street, city, pc, cc, org=None, voice=None, fax=None, email=None, legalForm=None, legalFormRegNo=None):
         """
@@ -166,7 +193,7 @@ class ContactHandler(BaseHandler):
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
         )
-        res = self.epp.cmd(cmd).resdata
+        res = self.epp.cmd(cmd).resData
         return res.find('contact:id').text
 
     def update(self, handle, name, street, city, pc, cc, org=None, cr_id=None, voice=None, fax=None, email=None, legalForm=None, legalFormRegNo=None):
@@ -187,7 +214,7 @@ class ContactHandler(BaseHandler):
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
         ))
-        res = self.epp.cmd(cmd).resdata
+        res = self.epp.cmd(cmd).resData
         return res.find('contact:id').text
 
     def get(self, handle):
@@ -195,15 +222,19 @@ class ContactHandler(BaseHandler):
         Fetch contact data
         """
         cmd = self._build_command('info', commands.contact.info_part(handle))
-        resdata = self.epp.cmd(cmd).resdata
-        infData = resdata.find('contact:infData')
-        loc = infData.find('contact:postalInfo', name='loc')
-        addr = loc.find('contact:addr')
+        resdata = self.epp.cmd(cmd).resData
+        return self._parse_info(resdata)
+
+    @staticmethod
+    def _parse_info(resData):
+        infData = resData.find('contact:infData', NS)
+        loc = infData.find("contact:postalInfo[@type='loc']", NS)
+        addr = loc.find('contact:addr', NS)
 
         return objects.Contact(
-            handle=handle,
+            handle=_get_xml_text(infData, 'contact:id'),
             roid=_get_xml_text(infData, 'contact:roid'),
-            status=resdata.find('contact:status').get('s'),
+            status=infData.find('contact:status', NS).attrib['s'],
             name=_get_xml_text(loc, 'contact:name'),
             org=_get_xml_text(loc, 'contact:org'),
             street= _get_xml_text(addr, 'contact:street'),
@@ -232,10 +263,10 @@ class HostHandler(BaseHandler):
 
     def get(self, nameserver):
         cmd = commands.host.info_part.format(name=nameserver)
-        resdata = self.epp.cmd(cmd).resdata
+        resdata = self.epp.cmd(cmd).resData
         return objects.Host(
             name=nameserver,
-            addr=resdata.find('host:addr').text
+            addr=resdata.find('host:addr', NS).text
         )
 
 

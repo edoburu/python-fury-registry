@@ -2,7 +2,6 @@
 from setuptools import setup, find_packages
 from os import path
 import codecs
-import os
 import re
 
 
@@ -28,7 +27,6 @@ setup(
     description='Python EPP client for SIDN/DRS5',
     long_description=read('README.rst'),
     install_requires=[
-        "BeautifulSoup >= 3.2.1",
         "python-dateutil",
     ],
 )

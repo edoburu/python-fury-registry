@@ -1,8 +1,10 @@
 import logging
+from .utils import python_2_unicode_compatible
 
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class Contact(object):
     """
     Contact data object
@@ -24,7 +26,7 @@ class Contact(object):
         self.created_date = created_date
         self.modified_date = modified_date
 
-    def __unicode__(self):
+    def __str__(self):
         return "[{handle}] {name}, {street}, {pc} {city} ({cc})".format(
             handle=self.handle,
             name=self.name,
@@ -47,6 +49,7 @@ class Contact(object):
         return self.voice
 
 
+@python_2_unicode_compatible
 class Domain(object):
     """
     Domain data object
@@ -72,7 +75,7 @@ class Domain(object):
         # Can be assigned by handler
         self.epp = None
 
-    def __unicode__(self):
+    def __str__(self):
         return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
             domain=self.name,
             status=self.status,
@@ -98,6 +101,7 @@ class Domain(object):
         return self.epp.contacts.get(self.tech)
 
 
+@python_2_unicode_compatible
 class Host(object):
     """
     Host data object (e.g. for nameservers)
@@ -107,5 +111,5 @@ class Host(object):
         self.name = name
         self.addr = addr
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
