@@ -87,9 +87,10 @@ class Domain(EPPObject):
         cmd = commands.available % self.domain
         res = self.epp.cmd(cmd)
         if not res:
-            # exception would be more fitting
             return False
-        return res.resdata.find('domain:name').get('avail') == 'true'
+        else:
+            status = res.resdata.find('domain:name').get('avail')
+            return status in ('1', 'true')
 
     def create(self, contacts, ns):
         cmd = commands.create % {
