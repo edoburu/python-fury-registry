@@ -92,13 +92,13 @@ class Domain(EPPObject):
         return res.resdata.find('domain:name').get('avail') == 'true'
 
     def create(self, contacts, ns):
-        cmd = commands.create % dict({
+        cmd = commands.create % {
             'domain': self.domain,
             'ns': ns[0],
             'registrant': contacts['registrant'],
             'admin': contacts['admin'],
             'tech': contacts['tech'],
-        })
+        }
         return self.epp.cmd(cmd)
 
     def delete(self, undo=False):
@@ -131,10 +131,10 @@ class Domain(EPPObject):
         return res.resdata.find('domain:pw').text
 
     def transfer(self, token):
-        cmd = commands.transfer % dict({
+        cmd = commands.transfer % {
             'domain': self.domain,
             'token': token,
-        })
+        }
         return self.epp.cmd(cmd)
 
 
