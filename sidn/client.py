@@ -15,19 +15,18 @@ RE_PW = re.compile(r'<pw>[^<]+</pw>')
 
 class EPP(object):
 
-    def __init__(self, **kwargs):
-        self.config = kwargs
+    def __init__(self, host, port, user, password):
         self.connected = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(2)
-        self.socket.connect((self.config['host'], self.config['port']))
+        self.socket.connect((host, port))
         try:
             self.ssl = ssl.wrap_socket(self.socket)
         except socket.error:
             logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
             raise
         self.format_32 = self.format_32()
-        self.login()
+        self.login(user, password)
 
     def __del__(self):
         try:
@@ -76,7 +75,7 @@ class EPP(object):
         self.ssl.send(length)
         return self.ssl.send(epp_as_string + "\r\n")
 
-    def login(self):
+    def login(self, user, password):
         """
         Perform the login.
         """
@@ -88,7 +87,7 @@ class EPP(object):
         logger.info("Connected to %s (v%s)\n", svid.text, version.text)
 
         # Login
-        xml = commands.login % self.config
+        xml = commands.login % dict(user=user, password=password)
         return self.cmd(xml, silent=True)
 
     def logout(self):

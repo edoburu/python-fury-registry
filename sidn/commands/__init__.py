@@ -78,7 +78,7 @@ login = """<?xml version="1.0" encoding="UTF-8"?>
   <command>
     <login>
       <clID>%(user)s</clID>
-      <pw>%(pass)s</pw>
+      <pw>%(password)s</pw>
       <options>
         <version>1.0</version>
         <lang>en</lang>
