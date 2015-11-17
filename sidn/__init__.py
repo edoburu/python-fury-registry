@@ -1,2 +1,1 @@
-from .client import EPP
-from .objects import Domain, Host, Contact
+__version__ = "1.0"  # PEP440
