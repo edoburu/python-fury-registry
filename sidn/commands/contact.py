@@ -1,17 +1,25 @@
 from __future__ import unicode_literals
 import re
-from .xml import xml_format
+from sidn.utils import xml_format
 
 RE_PHONE_START = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
 RE_PHONE = re.compile("^(\+[0-9]{1,3}\.[0-9]{1,14})?$")
+
+
+def info_part(handle):
+    xml = """
+      <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>{handle}</contact:id>
+      </contact:info>
+"""
+    return xml_format(xml, handle=handle)
 
 
 def check_part(handle):
     xml = """
       <contact:check xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <contact:id>{handle}</contact:id>
-      </contact:check>
-"""
+      </contact:check>"""
     return xml_format(xml, handle=handle)
 
 
@@ -31,20 +39,14 @@ def create(**data):
 
     xml += _contact_ext(**data)
     xml += """
-    <clTRID>ABC-12345</clTRID>
+    <clTRID>{clTRID}</clTRID>
   </command>
 </epp>"""
 
+    if not data.get('clTRID', None):
+        data['clTRID'] = 'unused'
+
     return xml_format(xml, **data)
-
-
-def info_part(handle):
-    xml = """
-      <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-        <contact:id>%(handle)s</contact:id>
-      </contact:info>
-"""
-    return xml_format(xml, handle=handle)
 
 
 def update_part(**data):
@@ -86,10 +88,7 @@ def _contact_info(**data):
         </contact:postalInfo>
         <contact:voice>{voice}</contact:voice>
         <contact:fax>{fax}</contact:fax>
-        <contact:email>{email}</contact:email>
-        <contact:authInfo>
-          <contact:pw>unused</contact:pw>
-        </contact:authInfo>"""
+        <contact:email>{email}</contact:email>"""
     return xml_format(xml, **data)
 
 
@@ -111,6 +110,14 @@ def _contact_ext(**data):
       </sidn-ext-epp:ext>
     </extension>"""
     return xml_format(xml, **data)
+
+
+def delete_part(handle):
+    xml = """
+      <contact:delete xmlns:domain="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>{handle}</contact:id>
+      </contact:delete>"""
+    return xml_format(xml, handle=handle)
 
 
 def _fix_phone(value):

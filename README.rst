@@ -40,8 +40,10 @@ Code:
     domain = client.domains.create(
         name='example.nl',
         registrant=handle,
-        admin=handle,
-        tech=handle,
+        contacts=dict(
+            admin=handle,
+            tech=handle,
+        )
         ns=[
             'ns1.example.nl',
             'ns2.example.nl',

@@ -1,19 +1,20 @@
 from __future__ import unicode_literals
-from .xml import xml_format
+from sidn.utils import xml_format, escape
 
 
-info_part = """
+def info_part(name):
+    xml = """
       <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name hosts="all">{name}</domain:name>
-      </domain:info>
-"""
+      </domain:info>"""
+    return xml_format(xml, name=name)
+
 
 def check_part(name):
     xml = """
       <domain:check xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
-      </domain:check>
-    """
+      </domain:check>"""
     return xml_format(xml, name=name)
 
 
@@ -25,7 +26,7 @@ def create_part(name, registrant, admin, tech, ns, pw='unused'):
 
     for host in ns:
         xml += """
-          <domain:hostObj>{ns}</domain:hostObj>""".format(ns=host)
+          <domain:hostObj>{ns}</domain:hostObj>""".format(ns=escape(host))
 
     xml += """
         </domain:ns>
@@ -35,8 +36,7 @@ def create_part(name, registrant, admin, tech, ns, pw='unused'):
         <domain:authInfo>
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
-      </domain:create>
-"""
+      </domain:create>"""
     return xml_format(
         xml,
         name=name,
@@ -62,10 +62,11 @@ def transfer(name, token, clTRID=None):
     <clTRID>{clTRID}</clTRID>
   </command>
 </epp>"""
-    return xml_format(xml, name=name, pw=token, clTRID=clTRID or '')
+    return xml_format(xml, name=name, pw=token, clTRID=clTRID or 'unused')
 
 
 def transfer_status(name, clTRID=None):
+    # Difference is op="query"
     xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
@@ -77,7 +78,7 @@ def transfer_status(name, clTRID=None):
     <clTRID>{clTRID}</clTRID>
   </command>
 </epp>"""
-    return xml_format(xml, name=name, clTRID=clTRID or '')
+    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
 
 
 def cancel_delete(name, clTRID=None):
@@ -92,14 +93,11 @@ def cancel_delete(name, clTRID=None):
     </sidn-ext-epp:command>
   </extension>
 </epp>"""
-    return xml_format(xml, name=name, clTRID=clTRID or '')
+    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
 
 def delete_part(name):
     xml = """
-    <delete>
       <domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>%s</domain:name>
-      </domain:delete>
-    </delete>
-"""
+      </domain:delete>"""
     return xml_format(xml, name=name)

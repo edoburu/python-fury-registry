@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+from sidn.utils import xml_format
+
 # EPP: https://tools.ietf.org/html/rfc5730
 #
 # clTRID = client transaction id
@@ -18,12 +20,13 @@ check = """<?xml version="1.0" encoding="UTF-8"?>
   </command>
 </epp>"""
 
-login = """<?xml version="1.0" encoding="UTF-8"?>
+def login(username, password):
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <login>
-      <clID>%(user)s</clID>
-      <pw>%(password)s</pw>
+      <clID>{username}</clID>
+      <pw>{password}</pw>
       <options>
         <version>1.0</version>
         <lang>en</lang>
@@ -39,6 +42,7 @@ login = """<?xml version="1.0" encoding="UTF-8"?>
     </login>
   </command>
 </epp>"""
+    return xml_format(xml, username=username, password=password)
 
 logout = """<?xml version="1.0" encoding="UTF-8"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
@@ -47,22 +51,12 @@ logout = """<?xml version="1.0" encoding="UTF-8"?>
   </command>
 </epp>"""
 
-nameserver = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-  <command>
-    <info>
-      <host:info xmlns:host="urn:ietf:params:xml:ns:host-1.0">
-        <host:name>%s</host:name>
-      </host:info>
-    </info>
-    <clTRID>{clTRID}</clTRID>
-  </command>
-</epp>"""
-
-poll = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-  <command>
-    <poll op="req"/>
-    <clTRID>{clTRID}</clTRID>
-  </command>
-</epp>"""
+def poll(transaction_id=None):
+    xml  = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+      <command>
+        <poll op="req"/>
+        <clTRID>{clTRID}</clTRID>
+      </command>
+    </epp>"""
+    return xml_format(xml, clTRID=transaction_id or 'unused')

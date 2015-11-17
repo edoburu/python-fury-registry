@@ -29,5 +29,6 @@ setup(
     long_description=read('README.rst'),
     install_requires=[
         "BeautifulSoup >= 3.2.1",
+        "python-dateutil",
     ],
 )
