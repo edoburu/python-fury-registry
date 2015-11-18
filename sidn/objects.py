@@ -10,7 +10,7 @@ class Contact(object):
     Contact data object
     """
 
-    def __init__(self, handle, roid, status, name, org, street, city, pc, cc, voice, fax, email, created_date, modified_date):
+    def __init__(self, handle, roid, status, name, org, street, city, pc, cc, voice, fax, email, created_date, updated_date):
         self.handle = handle
         self.roid = roid
         self.status = status
@@ -24,7 +24,7 @@ class Contact(object):
         self.fax = fax
         self.email = email
         self.created_date = created_date
-        self.modified_date = modified_date
+        self.updated_date = updated_date
 
     def __str__(self):
         return "[{handle}] {name}, {street}, {pc} {city} ({cc})".format(
@@ -55,7 +55,7 @@ class Domain(object):
     Domain data object
     """
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, cl_id, cr_id, created_date, modified_date, expire_date, pw):
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, cl_id, cr_id, created_date, updated_date, expire_date, pw):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
         self.name = name
@@ -68,7 +68,7 @@ class Domain(object):
         self.cl_id = cl_id
         self.cr_id = cr_id
         self.created_date = created_date
-        self.modified_date = modified_date
+        self.updated_date = updated_date
         self.expire_date = expire_date
         self.pw = pw
 

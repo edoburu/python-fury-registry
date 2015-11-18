@@ -85,7 +85,7 @@ class DomainHandler(BaseHandler):
             cl_id=_get_xml_text(infData, 'domain:clID'),  # current registrar
             cr_id=_get_xml_text(infData, 'domain:crID'),  # initial registrar
             created_date=_parse_iso_date(_get_xml_text(infData, 'domain:crDate')),
-            modified_date=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
+            updated_date=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
             expire_date=_parse_iso_date(_get_xml_text(infData, 'domain:exDate')),
             pw=_get_xml_text(authInfo, 'domain:pw'),
         )
@@ -245,7 +245,7 @@ class ContactHandler(BaseHandler):
             fax=_get_xml_text(infData, 'contact:fax'),
             email=_get_xml_text(infData, 'contact:email'),
             created_date=_parse_iso_date(_get_xml_text(infData, 'contact:crDate')),
-            modified_date=_parse_iso_date(_get_xml_text(infData, 'contact:upDate')),
+            updated_date=_parse_iso_date(_get_xml_text(infData, 'contact:upDate')),
         )
 
     def delete(self, name):
