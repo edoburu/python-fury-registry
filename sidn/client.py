@@ -58,6 +58,8 @@ class EPP(object):
         # Write and read
         self._write(cmd)
         raw_response = self._read()
+        if raw_response is None:
+            raise IOError("Server disconnected")
 
         # Convert to response objects
         response = self._parse_response(raw_response)
