@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import re
 from sidn.utils import xml_format, escape
 
-RE_PHONE_START = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
+RE_PHONE_COUNTRY = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
 RE_PHONE = re.compile("^(\+[0-9]{1,3}\.[0-9]{1,14})?$")
 
 
@@ -154,7 +154,8 @@ def delete_part(handle):
 def _fix_phone(value):
     # A fax or phone number is a string that starts with a '+', followed by the country code, followed by a '.'
     # and then followed by a series of numbers being the fax or telephone.
-    value = RE_PHONE_START.sub('+\g<country>.', value)
+    value = RE_PHONE_COUNTRY.sub('+\g<country>.', value)
     value = value.replace(' ', '').replace('-', '')
-    assert RE_PHONE.match(value)
+    if not RE_PHONE.match(value):
+        raise ValueError("Could not format the phone number {0}".format(value))
     return value
