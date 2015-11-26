@@ -59,8 +59,8 @@ class DomainHandler(BaseHandler):
         """
         Request the info of a domain
         """
-        cmd = self._build_command('info', commands.domain.info_part(name=domain_name))
-        resData = self.epp.cmd(cmd).resData
+        xml = self._build_command('info', commands.domain.info_part(name=domain_name))
+        resData = self.epp.cmd(xml).resData
         domain = self._parse_info(resData)
         domain._epp = self.epp  # Sneak it in
         return domain
@@ -82,11 +82,11 @@ class DomainHandler(BaseHandler):
             admin=_get_xml_text(infData, "domain:contact[@type='admin']"),
             tech=_get_xml_text(infData, "domain:contact[@type='tech']"),
             ns=ns,
-            cl_id=_get_xml_text(infData, 'domain:clID'),  # current registrar
-            cr_id=_get_xml_text(infData, 'domain:crID'),  # initial registrar
-            created_date=_parse_iso_date(_get_xml_text(infData, 'domain:crDate')),
-            updated_date=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
-            expire_date=_parse_iso_date(_get_xml_text(infData, 'domain:exDate')),
+            clID=_get_xml_text(infData, 'domain:clID'),  # current registrar
+            crID=_get_xml_text(infData, 'domain:crID'),  # initial registrar
+            crDate=_parse_iso_date(_get_xml_text(infData, 'domain:crDate')),
+            upDate=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
+            exDate=_parse_iso_date(_get_xml_text(infData, 'domain:exDate')),
             pw=_get_xml_text(authInfo, 'domain:pw'),
         )
 
@@ -94,8 +94,8 @@ class DomainHandler(BaseHandler):
         """
         Check if a domain is available.
         """
-        cmd = self._build_command('check', commands.domain.check_part(name=domain_name))
-        res = self.epp.cmd(cmd)
+        xml = self._build_command('check', commands.domain.check_part(name=domain_name))
+        res = self.epp.cmd(xml)
         status = res.resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail']
         return status in ('1', 'true')
 
@@ -110,42 +110,42 @@ class DomainHandler(BaseHandler):
         :param ns: List of nameserver host names
         :type ns: list
         """
-        cmd = self._build_command('create', commands.domain.create_part(
+        xml = self._build_command('create', commands.domain.create_part(
             name=name,
             registrant=registrant,
             admin=contacts['admin'],  # Only supported options by DRS5
             tech=contacts['tech'],
             ns=ns
         ))
-        return self.epp.cmd(cmd)
+        return self.epp.cmd(xml)
 
     def delete(self, name):
         """
         Delete a domain
         """
-        cmd = self._build_command('delete', commands.domain.delete_part(name))
-        return self.epp.cmd(cmd)
+        xml = self._build_command('delete', commands.domain.delete_part(name))
+        return self.epp.cmd(xml)
 
     def cancel_delete(self, name):
         """
         Cancel deletion
         """
-        cmd = commands.domain.cancel_delete(name)
-        return self.epp.cmd(cmd)
+        xml = commands.domain.cancel_delete(name)
+        return self.epp.cmd(xml)
 
     def transfer(self, name, token):
         """
         Initiate the domain transfer.
         """
-        cmd = commands.domain.transfer(name, token)
-        return self.epp.cmd(cmd)
+        xml = commands.domain.transfer(name, token)
+        return self.epp.cmd(xml)
 
     def get_transfer_status(self, name):
         """
         Get status of current domain transfer.
         """
-        cmd = commands.domain.transfer_status(name)
-        return self.epp.cmd(cmd)
+        xml = commands.domain.transfer_status(name)
+        return self.epp.cmd(xml)
 
 
 class ContactHandler(BaseHandler):
@@ -157,11 +157,11 @@ class ContactHandler(BaseHandler):
         """
         Check if a given handle is available.
         """
-        cmd = self._build_command('check', commands.contact.check_part(handle))
+        xml = self._build_command('check', commands.contact.check_part(handle))
 
         from sidn.client import EPPError
         try:
-            res = self.epp.cmd(cmd)
+            res = self.epp.cmd(xml)
         except EPPError as e:
             if e.code == EPP_DATA_MGMT_POLICY and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED:
                 return False
@@ -173,7 +173,7 @@ class ContactHandler(BaseHandler):
         status = resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail']
         return status in ('1', 'true')
 
-    def create(self, id, name, org=None, street1=None, street2=None, city=None, pc=None, cc=None, voice=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
+    def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
         """
         Create a contact.
 
@@ -200,59 +200,59 @@ class ContactHandler(BaseHandler):
 
         :param id: object ID, will be ignored.
         :param name: Unicode name for the person.
-        :param org: Organisation name (department in DRS5)
-        :param street1: First line of the address.
-        :param street2: Second line of the address.
+        :param organisation: Organisation name (department in DRS5)
+        :param street: Street + house number. Can also be a list for line1/line2.
         :param city: City of the address.
-        :param pc: Postal code, required for NL.
-        :param cc: ISO Country code.
-        :param voice: Phone number, required.
+        :param postcode: Postal code, required for NL.
+        :param country_code: ISO Country code.
+        :param phone: Phone number, required.
         :returns: The contact handle.
         """
-        cmd = commands.contact.create(
+        xml = commands.contact.create(
             handle=id,  # Mandatory, but will be ignored
             name=name,
-            org=org,  # department in DRS5
-            street1=street1,
-            street2=street2,
+            org=organisation,  # department in DRS5
+            street=street,
             city=city,
-            pc=pc,  # postcode
-            cc=cc,  # country code
-            voice=voice,
+            pc=postcode,
+            cc=country_code,
+            voice=phone,
             fax=fax,
             email=email,
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
         )
-        res = self.epp.cmd(cmd).resData
+        res = self.epp.cmd(xml).resData
         return res.find('contact:creData/contact:id', NS).text
 
-    def update(self, handle, name, street, city, pc, cc, org=None, cr_id=None, voice=None, fax=None, email=None, legalForm=None, legalFormRegNo=None):
+    def update(self, handle, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
         """
-        Update an existing contact
+        Update an existing contact.
+
+        Any omitted fields will be reset, so make sure to pass all data.
         """
-        cmd = self._build_command('update', commands.contact.update_part(
+        xml = self._build_command('update', commands.contact.update_part(
             handle=handle,
             name=name,
-            org=org,  # department in DRS5
+            org=organisation,  # department in DRS5
             street=street,
             city=city,
-            pc=pc,
-            cc=cc,
-            voice=voice,
+            pc=postcode,
+            cc=country_code,
+            voice=phone,
             fax=fax,
             email=email,
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
         ))
-        self.epp.cmd(cmd)
+        self.epp.cmd(xml)
 
     def get(self, handle):
         """
         Fetch contact data
         """
-        cmd = self._build_command('info', commands.contact.info_part(handle))
-        resdata = self.epp.cmd(cmd).resData
+        xml = self._build_command('info', commands.contact.info_part(handle))
+        resdata = self.epp.cmd(xml).resData
         return self._parse_info(resdata)
 
     @staticmethod
@@ -262,7 +262,7 @@ class ContactHandler(BaseHandler):
         addr = loc.find('contact:addr', NS)
 
         return objects.Contact(
-            handle=_get_xml_text(infData, 'contact:id'),
+            id=_get_xml_text(infData, 'contact:id'),
             roid=_get_xml_text(infData, 'contact:roid'),
             status=infData.find('contact:status', NS).attrib['s'],
             name=_get_xml_text(loc, 'contact:name'),
@@ -274,16 +274,16 @@ class ContactHandler(BaseHandler):
             voice=_get_xml_text(infData, 'contact:voice'),
             fax=_get_xml_text(infData, 'contact:fax'),
             email=_get_xml_text(infData, 'contact:email'),
-            created_date=_parse_iso_date(_get_xml_text(infData, 'contact:crDate')),
-            updated_date=_parse_iso_date(_get_xml_text(infData, 'contact:upDate')),
+            crDate=_parse_iso_date(_get_xml_text(infData, 'contact:crDate')),
+            upDate=_parse_iso_date(_get_xml_text(infData, 'contact:upDate')),
         )
 
     def delete(self, name):
         """
         Delete a contact
         """
-        cmd = self._build_command('delete', commands.contact.delete_part(name))
-        return self.epp.cmd(cmd)
+        xml = self._build_command('delete', commands.contact.delete_part(name))
+        return self.epp.cmd(xml)
 
 
 class HostHandler(BaseHandler):
@@ -292,8 +292,8 @@ class HostHandler(BaseHandler):
     """
 
     def get(self, nameserver):
-        cmd = commands.host.info_part.format(name=nameserver)
-        resdata = self.epp.cmd(cmd).resData
+        xml = commands.host.info_part.format(name=nameserver)
+        resdata = self.epp.cmd(xml).resData
         return objects.Host(
             name=nameserver,
             addr=resdata.find('host:addr', NS).text

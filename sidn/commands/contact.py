@@ -95,11 +95,15 @@ def _contact_info(**data):
         <contact:postalInfo type="loc">
           <contact:name>{name}</contact:name>
           <contact:org>{org}</contact:org>
-          <contact:addr>
-            <contact:street>{street1}</contact:street>"""
-    if data.get('street2'):
+          <contact:addr>"""
+
+    street = data['street']
+    if not isinstance(street, (list, tuple)):
+        street = [street]
+
+    for item in street:
         xml += """
-            <contact:street>{street2}</contact:street>"""
+            <contact:street>{0}</contact:street>""".format(escape(item))
 
     xml += """
             <contact:city>{city}</contact:city>

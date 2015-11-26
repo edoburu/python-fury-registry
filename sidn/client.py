@@ -46,17 +46,17 @@ class EPP(object):
             pass  # Will occur when not properly connected
         self.socket.close()
 
-    def cmd(self, cmd, silent=False):
+    def cmd(self, xml, silent=False):
         """
         Execute a raw request on the server.
 
         :rtype: EPPResponse
         """
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("SIDN request: %s", mask_sensitive_fields(cmd))
+            logger.debug("SIDN request: %s", mask_sensitive_fields(xml))
 
         # Write and read
-        self._write(cmd)
+        self._write(xml)
         raw_response = self._read()
         if raw_response is None:
             raise IOError("Server disconnected")

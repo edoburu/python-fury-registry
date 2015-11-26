@@ -10,46 +10,36 @@ class Contact(object):
     Contact data object
     """
 
-    def __init__(self, handle, roid, status, name, org, street, city, pc, cc, voice, fax, email, created_date, updated_date):
-        self.handle = handle
+    def __init__(self, id, roid, status, name, org, street, city, pc, cc, voice, fax, email, crDate, upDate):
+        # Some fields are renamed for easier referencing,
+        # while the constructor arguments map to the XML field names.
+        self.handle = id
         self.roid = roid
         self.status = status
         self.name = name
-        self.org = org
+        self.organisation = org
         self.street = street
         self.city = city
-        self.pc = pc
-        self.cc = cc
-        self.voice = voice
+        self.postcode = pc
+        self.country_code = cc
+        self.phone = voice
         self.fax = fax
         self.email = email
-        self.created_date = created_date
-        self.updated_date = updated_date
+        self.created_date = crDate
+        self.updated_date = upDate
 
     def __repr__(self):
         return '<Contact {0}>'.format(self)
 
     def __str__(self):
-        return "[{handle}] {name}, {street}, {pc} {city} ({cc})".format(
+        return "[{handle}] {name}, {street}, {postcode} {city} ({country_code})".format(
             handle=self.handle,
             name=self.name,
             street=self.street,
-            pc=self.pc,
+            postcode=self.postcode,
             city=self.city,
-            cc=self.cc
+            country_code=self.country_code
         )
-
-    @property
-    def postcode(self):
-        return self.pc
-
-    @property
-    def country_code(self):
-        return self.cc
-
-    @property
-    def telephone(self):
-        return self.voice
 
 
 @python_2_unicode_compatible
@@ -58,9 +48,12 @@ class Domain(object):
     Domain data object
     """
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, cl_id, cr_id, created_date, updated_date, expire_date, pw):
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
+        #
+        # Some fields are renamed for easier referencing,
+        # while the constructor arguments map to the XML field names.
         self.name = name
         self.roid = roid
         self.status = status
@@ -68,11 +61,11 @@ class Domain(object):
         self.admin = admin
         self.tech = tech
         self.ns = ns
-        self.cl_id = cl_id
-        self.cr_id = cr_id
-        self.created_date = created_date
-        self.updated_date = updated_date
-        self.expire_date = expire_date
+        self.cl_id = clID
+        self.cr_id = crID
+        self.created_date = crDate
+        self.updated_date = upDate
+        self.expire_date = exDate
         self.pw = pw
 
         # Can be assigned by handler
