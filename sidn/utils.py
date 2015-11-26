@@ -4,7 +4,7 @@ Internal utils
 import re
 import sys
 import struct
-from xml.sax.saxutils import escape
+from xml.sax import saxutils
 
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
@@ -37,6 +37,18 @@ def _xml_escape(**data):
     Escape the data for inclusion in XML
     """
     return dict((k, escape(v)) for k, v in data.iteritems())
+
+
+def escape(value):
+    """
+    Escape a single value for XML
+    """
+    if value is None:
+        return None
+    elif isinstance(value, (int, long)):
+        return str(value)
+    else:
+        return saxutils.escape(value)
 
 
 def mask_sensitive_fields(cmd):

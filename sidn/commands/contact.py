@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import re
-from sidn.utils import xml_format
+from sidn.utils import xml_format, escape
 
 RE_PHONE_START = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
 RE_PHONE = re.compile("^(\+[0-9]{1,3}\.[0-9]{1,14})?$")
@@ -24,7 +24,7 @@ def check_part(handle):
 
 
 def create(**data):
-    xml = """<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
   <command>
     <create>
@@ -71,16 +71,37 @@ def update_part(**data):
 def _contact_info(**data):
     if data.get('voice', None):
         data['voice'] = _fix_phone(data['voice'])
+    else:
+        data['voice'] = ''
+
     if data.get('fax', None):
         data['fax'] = _fix_phone(data['fax'])
+    else:
+        data['fax'] = ''
 
-    # DRS5 note: only unrestricted utf-8 is allowed, not 7-bit US-ASCII
+    # DRS5 notes:
+    # - name allows only unrestricted utf-8, not 7-bit US-ASCII
+    # - handle is mandatory, but DRS5 will generate a new one server-side in the format XXX999999-YYYYY
+    # - street can be 1 field.
+    # - postalInfo only supports 'loc'
+    # - sp (state/province) is not implemented
+    # - pc is mandatory for country NL
+    # - voice is mandatory
+    # - trDate not implemented (no transfer support)
+    # - pw is mandatory, but not used
+    # - disclose is not implemented
+
     xml = """
         <contact:postalInfo type="loc">
           <contact:name>{name}</contact:name>
           <contact:org>{org}</contact:org>
           <contact:addr>
-            <contact:street>{street}</contact:street>
+            <contact:street>{street1}</contact:street>"""
+    if data.get('street2'):
+        xml += """
+            <contact:street>{street2}</contact:street>"""
+
+    xml += """
             <contact:city>{city}</contact:city>
             <contact:pc>{pc}</contact:pc>
             <contact:cc>{cc}</contact:cc>
@@ -88,7 +109,10 @@ def _contact_info(**data):
         </contact:postalInfo>
         <contact:voice>{voice}</contact:voice>
         <contact:fax>{fax}</contact:fax>
-        <contact:email>{email}</contact:email>"""
+        <contact:email>{email}</contact:email>
+        <contact:authInfo>
+          <contact:pw>2fooBAR</contact:pw>
+        </contact:authInfo>"""
     return xml_format(xml, **data)
 
 
@@ -99,17 +123,24 @@ def _contact_ext(**data):
         <sidn-ext-epp:create>
           <sidn-ext-epp:contact>"""
 
-    if data.get('legalForm', None):
-      xml += """
-            <sidn-ext-epp:legalForm>{legalForm}</sidn-ext-epp:legalForm>
-            <sidn-ext-epp:legalFormRegNo>{legalFormRegNo}</sidn-ext-epp:legalFormRegNo>"""
+    # Mandatory: legal form field.
+    xml += """
+            <sidn-ext-epp:legalForm>{legalForm}</sidn-ext-epp:legalForm>""".format(
+        legalForm=data.get('legalForm') or "ANDERS"
+    )
+
+    if data.get('legalFormRegNo'):
+        xml += """
+            <sidn-ext-epp:legalFormRegNo>{legalFormRegNo}</sidn-ext-epp:legalFormRegNo>""".format(
+            legalFormRegNo=escape(data['legalFormRegNo'])
+        )
 
     xml += """
           </sidn-ext-epp:contact>
         </sidn-ext-epp:create>
       </sidn-ext-epp:ext>
     </extension>"""
-    return xml_format(xml, **data)
+    return xml
 
 
 def delete_part(handle):

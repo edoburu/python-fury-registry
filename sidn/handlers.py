@@ -173,17 +173,48 @@ class ContactHandler(BaseHandler):
         status = resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail']
         return status in ('1', 'true')
 
-    def create(self, name, street, city, pc, cc, org=None, voice=None, fax=None, email=None, legalForm=None, legalFormRegNo=None):
+    def create(self, id, name, org=None, street1=None, street2=None, city=None, pc=None, cc=None, voice=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
         """
         Create a contact.
 
+        Allowed Dutch legalForm options:
+
+        * ``ANDERS``      - Anders
+        * ``BGG``         - Buitenlandse EG vennootschap
+        * ``BRO``         - Buitenlandse rechtsvorm/onderneming/nevenvestiging
+        * ``BV``          - Besloten Vennootschap
+        * ``BVI/O``       - B.V. in oprichting
+        * ``COOP``        - Cooperatie
+        * ``CV``          - Commanditaire Vennootschap
+        * ``EENMANSZAAK`` - Eenmanszaak
+        * ``EESV``        - Europees Economisch Samenwerkingsverband
+        * ``KERK``        - Kerkgenootschap
+        * ``MAATSCHAP``   - Maatschap
+        * ``NV``          - Naamloze Vennootschap
+        * ``OWM``         - Onderlinge Waarborg Maatschappij
+        * ``PERSOON``     - Natuurlijk persoon
+        * ``REDR``        - Rederij
+        * ``STICHTING``   - Stichting
+        * ``VERENIGING  - Vereniging
+        * ``VOF         - Vennootschap onder firma
+
+        :param id: object ID, will be ignored.
+        :param name: Unicode name for the person.
+        :param org: Organisation name (department in DRS5)
+        :param street1: First line of the address.
+        :param street2: Second line of the address.
+        :param city: City of the address.
+        :param pc: Postal code, required for NL.
+        :param cc: ISO Country code.
+        :param voice: Phone number, required.
         :returns: The contact handle.
         """
         cmd = commands.contact.create(
-            handle='',
+            handle=id,  # Mandatory, but will be ignored
             name=name,
             org=org,  # department in DRS5
-            street=street,
+            street1=street1,
+            street2=street2,
             city=city,
             pc=pc,  # postcode
             cc=cc,  # country code
@@ -194,7 +225,7 @@ class ContactHandler(BaseHandler):
             legalFormRegNo=legalFormRegNo,
         )
         res = self.epp.cmd(cmd).resData
-        return res.find('contact:id').text
+        return res.find('contact:creData/contact:id', NS).text
 
     def update(self, handle, name, street, city, pc, cc, org=None, cr_id=None, voice=None, fax=None, email=None, legalForm=None, legalFormRegNo=None):
         """
@@ -214,8 +245,7 @@ class ContactHandler(BaseHandler):
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
         ))
-        res = self.epp.cmd(cmd).resData
-        return res.find('contact:id').text
+        self.epp.cmd(cmd)
 
     def get(self, handle):
         """
