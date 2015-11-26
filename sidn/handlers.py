@@ -301,5 +301,8 @@ class HostHandler(BaseHandler):
 
 
 def _parse_iso_date(date):
-    # Dates like: 1995-12-10T23:00:00.000Z
-    return dateutil.parser.parse(date)
+    if date is None:
+        return None
+    else:
+        # Dates like: 1995-12-10T23:00:00.000Z
+        return dateutil.parser.parse(date)
