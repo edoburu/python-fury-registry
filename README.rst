@@ -51,7 +51,7 @@ Code:
     )
 
     domain = client.domains.get('example.nl')
-    print domain.auth_token
+    print domain.token
 
     contact = client.contacts.get(handle="FOOBAR01")
     print contact.name
