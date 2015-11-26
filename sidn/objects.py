@@ -26,6 +26,9 @@ class Contact(object):
         self.created_date = created_date
         self.updated_date = updated_date
 
+    def __repr__(self):
+        return '<Contact {0}>'.format(self)
+
     def __str__(self):
         return "[{handle}] {name}, {street}, {pc} {city} ({cc})".format(
             handle=self.handle,
@@ -73,7 +76,10 @@ class Domain(object):
         self.pw = pw
 
         # Can be assigned by handler
-        self.epp = None
+        self._epp = None
+
+    def __repr__(self):
+        return '<Domain {0}>'.format(self)
 
     def __str__(self):
         return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
@@ -90,15 +96,15 @@ class Domain(object):
 
     @property
     def registrant_contact(self):
-        return self.epp.contacts.get(self.registrant)
+        return self._epp.contacts.get(self.registrant)
 
     @property
     def admin_contact(self):
-        return self.epp.contacts.get(self.admin)
+        return self._epp.contacts.get(self.admin)
 
     @property
     def tech_contact(self):
-        return self.epp.contacts.get(self.tech)
+        return self._epp.contacts.get(self.tech)
 
 
 @python_2_unicode_compatible
@@ -110,6 +116,9 @@ class Host(object):
     def __init__(self, name, addr):
         self.name = name
         self.addr = addr
+
+    def __repr__(self):
+        return '<Host {0}>'.format(self)
 
     def __str__(self):
         return self.name

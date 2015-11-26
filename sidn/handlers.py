@@ -62,7 +62,7 @@ class DomainHandler(BaseHandler):
         cmd = self._build_command('info', commands.domain.info_part(name=domain_name))
         resData = self.epp.cmd(cmd).resData
         domain = self._parse_info(resData)
-        domain.epp = self.epp  # Sneak it in
+        domain._epp = self.epp  # Sneak it in
         return domain
 
     @staticmethod
