@@ -98,6 +98,6 @@ def cancel_delete(name, clTRID=None):
 def delete_part(name):
     xml = """
       <domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>%s</domain:name>
+        <domain:name>{name}</domain:name>
       </domain:delete>"""
     return xml_format(xml, name=name)
