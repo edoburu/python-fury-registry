@@ -110,8 +110,8 @@ class EPP(object):
                 xml_bytes += self.ssl.read(remaining)
                 remaining = size - len(xml_bytes)
 
-            logger.debug("SIDN Response: %s", xml_bytes)
-            return xml_bytes.decode('utf-8')
+            logger.debug("SIDN Response: %s", xml_bytes.decode('utf-8'))
+            return xml_bytes  # raw result for ElementTree to convert.
         else:
             return None
 
