@@ -24,6 +24,8 @@ class EPP(object):
 
         :raises socket.error: In case the connection failed.
         """
+        self.host = host
+        self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(timeout)
         self.socket.connect((host, port))
@@ -36,6 +38,9 @@ class EPP(object):
         self._read_greeting()
         if username and password:
             self.login(username, password)
+
+    def __repr__(self):
+        return "<EPP: {0}:{1}>".format(self.host, self.port)
 
     def __del__(self):
         # Auto logout on instance destruction.
