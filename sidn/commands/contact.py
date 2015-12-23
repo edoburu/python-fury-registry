@@ -10,8 +10,7 @@ def info_part(handle):
     xml = """
       <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <contact:id>{handle}</contact:id>
-      </contact:info>
-"""
+      </contact:info>"""
     return xml_format(xml, handle=handle)
 
 
@@ -23,49 +22,36 @@ def check_part(handle):
     return xml_format(xml, handle=handle)
 
 
-def create(**data):
-    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
-  <command>
-    <create>
+def create_part(handle, **data):
+    xml = xml_format("""
       <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-        <contact:id>{handle}</contact:id>"""
+        <contact:id>{handle}</contact:id>""", handle=handle)
 
     xml += _contact_info(**data)
 
     xml += """
-      </contact:create>
-    </create>"""
+      </contact:create>"""
 
-    xml += _contact_ext(**data)
-    xml += """
-    <clTRID>{clTRID}</clTRID>
-  </command>
-</epp>"""
-
-    if not data.get('clTRID', None):
-        data['clTRID'] = 'unused'
-
-    return xml_format(xml, **data)
+    xml += _contact_extension('create', **data)
+    return xml
 
 
-def update_part(**data):
+def update_part(handle, **data):
     """
     Update an contact.
     """
-    xml = """
-    <contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-      <contact:id>{handle}</contact:id>
-        <contact:chg>"""
+    xml = xml_format("""
+      <contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>{handle}</contact:id>
+          <contact:chg>""", handle=handle)
 
     xml += _contact_info(**data)   # TODO: only add included fields?
     xml += """
-        </contact:chg>   
-      </contact:update>
-    </update>"""
+        </contact:chg>
+      </contact:update>"""
 
-    xml += _contact_ext(**data)
-    return xml_format(xml, **data)
+    xml += _contact_extension('chg', **data)
+    return xml
 
 
 def _contact_info(**data):
@@ -120,30 +106,30 @@ def _contact_info(**data):
     return xml_format(xml, **data)
 
 
-def _contact_ext(**data):
+def _contact_extension(command, **data):
     xml = """
-    <extension>
-      <sidn-ext-epp:ext>
-        <sidn-ext-epp:create>
-          <sidn-ext-epp:contact>"""
+      <extension>
+        <sidn-ext-epp:ext>
+          <sidn-ext-epp:{command}>
+            <sidn-ext-epp:contact>""".format(command=command)
 
     # Mandatory: legal form field.
     xml += """
-            <sidn-ext-epp:legalForm>{legalForm}</sidn-ext-epp:legalForm>""".format(
+              <sidn-ext-epp:legalForm>{legalForm}</sidn-ext-epp:legalForm>""".format(
         legalForm=data.get('legalForm') or "ANDERS"
     )
 
     if data.get('legalFormRegNo'):
         xml += """
-            <sidn-ext-epp:legalFormRegNo>{legalFormRegNo}</sidn-ext-epp:legalFormRegNo>""".format(
+              <sidn-ext-epp:legalFormRegNo>{legalFormRegNo}</sidn-ext-epp:legalFormRegNo>""".format(
             legalFormRegNo=escape(data['legalFormRegNo'])
         )
 
     xml += """
-          </sidn-ext-epp:contact>
-        </sidn-ext-epp:create>
-      </sidn-ext-epp:ext>
-    </extension>"""
+            </sidn-ext-epp:contact>
+          </sidn-ext-epp:{command}>
+        </sidn-ext-epp:ext>
+      </extension>""".format(command=command)
     return xml
 
 

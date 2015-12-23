@@ -9,13 +9,12 @@ import dateutil.parser
 NS = {
     # Possible namespaces in the response
     # See greeting message for all possible supported extensions
-    'epp': 'urn:ietf:params:xml:ns:epp-1.0',
-    'contact': 'urn:ietf:params:xml:ns:contact-1.0',
-    'domain': 'urn:ietf:params:xml:ns:domain-1.0',
-    'host': 'urn:ietf:params:xml:ns:host-1.0',
-    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',
+    'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
+    'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
+    'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
+    'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
+    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
 }
-
 
 
 class BaseHandler(object):
@@ -25,29 +24,18 @@ class BaseHandler(object):
         """
         self.epp = epp
 
-    def _build_command(self, command, contents, transaction_id=None):
+    def _build_command(self, command_name, command_xml, command_extensions=(), op=None, transaction_id=None, epp_extensions=()):
         """
         Build a generic command
-        :param command: The command to send, e.g. ``create``, ``info``, ``check``, ``delete``.
-        :param contents: The XML contents of the command
-        :param transaction_id: Optional client transaction ID, to recognize server responses.
         """
-        return commands.epp.generic.format(
-            command=command,
-            contents=contents,
-            clTRID=transaction_id or 'unused',
+        return commands.epp.build_command(
+            command_name=command_name,
+            command_xml=command_xml,
+            command_extensions=command_extensions,
+            op=op,
+            clTRID=transaction_id,
+            epp_extensions=epp_extensions
         )
-
-
-def _get_xml_text(node, name):
-    """
-    :type node: xml.etree.ElementTree.Element
-    """
-    if node is None:
-        return None
-    # Handling of optional fields
-    node = node.find(name, NS)
-    return node.text if node is not None else None
 
 
 class DomainHandler(BaseHandler):
@@ -59,6 +47,7 @@ class DomainHandler(BaseHandler):
         """
         Request the info of a domain
         """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
         xml = self._build_command('info', commands.domain.info_part(name=domain_name))
         resData = self.epp.cmd(xml).resData
         domain = self._parse_info(resData)
@@ -84,9 +73,9 @@ class DomainHandler(BaseHandler):
             ns=ns,
             clID=_get_xml_text(infData, 'domain:clID'),  # current registrar
             crID=_get_xml_text(infData, 'domain:crID'),  # initial registrar
-            crDate=_parse_iso_date(_get_xml_text(infData, 'domain:crDate')),
-            upDate=_parse_iso_date(_get_xml_text(infData, 'domain:upDate')),
-            exDate=_parse_iso_date(_get_xml_text(infData, 'domain:exDate')),
+            crDate=_get_xml_date(infData, 'domain:crDate'),
+            upDate=_get_xml_date(infData, 'domain:upDate'),
+            exDate=_get_xml_date(infData, 'domain:exDate'),
             pw=_get_xml_text(authInfo, 'domain:pw'),
         )
 
@@ -94,12 +83,19 @@ class DomainHandler(BaseHandler):
         """
         Check if a domain is available.
         """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
         xml = self._build_command('check', commands.domain.check_part(name=domain_name))
         res = self.epp.cmd(xml)
-        status = res.resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail']
+        return self._parse_avail(res.resData)
+
+    @staticmethod
+    def _parse_avail(resData):
+        # Note that the domain:cd element may be repeated
+        # The element may also contain a <domain:reason> element.
+        status = resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail']
         return status in ('1', 'true')
 
-    def create(self, name, registrant, contacts, ns):
+    def create(self, name, registrant, contacts, ns, dskeys=(), keyData=()):
         """
         Create a domain
 
@@ -110,6 +106,7 @@ class DomainHandler(BaseHandler):
         :param ns: List of nameserver host names
         :type ns: list
         """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.3.1
         xml = self._build_command('create', commands.domain.create_part(
             name=name,
             registrant=registrant,
@@ -123,6 +120,8 @@ class DomainHandler(BaseHandler):
         """
         Delete a domain
         """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.3.2
+        # https://tools.ietf.org/html/rfc5731#section-3.2.2
         xml = self._build_command('delete', commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
@@ -130,21 +129,24 @@ class DomainHandler(BaseHandler):
         """
         Cancel deletion
         """
-        xml = commands.domain.cancel_delete(name)
+        # Extension by SIDN
+        xml = self._build_command(None, commands.domain.cancel_delete_parts(name))
         return self.epp.cmd(xml)
 
     def transfer(self, name, token):
         """
         Initiate the domain transfer.
         """
-        xml = commands.domain.transfer(name, token)
+        # https://tools.ietf.org/html/rfc5730#section-2.9.3.4
+        xml = self._build_command('transfer', commands.domain.transfer_req_part(name, token), op='request')
         return self.epp.cmd(xml)
 
     def get_transfer_status(self, name):
         """
         Get status of current domain transfer.
         """
-        xml = commands.domain.transfer_status(name)
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
+        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
         return self.epp.cmd(xml)
 
 
@@ -173,7 +175,8 @@ class ContactHandler(BaseHandler):
         status = resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail']
         return status in ('1', 'true')
 
-    def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
+    def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None,
+               phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
         """
         Create a contact.
 
@@ -206,9 +209,11 @@ class ContactHandler(BaseHandler):
         :param postcode: Postal code, required for NL.
         :param country_code: ISO Country code.
         :param phone: Phone number, required.
+        :param fax: Fax number, optional.
+        :param email: Email, optional.
         :returns: The contact handle.
         """
-        xml = commands.contact.create(
+        xml = self._build_command('create', commands.contact.create_part(
             handle=id,  # Mandatory, but will be ignored
             name=name,
             org=organisation,  # department in DRS5
@@ -221,7 +226,7 @@ class ContactHandler(BaseHandler):
             email=email,
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
-        )
+        ))
         res = self.epp.cmd(xml).resData
         return res.find('contact:creData/contact:id', NS).text
 
@@ -274,8 +279,8 @@ class ContactHandler(BaseHandler):
             voice=_get_xml_text(infData, 'contact:voice'),
             fax=_get_xml_text(infData, 'contact:fax'),
             email=_get_xml_text(infData, 'contact:email'),
-            crDate=_parse_iso_date(_get_xml_text(infData, 'contact:crDate')),
-            upDate=_parse_iso_date(_get_xml_text(infData, 'contact:upDate')),
+            crDate=_get_xml_date(infData, 'contact:crDate'),
+            upDate=_get_xml_date(infData, 'contact:upDate'),
         )
 
     def delete(self, name):
@@ -289,6 +294,9 @@ class ContactHandler(BaseHandler):
 class HostHandler(BaseHandler):
     """
     Handler for host data
+
+    This is used to register nameservers, with their IPv4 and IPv6 addresses.
+    Currently those commands are not implemented, it's assumed the values are configured manually in DRS5.
     """
 
     def get(self, nameserver):
@@ -298,6 +306,23 @@ class HostHandler(BaseHandler):
             name=nameserver,
             addr=resdata.find('host:addr', NS).text
         )
+
+
+
+def _get_xml_text(node, name):
+    """
+    :type node: xml.etree.ElementTree.Element
+    """
+    if node is None:
+        return None
+    # Handling of optional fields
+    node = node.find(name, NS)
+    return node.text if node is not None else None
+
+
+def _get_xml_date(node, name):
+    text = _get_xml_text(node, name)
+    return _parse_iso_date(text)
 
 
 def _parse_iso_date(date):

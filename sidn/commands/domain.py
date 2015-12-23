@@ -11,6 +11,7 @@ def info_part(name):
 
 
 def check_part(name):
+    # Note that the <domain:name> may be repeated in EPP to check multiple objects at once.
     xml = """
       <domain:check xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
@@ -37,6 +38,7 @@ def create_part(name, registrant, admin, tech, ns, pw='unused'):
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
       </domain:create>"""
+
     return xml_format(
         xml,
         name=name,
@@ -47,53 +49,47 @@ def create_part(name, registrant, admin, tech, ns, pw='unused'):
     )
 
 
-def transfer(name, token, clTRID=None):
-    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-  <command>
-    <transfer op="request">
+def update_part(name):
+    xml = """
+      <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>{name}</domain:name>
+      </domain:update>"""
+    return xml_format(xml, name=name)
+
+
+def transfer_req_part(name, token):
+    xml = """
       <domain:transfer xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
         <domain:authInfo>
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
       </domain:transfer>
-    </transfer>
-    <clTRID>{clTRID}</clTRID>
-  </command>
-</epp>"""
-    return xml_format(xml, name=name, pw=token, clTRID=clTRID or 'unused')
+    </transfer>"""
+    return xml_format(xml, name=name, pw=token)
 
 
-def transfer_status(name, clTRID=None):
-    # Difference is op="query"
-    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-  <command>
-    <transfer op="query">
+def transfer_query_part(name):
+    # Needs op="query"
+    xml = """
       <domain:transfer xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
-      </domain:transfer>
-    </transfer>
-    <clTRID>{clTRID}</clTRID>
-  </command>
-</epp>"""
-    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
+      </domain:transfer>"""
+    return xml_format(xml, name=name)
 
 
-def cancel_delete(name, clTRID=None):
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-  <extension>
-    <sidn-ext-epp:command xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
-      <sidn-ext-epp:domainCancelDelete>
-        <sidn-ext-epp:name>{name}</sidn-ext-epp:name>
-      </sidn-ext-epp:domainCancelDelete>
-      <sidn-ext-epp:clTRID>{clTRID}</sidn-ext-epp:clTRID>
-    </sidn-ext-epp:command>
-  </extension>
-</epp>"""
-    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
+def cancel_delete_parts(name, clTRID=None):
+    xml = """
+      <sidn-ext-epp:command xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+        <sidn-ext-epp:domainCancelDelete>
+          <sidn-ext-epp:name>{name}</sidn-ext-epp:name>
+        </sidn-ext-epp:domainCancelDelete>
+        <sidn-ext-epp:clTRID>{clTRID}</sidn-ext-epp:clTRID>
+      </sidn-ext-epp:command>"""
+
+    # No command, only extension bit.
+    return None, xml_format(xml, name=name, clTRID=clTRID or 'unused')
+
 
 def delete_part(name):
     xml = """

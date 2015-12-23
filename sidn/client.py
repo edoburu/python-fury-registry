@@ -83,6 +83,7 @@ class EPP(object):
         response = xml.find('epp:response', NS)
 
         # Check <result> node
+        # Note for failures, multiple <result> nodes may be present for multiple error conditions.
         result = response.find('epp:result', NS)
         result_code = int(result.attrib['code'])
         if result_code >= 2000:
@@ -154,25 +155,52 @@ class EPP(object):
         return self.cmd(xml, silent=True)
 
     def logout(self):
+        """
+        Perform the logout, happens automatically on ``__dell__`.
+        """
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
-    def poll(self, transaction_id=None):
-        cmd = commands.epp.poll(transaction_id)
+    def poll(self, ack=False, transaction_id=None):
+        """
+        Poll for service notification messages.
+
+        It returns the first message.
+        When :meth:`poll` is called again with ``ack`` to True, the message will be removed.
+        The next call to :meth:`poll` will return the next available message.
+
+        :param ack: Set to true to acknowledge the message, and remove it from the server.
+        :param transaction_id:
+        """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
+        if ack:
+            op = 'ack'  # acknowledge read, and remove it
+        else:
+            op = 'req'  # Get first message
+        cmd = commands.epp.poll(op=op, transaction_id=transaction_id)
         return self.cmd(cmd)
 
     @property
     def domains(self):
+        """
+        :rtype: sidn.handlers.DomainHandler
+        """
         # These are not assigned to the class, to avoid circular references.
         # Only keep references temporary, so __del__ will be called.
         return handlers.DomainHandler(self)
 
     @property
     def contacts(self):
+        """
+        :rtype: sidn.handlers.ContactHandler
+        """
         return handlers.ContactHandler(self)
 
     @property
     def hosts(self):
+        """
+        :rtype: sidn.handlers.HostHandler
+        """
         return handlers.HostHandler(self)
 
 
