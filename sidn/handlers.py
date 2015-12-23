@@ -143,11 +143,27 @@ class DomainHandler(BaseHandler):
 
     def get_transfer_status(self, name):
         """
-        Get status of current domain transfer.
+        Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
-        return self.epp.cmd(xml)
+        res = self.epp.cmd(xml)
+        return self._parse_transfer_status(res.resData)
+
+    @staticmethod
+    def _parse_transfer_status(resData):
+        trnData = resData.find('domain:trnData', NS)
+
+        return objects.TransferStatus(
+            name=_get_xml_text(trnData, 'domain:name'),
+            trStatus=_get_xml_text(trnData, 'domain:trStatus'),
+            reID=_get_xml_text(trnData, 'domain:reID'),  # requested client
+            reDate=_get_xml_date(trnData, 'domain:reDate'),
+            acID=_get_xml_text(trnData, 'domain:acID'),  # acting client
+            acDate=_get_xml_date(trnData, 'domain:acDate'),
+            exDate=_get_xml_date(trnData, 'domain:exDate'),
+        )
+
 
 
 class ContactHandler(BaseHandler):

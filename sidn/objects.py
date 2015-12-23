@@ -115,3 +115,26 @@ class Host(object):
 
     def __str__(self):
         return self.name
+
+
+class TransferStatus(object):
+    """
+    EPP Transfer status response object
+    """
+
+    def __init__(self, name, trStatus, reID, reDate, acID, acDate, exDate=None):
+        # Some fields are renamed for easier referencing,
+        # while the constructor arguments map to the XML field names.
+        self.name = name
+        self.status = trStatus
+        self.request_id = reID
+        self.request_date = reDate
+        self.act_id = acID
+        self.act_date = acDate
+        self.expire_date = exDate
+
+    def __repr__(self):
+        return '<TransferStatus {0}: {1}>'.format(self.name, self.status)
+
+    def __str__(self):
+        return self.name
