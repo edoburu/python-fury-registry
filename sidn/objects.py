@@ -100,6 +100,87 @@ class Domain(object):
         return self._epp.contacts.get(self.tech)
 
 
+class DomainExt(object):
+    """
+    Domain extension information by SIDN
+    """
+
+@python_2_unicode_compatible
+class DSKey(object):
+    """
+    Delegation Signer key
+
+    SIDN doesn't use the ``dsData`` fields.
+    It only reads the ``keyData`` field.
+    """
+
+    def __init__(self, keyTag, alg, digestType, digest, keyData=()):
+        """
+        :type keyTag: int
+        :type alg: int
+        :param digestType: See https://tools.ietf.org/html/rfc4034#appendix-A.2
+        :type digestType: int
+        :type digest: str
+        :type keyData: Tuple[KeyData]
+        """
+        self.keyTag = keyTag  # unsignedShort
+        self.alg = alg  # unsignedByte
+        self.digestType = digestType  # unsignedByte
+        self.digest = digest  # hexBinary
+        self.keyData = keyData  # secDNS:keyDataType
+
+    def __repr__(self):
+        return '<DSKey {0}>'.format(self)
+
+    def __str__(self):
+        return self.digest
+
+
+@python_2_unicode_compatible
+class KeyData(object):
+    """
+    DNSSec client key data
+    """
+    PROTOCOL3 = 3
+
+    #: DSA/SHA-1
+    ALG_DSA = 3
+    #: Elliptic Curve
+    ALG_ECC = 4
+    #: RSA/SHA-1
+    ALG_SHA1 = 5
+    #: RSA/SHA-256
+    ALG_SHA256 = 8
+
+    #: Zone signing key
+    FLAG_ZSK = 256
+    #: Key signing key
+    FLAG_KSK = 257
+
+    def __init__(self, flags, protocol, alg, pubKey):
+        """
+        :param flags: Values 256 (ZSK) en 257 (KSK) are allowed.
+        :type flags: int
+        :param protocol: Fixed value 3, see
+        :type protocol: int
+        :param alg: See http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
+        :type alg: int
+        :param pubKey: Base64 encoded public key
+        :type pubKey: str
+        """
+        # https://tools.ietf.org/html/rfc4034#section-2.1.1
+        self.flags = flags  # unsignedShort
+        self.protocol = protocol  # unsignedByte
+        self.alg = alg  # unsignedByte
+        self.pubKey = pubKey  # secDNS:keyType
+
+    def __repr__(self):
+        return '<KeyData: {0}>'.format(self)
+
+    def __str__(self):
+        return " ".join(map(str, (self.flags, self.protocol, self.alg, self.pubKey)))
+
+
 @python_2_unicode_compatible
 class Host(object):
     """

@@ -13,6 +13,7 @@ NS = {
     'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
     'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
     'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
+    'secDNS': 'urn:ietf:params:xml:ns:secDNS-1.1',  # DNSSec; https://tools.ietf.org/html/rfc5910
     'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
 }
 
@@ -105,15 +106,45 @@ class DomainHandler(BaseHandler):
         :type contacts: dict
         :param ns: List of nameserver host names
         :type ns: list
+        :param dskeys: DNSSec keys (values not read by SIDN, only keyData field is used.)
+        :type dskeys: Tuple[sidn.objects.DSKey]
+        :param keyData: DNSSec keydata, as alternative for ``keys``, max 4 with SIDN.
+        :type keyData: Tuple[sidn.objects.KeyData]
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.1
-        xml = self._build_command('create', commands.domain.create_part(
+        # https://tools.ietf.org/html/rfc5731#section-3.2.1
+        xml = commands.domain.create_part(
             name=name,
             registrant=registrant,
             admin=contacts['admin'],  # Only supported options by DRS5
             tech=contacts['tech'],
             ns=ns
-        ))
+        )
+
+        if dskeys or keyData:
+            # SIDN only looks at the keydata fields.
+            # https://tools.ietf.org/html/rfc5910#section-5.2.1
+            extensions = (commands.secdns.create(dskeys=dskeys, keyData=keyData),)
+        else:
+            extensions = ()
+
+        xml = self._build_command('create', xml, extensions=extensions)
+        return self.epp.cmd(xml)
+
+    def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
+        """
+        Update the DNSSec keys in a domain
+        """
+        # SIDN only looks at the keydata fields.
+        # https://tools.ietf.org/html/rfc5910#section-5.2.5
+        secdns_ext = commands.secdns.update(
+            remove_all=remove_all,
+            remove_keydatas=remove_keydatas,
+            add_keydatas=add_keydatas,
+            urgent=urgent
+        )
+
+        xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(secdns_ext,))
         return self.epp.cmd(xml)
 
     def delete(self, name):
@@ -123,6 +154,22 @@ class DomainHandler(BaseHandler):
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.2
         # https://tools.ietf.org/html/rfc5731#section-3.2.2
         xml = self._build_command('delete', commands.domain.delete_part(name))
+        return self.epp.cmd(xml)
+
+    def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
+        """
+        Update the DNSSec keys in a domain
+        """
+        # SIDN only looks at the keydata fields.
+        # https://tools.ietf.org/html/rfc5910#section-5.2.5
+        secdns_ext = commands.secdns.update(
+            remove_all=remove_all,
+            remove_keydatas=remove_keydatas,
+            add_keydatas=add_keydatas,
+            urgent=urgent
+        )
+
+        xml = self._build_command('update', commands.domain.update_part(name), extensions=(secdns_ext,))
         return self.epp.cmd(xml)
 
     def cancel_delete(self, name):

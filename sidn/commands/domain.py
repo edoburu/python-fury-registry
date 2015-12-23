@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from sidn.utils import xml_format, escape
+from . import secdns
 
 
 def info_part(name):
