@@ -128,7 +128,7 @@ class DomainHandler(BaseHandler):
         else:
             extensions = ()
 
-        xml = self._build_command('create', xml, extensions=extensions)
+        xml = self._build_command('create', xml, command_extensions=(extensions,))
         return self.epp.cmd(xml)
 
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
