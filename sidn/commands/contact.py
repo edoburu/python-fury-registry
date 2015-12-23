@@ -117,7 +117,7 @@ def _contact_info(**data):
 def _contact_extension(command, **data):
     xml = """
       <extension>
-        <sidn-ext-epp:ext>
+        <sidn-ext-epp:ext xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
           <sidn-ext-epp:{command}>
             <sidn-ext-epp:contact>""".format(command=command)
 
