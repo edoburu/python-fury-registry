@@ -96,9 +96,17 @@ def _contact_info(**data):
             <contact:pc>{pc}</contact:pc>
             <contact:cc>{cc}</contact:cc>
           </contact:addr>
-        </contact:postalInfo>
-        <contact:voice>{voice}</contact:voice>
-        <contact:fax>{fax}</contact:fax>
+        </contact:postalInfo>"""
+
+    if data['voice']:
+        xml += """
+        <contact:voice>{voice}</contact:voice>"""
+
+    if data['fax']:
+        xml += """
+        <contact:fax>{fax}</contact:fax>"""
+
+    xml += """
         <contact:email>{email}</contact:email>
         <contact:authInfo>
           <contact:pw>2fooBAR</contact:pw>
