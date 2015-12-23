@@ -177,7 +177,7 @@ class DomainHandler(BaseHandler):
         Cancel deletion
         """
         # Extension by SIDN
-        xml = self._build_command(None, commands.domain.cancel_delete_parts(name))
+        xml = self._build_command(None, command_extensions=(commands.domain.cancel_delete_part(name),))
         return self.epp.cmd(xml)
 
     def transfer(self, name, token):

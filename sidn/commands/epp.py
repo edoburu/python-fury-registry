@@ -7,7 +7,7 @@ from sidn.utils import xml_format, escape
 # clTRID = client transaction id
 
 
-def build_command(command_name, command_xml, op=None, command_extensions=(), clTRID=None, epp_extensions=()):
+def build_command(command_name, command_xml=None, op=None, command_extensions=(), clTRID=None, epp_extensions=()):
     """
     Construct an EPP command from it's parts.
 
@@ -37,7 +37,7 @@ def build_command(command_name, command_xml, op=None, command_extensions=(), clT
           "    <clTRID>{clTRID}</clTRID>\n"
           "  </command>\n").format(
             command_name=command_name,
-            command_xml=command_xml,
+            command_xml=command_xml or '',
             ext=command_ext,
             op_attr=' op="{0}"'.format(escape(op)) if op else '',
             clTRID=clTRID or 'unused',

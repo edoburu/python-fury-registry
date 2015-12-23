@@ -79,7 +79,7 @@ def transfer_query_part(name):
     return xml_format(xml, name=name)
 
 
-def cancel_delete_parts(name, clTRID=None):
+def cancel_delete_part(name, clTRID=None):
     xml = """
       <sidn-ext-epp:command xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
         <sidn-ext-epp:domainCancelDelete>
@@ -89,7 +89,7 @@ def cancel_delete_parts(name, clTRID=None):
       </sidn-ext-epp:command>"""
 
     # No command, only extension bit.
-    return None, xml_format(xml, name=name, clTRID=clTRID or 'unused')
+    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
 
 
 def delete_part(name):
