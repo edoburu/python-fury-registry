@@ -260,7 +260,7 @@ class ContactHandler(BaseHandler):
         :param email: Email, optional.
         :returns: The contact handle.
         """
-        xml = self._build_command('create', commands.contact.create_part(
+        command, ext = commands.contact.create_parts(
             handle=id,  # Mandatory, but will be ignored
             name=name,
             org=organisation,  # department in DRS5
@@ -273,7 +273,8 @@ class ContactHandler(BaseHandler):
             email=email,
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
-        ))
+        )
+        xml = self._build_command('create', command, command_extensions=(ext,))
         res = self.epp.cmd(xml).resData
         return res.find('contact:creData/contact:id', NS).text
 
@@ -283,7 +284,7 @@ class ContactHandler(BaseHandler):
 
         Any omitted fields will be reset, so make sure to pass all data.
         """
-        xml = self._build_command('update', commands.contact.update_part(
+        command, ext = commands.contact.update_parts(
             handle=handle,
             name=name,
             org=organisation,  # department in DRS5
@@ -296,7 +297,8 @@ class ContactHandler(BaseHandler):
             email=email,
             legalForm=legalForm,
             legalFormRegNo=legalFormRegNo,
-        ))
+        )
+        xml = self._build_command('update', command, command_extensions=(ext,))
         self.epp.cmd(xml)
 
     def get(self, handle):

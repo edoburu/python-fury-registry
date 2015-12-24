@@ -22,7 +22,7 @@ def check_part(handle):
     return xml_format(xml, handle=handle)
 
 
-def create_part(handle, **data):
+def create_parts(handle, **data):
     xml = xml_format("""
       <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <contact:id>{handle}</contact:id>""", handle=handle)
@@ -32,11 +32,11 @@ def create_part(handle, **data):
     xml += """
       </contact:create>"""
 
-    xml += _contact_extension('create', **data)
-    return xml
+    ext_part = _contact_extension('create', **data)
+    return xml, ext_part
 
 
-def update_part(handle, **data):
+def update_parts(handle, **data):
     """
     Update an contact.
     """
@@ -50,8 +50,8 @@ def update_part(handle, **data):
         </contact:chg>
       </contact:update>"""
 
-    xml += _contact_extension('chg', **data)
-    return xml
+    ext = _contact_extension('chg', **data)
+    return xml, ext
 
 
 def _contact_info(**data):
@@ -116,7 +116,6 @@ def _contact_info(**data):
 
 def _contact_extension(command, **data):
     xml = """
-      <extension>
         <sidn-ext-epp:ext xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
           <sidn-ext-epp:{command}>
             <sidn-ext-epp:contact>""".format(command=command)
@@ -136,8 +135,7 @@ def _contact_extension(command, **data):
     xml += """
             </sidn-ext-epp:contact>
           </sidn-ext-epp:{command}>
-        </sidn-ext-epp:ext>
-      </extension>""".format(command=command)
+        </sidn-ext-epp:ext>""".format(command=command)
     return xml
 
 
