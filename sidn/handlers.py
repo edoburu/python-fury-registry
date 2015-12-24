@@ -156,22 +156,6 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('delete', commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
-    def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
-        """
-        Update the DNSSec keys in a domain
-        """
-        # SIDN only looks at the keydata fields.
-        # https://tools.ietf.org/html/rfc5910#section-5.2.5
-        secdns_ext = commands.secdns.update(
-            remove_all=remove_all,
-            remove_keydatas=remove_keydatas,
-            add_keydatas=add_keydatas,
-            urgent=urgent
-        )
-
-        xml = self._build_command('update', commands.domain.update_part(name), extensions=(secdns_ext,))
-        return self.epp.cmd(xml)
-
     def cancel_delete(self, name):
         """
         Cancel deletion
