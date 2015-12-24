@@ -128,7 +128,7 @@ class DomainHandler(BaseHandler):
         else:
             extensions = ()
 
-        xml = self._build_command('create', xml, command_extensions=(extensions,))
+        xml = self._build_command('create', xml, command_extensions=extensions)
         return self.epp.cmd(xml)
 
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
@@ -161,7 +161,7 @@ class DomainHandler(BaseHandler):
         Cancel deletion
         """
         # Extension by SIDN
-        xml = self._build_command(None, command_extensions=(commands.domain.cancel_delete_part(name),))
+        xml = self._build_command(None, None, command_extensions=(commands.domain.cancel_delete_part(name),))
         return self.epp.cmd(xml)
 
     def transfer(self, name, token):
