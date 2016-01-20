@@ -65,8 +65,7 @@ def transfer_req_part(name, token):
         <domain:authInfo>
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
-      </domain:transfer>
-    </transfer>"""
+      </domain:transfer>"""
     return xml_format(xml, name=name, pw=token)
 
 
