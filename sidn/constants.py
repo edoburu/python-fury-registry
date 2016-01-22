@@ -124,6 +124,8 @@ EPP_AUTH_FAILED_CLOSING = 2501
 # and closing inactive connections.
 EPP_AUTH_SESSION_LIMIT = 2502
 
-
 # The specified handle is not associated with this account.
 SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'
+
+# The street field can't be used for a PO-Box ("Postbus")
+SIDN_EXT_PO_NOT_ALLOWED = 'F0007'
