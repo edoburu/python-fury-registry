@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 EPP response codes.
 Copied from the abandoned https://pypi.python.org/pypi/EPP package
@@ -127,5 +128,19 @@ EPP_AUTH_SESSION_LIMIT = 2502
 # The specified handle is not associated with this account.
 SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'
 
-# The street field can't be used for a PO-Box ("Postbus")
+# The street field can't be used for a PO-Box. ("Postbus")
 SIDN_EXT_PO_NOT_ALLOWED = 'F0007'
+
+# A domain name cannot contain more than one dot.
+SIDN_EXT_DOMAIN_SINGLE_DOT = 'F0017'
+
+# A domain name must end with ‘.nl‘.
+SIDN_EXT_EXTENSION_DOES_NOT_EXIST = 'F0018'
+
+# The specified domain name is unknown.
+SIDN_EXT_DOMAIN_DOES_NOT_EXIST = 'T0001'
+
+SIDN_EXT_REGISTRAR_DOES_NOT_EXIST = 'T0003'
+
+# The specified name server is unknown.
+SIDN_EXT_NS_DOES_NOT_EXIST = 'T0008'
