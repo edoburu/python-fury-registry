@@ -181,6 +181,24 @@ class DomainHandler(BaseHandler):
         res = self.epp.cmd(xml)
         return self._parse_transfer_status(res.resData)
 
+    def approve_transfer(self, name):
+        """
+        Query the status of current domain transfer.
+        """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
+        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
+        res = self.epp.cmd(xml)
+        return self._parse_transfer_status(res.resData)
+
+    def reject_transfer(self, name):
+        """
+        Query the status of current domain transfer.
+        """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
+        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')
+        res = self.epp.cmd(xml)
+        return self._parse_transfer_status(res.resData)
+
     @staticmethod
     def _parse_transfer_status(resData):
         trnData = resData.find('domain:trnData', NS)
