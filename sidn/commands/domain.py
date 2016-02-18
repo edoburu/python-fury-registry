@@ -21,41 +21,111 @@ def check_part(name):
 
 
 def create_part(name, registrant, admin, tech, ns, pw='unused'):
-    xml = """
+    xml = xml_format("""
       <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>{name}</domain:name>
-        <domain:ns>"""
+        <domain:name>{name}</domain:name>""", name=name)
 
-    for host in ns:
-        xml += """
-          <domain:hostObj>{ns}</domain:hostObj>""".format(ns=escape(host))
+    xml += _ns_list(ns)
 
-    xml += """
-        </domain:ns>
+    xml += xml_format("""
         <domain:registrant>{registrant}</domain:registrant>
         <domain:contact type="admin">{admin}</domain:contact>
         <domain:contact type="tech">{tech}</domain:contact>
         <domain:authInfo>
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
-      </domain:create>"""
+      </domain:create>""", registrant=registrant, admin=admin, tech=tech, pw=pw)
 
-    return xml_format(
-        xml,
-        name=name,
-        registrant=registrant,
-        admin=admin,
-        tech=tech,
-        pw=pw,
-    )
+    return xml
 
 
-def update_part(name):
-    xml = """
+def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), remove_techs=(), remove_statuses=(), add_ns=(), add_admins=(), add_techs=(), add_statuses=()):
+    xml = xml_format("""
       <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>{name}</domain:name>
+        <domain:name>{name}</domain:name>""", name=name)
+
+    if add_ns or add_admins or add_techs or add_statuses:
+        xml += """
+        <domain:add>"""
+
+        if add_ns:
+            xml += _ns_list(add_ns)
+
+        for admin in add_admins:
+            xml += xml_format("""
+          <domain:contact type="admin">{admin}</domain:contact>""", admin=admin)
+
+        for tech in add_techs:
+            xml += xml_format("""
+          <domain:contact type="tech">{tech}</domain:contact>""", tech=tech)
+
+        for status in add_statuses:
+            xml += xml_format("""
+          <domain:status>{status}</domain:status>""", status=status)
+
+        xml += """
+        </domain:add>"""
+
+    if remove_ns or remove_admins or remove_techs or remove_statuses:
+        xml += """
+        <domain:rem>"""
+
+        if add_ns:
+            xml += _ns_list(add_ns)
+
+        for admin in remove_admins:
+            xml += xml_format("""
+          <domain:contact type="admin">{admin}</domain:contact>""", admin=admin)
+
+        for tech in remove_techs:
+            xml += xml_format("""
+          <domain:contact type="tech">{tech}</domain:contact>""", tech=tech)
+
+        for status in remove_statuses:
+            xml += xml_format("""
+          <domain:status>{status}</domain:status>""", status=status)
+
+        xml += """
+        </domain:rem>"""
+
+    if registrant is not None or pw is not None:
+        xml += """
+        <domain:chg>"""
+
+        if registrant is not None:
+            xml += xml_format("""
+          <domain:registrant>{registrant}</domain:registrant>""", registrant=registrant)
+
+        if pw is not None:
+            xml += xml_format("""
+          <domain:authInfo>
+            <domain:pw>{pw}</domain:pw>
+          </domain:authInfo>""", pw=pw)
+
+        xml += """
+        </domain:chg>"""
+
+    xml += """
       </domain:update>"""
-    return xml_format(xml, name=name)
+    return xml
+
+
+def _ns_list(ns):
+    """
+    Produce a list of nameservers.
+    """
+    xml = ''
+    xml += """
+          <domain:ns>"""
+
+    for host in ns:
+        xml += """
+            <domain:hostObj>{ns}</domain:hostObj>""".format(ns=escape(host))
+
+    xml += """
+          </domain:ns>"""
+
+    return xml
 
 
 def transfer_req_part(name, token):

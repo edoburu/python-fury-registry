@@ -131,6 +131,40 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('create', xml, command_extensions=extensions)
         return self.epp.cmd(xml)
 
+    def update(self, name, registrant=None, remove_admins=(), remove_techs=(), remove_statuses=(), remove_ns=(), add_admins=(), add_techs=(), add_statuses=(), add_ns=()):
+        """
+        Update the domain.
+
+        :param name: The domain name
+        :param registrant: New registrant handle, if given.
+        :param remove_admins: iterable of admin handles to remove.
+        :param remove_techs: iterable of tech handles to remove.
+        :param remove_ns: iterable of nameservers to remove.
+        :param add_admins: iterable of admin handles to add.
+        :param add_techs: iterable of tech handles to add.
+        :param add_ns: iterable of nameservers to add.
+
+        Note that DRS5 only allows one admin handle;
+        after the removal/adding of handles there should be 1 handle again.
+        You can use the convenience methods on the :class:`~sidn.objects.Domain` class
+        to remove existing handles, and assign new ones.
+        """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.3.5
+        # https://tools.ietf.org/html/rfc5731#section-3.2.5
+        xml = self._build_command('update', commands.domain.update_part(
+            name=name,
+            registrant=registrant,
+            remove_ns=remove_ns,
+            remove_admins=remove_admins,
+            remove_techs=remove_techs,
+            remove_statuses=remove_statuses,
+            add_ns=add_ns,
+            add_admins=add_admins,
+            add_techs=add_techs,
+            add_statuses=add_statuses,
+        ))
+        return self.epp.cmd(xml)
+
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
         """
         Update the DNSSec keys in a domain

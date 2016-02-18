@@ -99,6 +99,50 @@ class Domain(object):
     def tech_contact(self):
         return self._epp.contacts.get(self.tech)
 
+    def set_registrant(self, new_handle):
+        # This could also be done by property assignment,
+        # but instead it's a bit more explicit that something big happens due to an assignment.
+        if self.registrant == new_handle:
+            return None
+        else:
+            return self._epp.domains.update(registrant=new_handle)
+
+    def set_admin(self, new_handle):
+        """
+        Replace the admin handle for the domain (DRS5 only allows one admin handle)
+        """
+        if new_handle == self.admin:
+            return None
+        else:
+            response = self._epp.domains.update(remove_techs=(self.admin,), add_techs=(new_handle,))
+            self.admin = new_handle
+            return response
+
+    def set_tech(self, new_handle):
+        """
+        Replace the tech handle for the domain.
+        """
+        if new_handle == self.tech:
+            return None
+        else:
+            response = self._epp.domains.update(remove_techs=(self.tech,), add_techs=(new_handle,))
+            self.tech = new_handle
+            return response
+
+    def set_nameservers(self, ns):
+        """
+        Assign new nameservers to the domain
+        """
+        current = set(self.ns)
+        new = set(ns)
+        response = self._epp.domains.update(
+            name=self.name,
+            remove_ns=sorted(current - new),
+            add_ns=sorted(new - current)
+        )
+        self.ns = ns
+        return response
+
 
 class DomainExt(object):
     """
