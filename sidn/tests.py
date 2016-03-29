@@ -1,13 +1,23 @@
 from unittest import TestCase
 
-from sidn.client import EPP, EPPError
+from datetime import datetime
+from dateutil.tz import tzutc
+
+from sidn.client import EPP, EPPError, EPPPollResponse
+from sidn.constants import EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
 from sidn.handlers import ContactHandler, DomainHandler
+from sidn.response import get_node_text, register_namespaces
 
 
 class ParserTests(TestCase):
     """
     Simple test case for parsers
     """
+
+    @classmethod
+    def setUpClass(cls):
+        super(ParserTests, cls).setUpClass()
+        register_namespaces()
 
     def test_parse_contact(self):
         """
@@ -181,3 +191,67 @@ class ParserTests(TestCase):
             self.assertEqual(e.ext_message, 'The specified handle is not associated with this account.')
         else:
             self.assertTrue(False, "EPPError not raised")
+
+    def test_parse_poll(self):
+        """
+        Test parsing for poll responses
+        """
+        raw_response = '''
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+      <response>
+        <result code="1301">
+          <msg>Command completed successfully; ack to dequeue</msg>
+        </result>
+        <msgQ count="5" id="12345">
+          <qDate>2000-06-08T22:00:00.0Z</qDate>
+          <msg>Transfer requested.</msg>
+        </msgQ>
+        <resData>
+          <obj:trnData xmlns:obj="urn:ietf:params:xml:ns:obj-1.0">
+            <obj:name>example.com</obj:name>
+            <obj:trStatus>pending</obj:trStatus>
+            <obj:reID>ClientX</obj:reID>
+            <obj:reDate>2000-06-08T22:00:00.0Z</obj:reDate>
+            <obj:acID>ClientY</obj:acID>
+            <obj:acDate>2000-06-13T22:00:00.0Z</obj:acDate>
+            <obj:exDate>2002-09-08T22:00:00.0Z</obj:exDate>
+          </obj:trnData>
+        </resData>
+        <trID>
+          <clTRID>ABC-12345</clTRID>
+          <svTRID>54321-XYZ</svTRID>
+        </trID>
+      </response>
+    </epp>'''
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)
+        self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
+        self.assertEqual(response.message_count, 5)
+        self.assertEqual(response.message_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=tzutc()))
+        self.assertEqual(response.message, 'Transfer requested.')
+        self.assertEqual(response.result_msg, 'Command completed successfully; ack to dequeue')
+        self.assertEqual(get_node_text(response.resData, 'obj:trnData/obj:name'), 'example.com')
+        self.assertEqual(response.clTRID, 'ABC-12345')
+        self.assertEqual(response.svTRID, '54321-XYZ')
+
+    def test_parse_empty_poll(self):
+        """
+        Handle nodes without msgQ element.
+        """
+        raw_response = '''
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+        <response>
+            <result code="1300">
+                <msg>There are no messages in the queue.</msg>
+            </result>
+            <trID>
+                <clTRID>unused</clTRID>
+                <svTRID>5A220D87-F00D-A8B3-BE74-076FE7B50149</svTRID>
+            </trID>
+        </response>
+    </epp>'''
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)
+        self.assertEqual(response.result_code, EPP_QUEUE_EMPTY)
+        self.assertEqual(response.message_count, 0)
+        self.assertEqual(response.message_date, None)
+        self.assertEqual(response.message, None)
+        self.assertEqual(response.result_msg, 'There are no messages in the queue.')

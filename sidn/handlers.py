@@ -2,20 +2,9 @@
 All specialized commands are performed by these handlers.
 """
 from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
+from sidn.response import NS, get_node_text, get_node_date
 from . import commands
 from . import objects
-import dateutil.parser
-
-NS = {
-    # Possible namespaces in the response
-    # See greeting message for all possible supported extensions
-    'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
-    'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
-    'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
-    'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
-    'secDNS': 'urn:ietf:params:xml:ns:secDNS-1.1',  # DNSSec; https://tools.ietf.org/html/rfc5910
-    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
-}
 
 
 class BaseHandler(object):
@@ -65,19 +54,19 @@ class DomainHandler(BaseHandler):
             ns.append(hostobj.text)
 
         return objects.Domain(
-            name=_get_xml_text(infData, 'domain:name'),
-            roid=_get_xml_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
+            name=get_node_text(infData, 'domain:name'),
+            roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
             status=infData.find('domain:status', NS).attrib['s'],
-            registrant=_get_xml_text(infData, 'domain:registrant'),
-            admin=_get_xml_text(infData, "domain:contact[@type='admin']"),
-            tech=_get_xml_text(infData, "domain:contact[@type='tech']"),
+            registrant=get_node_text(infData, 'domain:registrant'),
+            admin=get_node_text(infData, "domain:contact[@type='admin']"),
+            tech=get_node_text(infData, "domain:contact[@type='tech']"),
             ns=ns,
-            clID=_get_xml_text(infData, 'domain:clID'),  # current registrar
-            crID=_get_xml_text(infData, 'domain:crID'),  # initial registrar
-            crDate=_get_xml_date(infData, 'domain:crDate'),
-            upDate=_get_xml_date(infData, 'domain:upDate'),
-            exDate=_get_xml_date(infData, 'domain:exDate'),
-            pw=_get_xml_text(authInfo, 'domain:pw'),
+            clID=get_node_text(infData, 'domain:clID'),  # current registrar
+            crID=get_node_text(infData, 'domain:crID'),  # initial registrar
+            crDate=get_node_date(infData, 'domain:crDate'),
+            upDate=get_node_date(infData, 'domain:upDate'),
+            exDate=get_node_date(infData, 'domain:exDate'),
+            pw=get_node_text(authInfo, 'domain:pw'),
         )
 
     def is_available(self, domain_name):
@@ -238,13 +227,13 @@ class DomainHandler(BaseHandler):
         trnData = resData.find('domain:trnData', NS)
 
         return objects.TransferStatus(
-            name=_get_xml_text(trnData, 'domain:name'),
-            trStatus=_get_xml_text(trnData, 'domain:trStatus'),
-            reID=_get_xml_text(trnData, 'domain:reID'),  # requested client
-            reDate=_get_xml_date(trnData, 'domain:reDate'),
-            acID=_get_xml_text(trnData, 'domain:acID'),  # acting client
-            acDate=_get_xml_date(trnData, 'domain:acDate'),
-            exDate=_get_xml_date(trnData, 'domain:exDate'),
+            name=get_node_text(trnData, 'domain:name'),
+            trStatus=get_node_text(trnData, 'domain:trStatus'),
+            reID=get_node_text(trnData, 'domain:reID'),  # requested client
+            reDate=get_node_date(trnData, 'domain:reDate'),
+            acID=get_node_text(trnData, 'domain:acID'),  # acting client
+            acDate=get_node_date(trnData, 'domain:acDate'),
+            exDate=get_node_date(trnData, 'domain:exDate'),
         )
 
 
@@ -368,20 +357,20 @@ class ContactHandler(BaseHandler):
         addr = loc.find('contact:addr', NS)
 
         return objects.Contact(
-            id=_get_xml_text(infData, 'contact:id'),
-            roid=_get_xml_text(infData, 'contact:roid'),
+            id=get_node_text(infData, 'contact:id'),
+            roid=get_node_text(infData, 'contact:roid'),
             status=infData.find('contact:status', NS).attrib['s'],
-            name=_get_xml_text(loc, 'contact:name'),
-            org=_get_xml_text(loc, 'contact:org'),
-            street= _get_xml_text(addr, 'contact:street'),
-            city=_get_xml_text(addr, 'contact:city'),
-            pc=_get_xml_text(addr, 'contact:pc'),
-            cc=_get_xml_text(addr, 'contact:cc'),
-            voice=_get_xml_text(infData, 'contact:voice'),
-            fax=_get_xml_text(infData, 'contact:fax'),
-            email=_get_xml_text(infData, 'contact:email'),
-            crDate=_get_xml_date(infData, 'contact:crDate'),
-            upDate=_get_xml_date(infData, 'contact:upDate'),
+            name=get_node_text(loc, 'contact:name'),
+            org=get_node_text(loc, 'contact:org'),
+            street= get_node_text(addr, 'contact:street'),
+            city=get_node_text(addr, 'contact:city'),
+            pc=get_node_text(addr, 'contact:pc'),
+            cc=get_node_text(addr, 'contact:cc'),
+            voice=get_node_text(infData, 'contact:voice'),
+            fax=get_node_text(infData, 'contact:fax'),
+            email=get_node_text(infData, 'contact:email'),
+            crDate=get_node_date(infData, 'contact:crDate'),
+            upDate=get_node_date(infData, 'contact:upDate'),
         )
 
     def delete(self, name):
@@ -407,28 +396,3 @@ class HostHandler(BaseHandler):
             name=nameserver,
             addr=resdata.find('host:addr', NS).text
         )
-
-
-
-def _get_xml_text(node, name):
-    """
-    :type node: xml.etree.ElementTree.Element
-    """
-    if node is None:
-        return None
-    # Handling of optional fields
-    node = node.find(name, NS)
-    return node.text if node is not None else None
-
-
-def _get_xml_date(node, name):
-    text = _get_xml_text(node, name)
-    return _parse_iso_date(text)
-
-
-def _parse_iso_date(date):
-    if date is None:
-        return None
-    else:
-        # Dates like: 1995-12-10T23:00:00.000Z
-        return dateutil.parser.parse(date)

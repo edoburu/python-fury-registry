@@ -6,10 +6,26 @@ from xml.etree import ElementTree
 from sidn.constants import EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK
 from . import commands
 from . import handlers
-from .handlers import NS
+from sidn.response import NS, EPPResponse, EPPPollResponse
 from sidn.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 logger = logging.getLogger(__name__)
+
+
+class EPPError(RuntimeError):
+    """
+    Error response returned by the server.
+    """
+    def __init__(self, code, message, ext_code=None, ext_message=None):
+        if ext_code:
+            super(EPPError, self).__init__(u"{0} (code {1}/{2})".format(ext_message, code, ext_code))
+        else:
+            super(EPPError, self).__init__(u"{0} (code {1})".format(message, code))
+
+        self.code = code
+        self.message = message
+        self.ext_code = ext_code
+        self.ext_message = ext_message
 
 
 class EPP(object):
@@ -51,11 +67,11 @@ class EPP(object):
             pass  # Will occur when not properly connected
         self.socket.close()
 
-    def cmd(self, xml, silent=False):
+    def cmd(self, xml, silent=False, response_class=EPPResponse):
         """
         Execute a raw request on the server.
 
-        :rtype: EPPResponse
+        :rtype: sidn.response.EPPResponse
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("SIDN request: %s", mask_sensitive_fields(xml))
@@ -67,7 +83,7 @@ class EPP(object):
             raise IOError("Server disconnected")
 
         # Convert to response objects
-        response = self._parse_response(raw_response)
+        response = self._parse_response(raw_response, response_class=response_class)
         code = response.result_code
         if not silent or code not in (EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK):
             logger.info("- [%d] %s", code, response.result_msg)
@@ -75,7 +91,7 @@ class EPP(object):
         return response
 
     @staticmethod
-    def _parse_response(raw_response):
+    def _parse_response(raw_response, response_class=EPPResponse):
         # Standard wrapper:
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         #   <response>
@@ -102,7 +118,7 @@ class EPP(object):
                 ext_code = ext_message = None
 
             raise EPPError(result_code, msg.text, ext_code, ext_message)
-        return EPPResponse(response)
+        return response_class(response)
 
     def _read(self):
         # The first 4 bytes indicate the size.
@@ -176,6 +192,7 @@ class EPP(object):
 
         :param ack: Set to true to acknowledge the message, and remove it from the server.
         :param transaction_id:
+        :rtype: sidn.response.EPPPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         if ack:
@@ -183,7 +200,7 @@ class EPP(object):
         else:
             op = 'req'  # Get first message
         cmd = commands.epp.poll(op=op, transaction_id=transaction_id)
-        return self.cmd(cmd)
+        return self.cmd(cmd, response_class=EPPPollResponse)
 
     @property
     def domains(self):
@@ -207,55 +224,3 @@ class EPP(object):
         :rtype: sidn.handlers.HostHandler
         """
         return handlers.HostHandler(self)
-
-
-class EPPResponse(object):
-    """
-    Wrapper object for EPP responses
-    """
-
-    def __init__(self, response):
-        """
-        :type response: xml.etree.ElementTree.Element
-        """
-        self.response = response
-
-    @property
-    def result(self):
-        return self.response.find('epp:result', NS)
-
-    @property
-    def result_code(self):
-        return int(self.result.attrib['code'])
-
-    @property
-    def result_msg(self):
-        return self.result.find('epp:msg', NS).text
-
-    @property
-    def resData(self):
-        """
-        Return the resdata node from the response
-
-        :rtype: xml.etree.ElementTree.Element
-        """
-        resData = self.response.find('epp:resData', NS)
-        if resData is None:
-            raise AttributeError("There is no resData node in this response")
-        return resData
-
-
-class EPPError(RuntimeError):
-    """
-    Error response returned by the server.
-    """
-    def __init__(self, code, message, ext_code=None, ext_message=None):
-        if ext_code:
-            super(EPPError, self).__init__(u"{0} (code {1}/{2})".format(ext_message, code, ext_code))
-        else:
-            super(EPPError, self).__init__(u"{0} (code {1})".format(message, code))
-
-        self.code = code
-        self.message = message
-        self.ext_code = ext_code
-        self.ext_message = ext_message
