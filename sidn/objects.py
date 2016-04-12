@@ -143,6 +143,12 @@ class Domain(object):
         self.ns = ns
         return response
 
+    def renew(self, period, period_unit='y'):
+        """
+        Renew the registration period of the domain.
+        """
+        return self._epp.domains.renew(expiration_date=self.expire_date, period=period, period_unit=period_unit)
+
 
 class DomainExt(object):
     """

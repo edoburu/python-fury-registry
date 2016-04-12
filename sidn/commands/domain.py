@@ -20,6 +20,17 @@ def check_part(name):
     return xml_format(xml, name=name)
 
 
+def renew_part(name, curExpDate, period, unit):
+    # Note that the <domain:name> may be repeated in EPP to check multiple objects at once.
+    xml = """
+      <domain:renew xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>{name}</domain:name>
+        <domain:curExpDate>{curExpDate}</domain:curExpDate>
+        <domain:period unit="{unit}">{period}</domain:period>
+      </domain:check>"""
+    return xml_format(xml, name=name, curExpDate=curExpDate, period=period, unit=unit)
+
+
 def create_part(name, registrant, admin, tech, ns, pw='unused'):
     xml = xml_format("""
       <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">

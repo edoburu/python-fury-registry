@@ -187,6 +187,13 @@ class DomainHandler(BaseHandler):
         xml = self._build_command(None, None, command_extensions=(commands.domain.cancel_delete_part(name),))
         return self.epp.cmd(xml)
 
+    def renew(self, name, expiration_date, period, period_unit='y'):
+        """
+        Renew the registration period of the domain.
+        """
+        xml = self._build_command('renew', commands.domain.renew_part(name, expiration_date, period, period_unit))
+        return self.epp.cmd(xml)
+
     def transfer(self, name, token):
         """
         Initiate the domain transfer.
