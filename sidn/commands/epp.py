@@ -25,7 +25,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
     else:
         # Allow parts to pass an command + extension via a tuple
         command_ext = ''
-        command_extensions = filter(None, command_extensions)
+        command_extensions = filter(None, command_extensions) if command_extensions else None
         if command_extensions:
             command_ext += (u"    <extension>{0}\n"
                             u"    </extension>\n").format("\n".join(command_extensions))
