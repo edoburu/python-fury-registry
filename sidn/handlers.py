@@ -396,10 +396,31 @@ class HostHandler(BaseHandler):
     Currently those commands are not implemented, it's assumed the values are configured manually in DRS5.
     """
 
+    def create(self, name, ipv4_addresses=(), ipv6_addresses=()):
+        xml = commands.host.create_part(
+            name=name,
+            ipv4=ipv4_addresses,
+            ipv6=ipv6_addresses,
+        )
+
+        xml = self._build_command('create', xml)
+        return self.epp.cmd(xml)
+
     def get(self, nameserver):
-        xml = commands.host.info_part.format(name=nameserver)
+        xml = commands.host.info_part(name=nameserver)
         resdata = self.epp.cmd(xml).resData
+        # TODO: complete this.
         return objects.Host(
             name=nameserver,
             addr=resdata.find('host:addr', NS).text
         )
+
+    def delete(self, name):
+        """
+        Delete a contact
+        """
+        xml = self._build_command('delete', commands.host.delete_part(name))
+        return self.epp.cmd(xml)
+
+    # TODO: update()
+    # TODO: check()
