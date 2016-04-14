@@ -120,7 +120,11 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('create', xml, command_extensions=extensions)
         return self.epp.cmd(xml)
 
-    def update(self, name, registrant=None, remove_admins=(), remove_techs=(), remove_statuses=(), remove_ns=(), add_admins=(), add_techs=(), add_statuses=(), add_ns=()):
+    def update(self, name, registrant=None,
+               remove_admins=(), remove_techs=(), remove_statuses=(), remove_ns=(),
+               remove_all_keys=False, remove_keydatas=(),
+               add_admins=(), add_techs=(), add_statuses=(), add_ns=(),
+               add_keydatas=(), dnssec_urgent=False):
         """
         Update the domain.
 
@@ -138,6 +142,15 @@ class DomainHandler(BaseHandler):
         You can use the convenience methods on the :class:`~sidn.objects.Domain` class
         to remove existing handles, and assign new ones.
         """
+        command_extensions = ()
+        if remove_all_keys or remove_keydatas or add_keydatas or dnssec_urgent:
+            command_extensions = (commands.secdns.update(
+                remove_all=remove_all_keys,
+                remove_keydatas=remove_keydatas,
+                add_keydatas=add_keydatas,
+                urgent=dnssec_urgent
+            ),)
+
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.5
         # https://tools.ietf.org/html/rfc5731#section-3.2.5
         xml = self._build_command('update', commands.domain.update_part(
@@ -151,7 +164,7 @@ class DomainHandler(BaseHandler):
             add_admins=add_admins,
             add_techs=add_techs,
             add_statuses=add_statuses,
-        ))
+        ), command_extensions=command_extensions)
         return self.epp.cmd(xml)
 
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):

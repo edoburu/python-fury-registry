@@ -99,7 +99,33 @@ class Domain(object):
     def tech_contact(self):
         return self._epp.contacts.get(self.tech)
 
-    def set_registrant(self, new_handle):
+    def update(self, registrant=None, admin=None, tech=None, ns=None):
+        """
+        Update all domain settings at once.
+        # TODO: Add dnssec fields here as well.
+        """
+        kwargs = {}
+
+        if registrant:
+            kwargs['registrant'] = registrant
+
+        if admin and admin != self.admin:
+            kwargs['remove_admin'] = self.admin
+            kwargs['add_admin'] = admin
+
+        if tech and tech != self.tech:
+            kwargs['remove_tech'] = self.tech
+            kwargs['add_tech'] = tech
+
+        if ns and set(ns) != set(self.ns):
+            current = set(self.ns)
+            new = set(ns)
+            kwargs['remove_ns'] = sorted(current - new)
+            kwargs['add_ns'] = sorted(new - current)
+
+        return self._epp.domains.update(self.name, **kwargs)
+
+    def update_registrant(self, new_handle):
         # This could also be done by property assignment,
         # but instead it's a bit more explicit that something big happens due to an assignment.
         if self.registrant == new_handle:
@@ -107,7 +133,7 @@ class Domain(object):
         else:
             return self._epp.domains.update(registrant=new_handle)
 
-    def set_admin(self, new_handle):
+    def update_admin(self, new_handle):
         """
         Replace the admin handle for the domain (DRS5 only allows one admin handle)
         """
@@ -118,7 +144,7 @@ class Domain(object):
             self.admin = new_handle
             return response
 
-    def set_tech(self, new_handle):
+    def update_tech(self, new_handle):
         """
         Replace the tech handle for the domain.
         """
@@ -129,7 +155,7 @@ class Domain(object):
             self.tech = new_handle
             return response
 
-    def set_nameservers(self, ns):
+    def update_nameservers(self, ns):
         """
         Assign new nameservers to the domain
         """
