@@ -69,7 +69,7 @@ class DomainHandler(BaseHandler):
             pw=get_node_text(authInfo, 'domain:pw'),
         )
 
-    def is_available(self, domain_name):
+    def check(self, domain_name):
         """
         Check if a domain is available.
         """
@@ -250,7 +250,7 @@ class ContactHandler(BaseHandler):
     Actions for contacts
     """
 
-    def is_available(self, handle):
+    def check(self, handle):
         """
         Check if a given handle is available.
         """
