@@ -40,6 +40,7 @@ class EPP(object):
 
         :raises socket.error: In case the connection failed.
         """
+        self.ssl = None
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -61,10 +62,11 @@ class EPP(object):
     def __del__(self):
         # Auto logout on instance destruction.
         # This is important, to avoid overflowing the max allowed sessions.
-        try:
-            self.logout()
-        except EPPError:
-            pass  # Will occur when not properly connected
+        if self.ssl is not None:
+            try:
+                self.logout()
+            except EPPError:
+                pass  # Will occur when not properly connected
         self.socket.close()
 
     def cmd(self, xml, silent=False, response_class=EPPResponse):
