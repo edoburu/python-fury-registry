@@ -91,6 +91,7 @@ def _contact_info(**data):
         xml += """
             <contact:street>{0}</contact:street>""".format(escape(item))
 
+    data['pc'] = data['pc'].replace(' ', '')
     xml += """
             <contact:city>{city}</contact:city>
             <contact:pc>{pc}</contact:pc>
