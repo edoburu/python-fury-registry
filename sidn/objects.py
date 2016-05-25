@@ -172,6 +172,10 @@ class Domain(object):
     def renew(self, period, period_unit='y'):
         """
         Renew the registration period of the domain.
+
+        :param period: integer, the number of months or years depending on the ``period_unit``.
+        :type period: int
+        :param period_unit: ``y`` (years) or ``m`` (months)
         """
         return self._epp.domains.renew(expiration_date=self.expire_date, period=period, period_unit=period_unit)
 
