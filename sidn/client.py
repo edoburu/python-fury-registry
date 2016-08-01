@@ -67,7 +67,11 @@ class EPP(object):
                 self.logout()
             except EPPError:
                 pass  # Will occur when not properly connected
-        self.socket.close()
+
+        try:
+            self.socket.close()
+        except IOError:
+            pass  # Server disconnected
 
     def cmd(self, xml, silent=False, response_class=EPPResponse):
         """
@@ -179,7 +183,7 @@ class EPP(object):
 
     def logout(self):
         """
-        Perform the logout, happens automatically on ``__dell__`.
+        Perform the logout, happens automatically on ``__del__`.
         """
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
