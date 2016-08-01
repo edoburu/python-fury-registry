@@ -300,8 +300,28 @@ class TransferStatus(object):
     """
     EPP Transfer status response object
     """
+    CLIENT_APPROVED = "clientApproved"
+    CLIENT_CANCELLED = "clientCancelled"
+    CLIENT_REJECTED = "clientRejected"
+    PENDING = "pending"
+    SERVER_APPROVED = "serverApproved"  # Transfer OK
+    SERVER_CANCELLED = "serverCancelled'"
 
     def __init__(self, name, trStatus, reID, reDate, acID, acDate, exDate=None):
+        """
+        :param name: the fully qualified name of the domain object.
+        :param trStatus: the state of the most recent transfer request.
+        :param reID: the identifier of the client that requested the object transfer.
+        :param reDate: date and time that the transfer was requested.
+        :param acID: the identifier of the client that SHOULD act upon a PENDING transfer request.
+                     For all other status types, the value identifies the client that took the indicated action.
+        :param acDate: the date and time of a required or completed response.
+                       For a PENDING request, the value identifies the date and time by which a response is required
+                       before an automated response action will be taken by the server.
+                       For all other status types, the value identifies the date and time when the request was completed.
+        :param exDate: optional, the end of the domain object's validity period if the transfer command
+                       caused or causes a change in the validity period.
+        """
         # Some fields are renamed for easier referencing,
         # while the constructor arguments map to the XML field names.
         self.name = name
@@ -317,3 +337,19 @@ class TransferStatus(object):
 
     def __str__(self):
         return self.name
+
+    @property
+    def is_approved(self):
+        return self.status in (self.CLIENT_APPROVED, self.SERVER_APPROVED)
+
+    @property
+    def is_cancelled(self):
+        return self.status in (self.CLIENT_CANCELLED, self.SERVER_CANCELLED)
+
+    @property
+    def is_pending(self):
+        return self.status == self.PENDING
+
+    @property
+    def is_rejected(self):
+        return self.status == self.CLIENT_REJECTED
