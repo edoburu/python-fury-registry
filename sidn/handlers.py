@@ -224,6 +224,9 @@ class DomainHandler(BaseHandler):
     def get_transfer_status(self, name):
         """
         Query the status of current domain transfer.
+
+        When the domain is not in transfer, an :class:`~sidn.client.EPPError` will be raised,
+        with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
