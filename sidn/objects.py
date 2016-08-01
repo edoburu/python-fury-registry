@@ -47,6 +47,24 @@ class Domain(object):
     """
     Domain data object
     """
+    # Status values
+    CLIENT_DELETE_PROHIBITED = "clientDeleteProhibited"
+    CLIENT_HOLD = "clientHold"
+    CLIENT_RENEW_PROHIBITED = "clientRenewProhibited"
+    CLIENT_TRANSFER_PROHIBITED = "clientTransferProhibited"
+    CLIENT_UPDATE_PROHIBITED = "clientUpdateProhibited"
+    INACTIVE = "inactive"
+    OK = "ok"
+    PENDING_CREATE = "pendingCreate"
+    PENDING_DELETE = "pendingDelete"
+    PENDING_RENEW = "pendingRenew"
+    PENDING_TRANSFER = "pendingTransfer"
+    PENDING_UPDATE = "pendingUpdate"
+    SERVER_DELETE_PROHIBITED = "serverDeleteProhibited"
+    SERVER_HOLD = "serverHold"
+    SERVER_RENEW_PROHIBITED = "serverRenewProhibited"
+    SERVER_TRANSFER_PROHIBITED = "serverTransferProhibited"
+    SERVER_UPDATE_PROHIBITED = "serverUpdateProhibited"
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
