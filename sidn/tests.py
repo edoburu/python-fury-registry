@@ -6,7 +6,7 @@ from dateutil.tz import tzutc
 from sidn.client import EPP, EPPError, EPPPollResponse
 from sidn.constants import EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
 from sidn.handlers import ContactHandler, DomainHandler
-from sidn.response import get_node_text, register_namespaces
+from sidn.response import get_node_text, register_namespaces, NS
 
 
 class ParserTests(TestCase):
@@ -223,7 +223,7 @@ class ParserTests(TestCase):
         </trID>
       </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.message_count, 5)
         self.assertEqual(response.message_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=tzutc()))
@@ -232,6 +232,57 @@ class ParserTests(TestCase):
         self.assertEqual(get_node_text(response.resData, 'obj:trnData/obj:name'), 'example.com')
         self.assertEqual(response.clTRID, 'ABC-12345')
         self.assertEqual(response.svTRID, '54321-XYZ')
+
+    def test_parse_poll_ext(self):
+        raw_response = '''<?xml version="1.0" encoding="utf-8"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0"
+        xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <response>
+            <result code="1301">
+                <msg>The message has been picked up. Please confirm receipt to remove
+                    the message from the queue.</msg>
+            </result>
+            <msgQ count="1" id="100206">
+                <qDate>2010-02-11T09:18:46.000Z</qDate>
+                <msg>1014 Verhuizen domeinnaam for-transfer-03.nl in behandeling
+                    genomen</msg>
+            </msgQ>
+            <resData>
+                <sidn-ext-epp:pollData>
+                    <sidn-ext-epp:command>domain:transfer-start</sidn-ext-epp:command>
+                    <sidn-ext-epp:data>
+                        <result code="1000">
+                            <msg>Transfer of the domain name has begun.</msg>
+                        </result>
+                        <resData>
+                            <domain:trnData>
+                                <domain:name>for-transfer-03.nl</domain:name>
+                                <domain:trStatus>pending</domain:trStatus>
+                                <domain:reID>IWORK</domain:reID>
+                                <domain:reDate>2010-02-11T09:18:46.000Z</domain:reDate>
+                                <domain:acID>X1140</domain:acID>
+                                <domain:acDate>2010-02-11T09:48:46.000Z</domain:acDate>
+                            </domain:trnData>
+                        </resData>
+                        <trID>
+                            <svTRID>28096172</svTRID>
+                        </trID>
+                    </sidn-ext-epp:data>
+                </sidn-ext-epp:pollData>
+            </resData>
+            <trID>
+                <clTRID>900398-1265880242</clTRID>
+                <svTRID>C54BF9AD-907C-4C5C-F791-AE0CB997716E</svTRID>
+            </trID>
+        </response>
+    </epp>'''
+
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
+        self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
+        self.assertEqual(response.pollData.command, 'domain:transfer-start')
+        self.assertEqual(response.pollData.code, 1000)
+        self.assertEqual(response.pollData.message, "Transfer of the domain name has begun.")
+        self.assertEqual(response.pollData.resData.find('domain:trnData/domain:name', NS).text, 'for-transfer-03.nl')
 
     def test_parse_empty_poll(self):
         """
@@ -249,7 +300,7 @@ class ParserTests(TestCase):
             </trID>
         </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_EMPTY)
         self.assertEqual(response.message_count, 0)
         self.assertEqual(response.message_date, None)

@@ -1,10 +1,7 @@
 import dateutil.parser
-
+import sys
 from xml.etree import ElementTree
 
-import sys
-
-from sidn.constants import EPP_QUEUE_NOT_EMPTY
 from sidn.utils import python_2_unicode_compatible, cached_property
 
 NS = {
@@ -30,16 +27,16 @@ def register_namespaces():
 
 
 @python_2_unicode_compatible
-class EPPResponse(object):
+class XmlObject(object):
     """
     Wrapper object for EPP responses
     """
 
-    def __init__(self, response):
+    def __init__(self, element):
         """
-        :type response: xml.etree.ElementTree.Element
+        :type element: xml.etree.ElementTree.Element
         """
-        self.response = response
+        self.element = element
 
     def __str__(self):
         """
@@ -47,21 +44,28 @@ class EPPResponse(object):
 
         Call :func:`register_namespaces` in case you like to have readable XML prefixes.
         """
-        return ElementTree.tostring(self.response)
+        return ElementTree.tostring(self.element)
 
     if sys.version_info[0] == 2:
         def __repr__(self):
-            return '<EPPResponse {0}>'.format(unicode(self).encode('utf-8'))
+            return '<{0} {1}>'.format(self.__class__.__name__, unicode(self).encode('utf-8'))
     else:
         def __repr__(self):
-            return '<EPPResponse {0}>'.format(self)
+            return '<{0} {1}>'.format(self.__class__.__name__, self)
+
+
+@python_2_unicode_compatible
+class EPPResponse(XmlObject):
+    """
+    Wrapper object for EPP responses
+    """
 
     @cached_property
     def result(self):
         """
         :rtype: xml.etree.ElementTree.Element
         """
-        return self.response.find('epp:result', NS)
+        return self.element.find('epp:result', NS)
 
     @cached_property
     def result_code(self):
@@ -79,31 +83,28 @@ class EPPResponse(object):
 
         :rtype: xml.etree.ElementTree.Element
         """
-        resData = self.response.find('epp:resData', NS)
+        resData = self.element.find('epp:resData', NS)
         if resData is None:
             raise AttributeError("There is no resData node in this response")
         return resData
 
     @cached_property
     def extension(self):
-        return self.response.find('epp:extension', NS)
+        return self.element.find('epp:extension', NS)
 
     @cached_property
     def clTRID(self):
-        return get_node_text(self.response.find('epp:trID', NS), 'epp:clTRID')
+        return get_node_text(self.element.find('epp:trID', NS), 'epp:clTRID')
 
     @cached_property
     def svTRID(self):
-        return get_node_text(self.response.find('epp:trID', NS), 'epp:svTRID')
+        return get_node_text(self.element.find('epp:trID', NS), 'epp:svTRID')
 
 
 class EPPPollResponse(EPPResponse):
     """
     Wrapper object for the EPP Poll response
     """
-
-    def __init__(self, response):
-        super(EPPPollResponse, self).__init__(response)
 
     def __bool__(self):
         return self.msgQ is not None  # self.result_code == EPP_QUEUE_NOT_EMPTY
@@ -115,7 +116,7 @@ class EPPPollResponse(EPPResponse):
         """
         :rtype: xml.etree.ElementTree.Element
         """
-        return self.response.find('epp:msgQ', NS)
+        return self.element.find('epp:msgQ', NS)
 
     @cached_property
     def message_count(self):
@@ -140,6 +141,54 @@ class EPPPollResponse(EPPResponse):
         if self.msgQ is None:
             return None
         return get_node_text(self.msgQ, 'epp:msg')
+
+    @cached_property
+    def pollData(self):
+        """
+        Return the SIDN extension data
+        """
+        return SidnPollData(self.resData.find('sidn-ext-epp:pollData', NS))
+
+
+class SidnPollData(XmlObject):
+    """
+    The SIDN extension for poll data.
+    """
+    DOMAIN_TRANSFER_START = "domain:transfer-start"
+    DOMAIN_TRANSFER = "domain:transfer"
+    DOMAIN_DELETE = "domain:delete"
+
+    @cached_property
+    def command(self):
+        """
+        The command that is stored in the :attr:`resData`.
+        This can be:
+
+        * ``domain:transfer-start`` (:attr:`DOMAIN_TRANSFER_START`)
+        * ``domain:transfer`` (:attr:`DOMAIN_TRANSFER`)
+        * ``domain:delete`` (:attr:`DOMAIN_DELETE`)
+        """
+        return get_node_text(self.element, 'sidn-ext-epp:command')
+
+    @cached_property
+    def result(self):
+        return self.element.find('sidn-ext-epp:data/epp:result', NS)
+
+    @cached_property
+    def code(self):
+        return int(self.result.attrib['code'])
+
+    @cached_property
+    def message(self):
+        return get_node_text(self.result, 'epp:msg')
+
+    @cached_property
+    def resData(self):
+        """
+        The SIDN poll data has another resData node inside.
+        :rtype: xml.etree.ElementTree.Element
+        """
+        return self.element.find('sidn-ext-epp:data/epp:resData', NS)
 
 
 def get_node_text(parent_node, node_name):
