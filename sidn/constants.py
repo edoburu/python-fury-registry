@@ -4,12 +4,16 @@ EPP response codes.
 Copied from the abandoned https://pypi.python.org/pypi/EPP package
 """
 
+# Command completed successfully
 EPP_OK = 1000
 
+# Command completed successfully; action pending
 EPP_OK_PENDING = 1001
 
+# Command completed successfully; no messages
 EPP_QUEUE_EMPTY = 1300
 
+# Command completed successfully; ack to dequeue
 EPP_QUEUE_NOT_EMPTY = 1301
 
 EPP_LOGOUT_OK = 1500
@@ -125,6 +129,18 @@ EPP_AUTH_FAILED_CLOSING = 2501
 # and closing inactive connections.
 EPP_AUTH_SESSION_LIMIT = 2502
 
+
+# ---- extended codes by SIDN ----
+
+# This transaction is incompatible with the domain names current status.
+SIDN_EXT_ACTION_INCOMPATIBLE_DOMAIN_STATUS = 'C0001b'  # for 2304 (EPP_OBJECT_STATUS)
+
+# The specified domain name is not managed by you.
+SIDN_EXT_NOT_MANAGED_BY_ACCOUNT = 'C0038b'  # for 2308 (EPP_DATA_MGMT_POLICY)
+
+# No transfers are recorded for this domain name.
+SIDN_EXT_NO_XFR_RECORDED = 'C0100'  # for 2301 (EPP_OBJECT_NOT_PENDING_XFR)
+
 # The specified handle is not associated with this account.
 SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'
 
@@ -138,9 +154,9 @@ SIDN_EXT_DOMAIN_SINGLE_DOT = 'F0017'
 SIDN_EXT_EXTENSION_DOES_NOT_EXIST = 'F0018'
 
 # The specified domain name is unknown.
-SIDN_EXT_DOMAIN_DOES_NOT_EXIST = 'T0001'
+SIDN_EXT_DOMAIN_DOES_NOT_EXIST = 'T0001'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
 
-SIDN_EXT_REGISTRAR_DOES_NOT_EXIST = 'T0003'
+SIDN_EXT_REGISTRAR_DOES_NOT_EXIST = 'T0003'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
 
 # The specified name server is unknown.
-SIDN_EXT_NS_DOES_NOT_EXIST = 'T0008'
+SIDN_EXT_NS_DOES_NOT_EXIST = 'T0008'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
