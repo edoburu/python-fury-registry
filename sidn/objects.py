@@ -343,13 +343,9 @@ class TransferStatus(object):
         return self.status in (self.CLIENT_APPROVED, self.SERVER_APPROVED)
 
     @property
-    def is_cancelled(self):
-        return self.status in (self.CLIENT_CANCELLED, self.SERVER_CANCELLED)
+    def is_declined(self):
+        return self.status in (self.CLIENT_CANCELLED, self.SERVER_CANCELLED, self.CLIENT_REJECTED)
 
     @property
     def is_pending(self):
         return self.status == self.PENDING
-
-    @property
-    def is_rejected(self):
-        return self.status == self.CLIENT_REJECTED
