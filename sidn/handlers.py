@@ -227,6 +227,8 @@ class DomainHandler(BaseHandler):
 
         When the domain is not in transfer, an :class:`~sidn.client.EPPError` will be raised,
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
+
+        :rtype: sidn.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
@@ -236,6 +238,8 @@ class DomainHandler(BaseHandler):
     def approve_transfer(self, name):
         """
         Query the status of current domain transfer.
+
+        :rtype: sidn.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
@@ -245,6 +249,8 @@ class DomainHandler(BaseHandler):
     def reject_transfer(self, name):
         """
         Query the status of current domain transfer.
+
+        :rtype: sidn.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')
