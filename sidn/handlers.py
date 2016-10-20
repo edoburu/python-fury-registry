@@ -38,6 +38,10 @@ class DomainHandler(BaseHandler):
     def get(self, domain_name):
         """
         Request the info of a domain
+
+        It raises an :class:`~sidn.client.EPPError` when:
+        * the domain does not exist: code 2303 (``EPP_OBJECT_DOES_NOT_EXIST``, with ``SIDN_EXT_DOMAIN_DOES_NOT_EXIST``).
+        * the domain is managed by other accounts: code 2308 (``EPP_DATA_MGMT_POLICY``, with ``SIDN_EXT_NOT_MANAGED_BY_ACCOUNT``)
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
         xml = self._build_command('info', commands.domain.info_part(name=domain_name))
