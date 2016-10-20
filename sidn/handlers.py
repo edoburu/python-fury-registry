@@ -1,6 +1,8 @@
 """
 All specialized commands are performed by these handlers.
 """
+import idna
+
 from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
 from sidn.response import NS, get_node_text, get_node_date
 from . import commands
@@ -54,7 +56,7 @@ class DomainHandler(BaseHandler):
             ns.append(hostobj.text)
 
         return objects.Domain(
-            name=get_node_text(infData, 'domain:name'),
+            name=idna.decode(get_node_text(infData, 'domain:name')),
             roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
             status=infData.find('domain:status', NS).attrib['s'],
             registrant=get_node_text(infData, 'domain:registrant'),

@@ -1,4 +1,7 @@
 from __future__ import unicode_literals
+
+import idna
+
 from sidn.utils import xml_format, escape
 from . import secdns
 
@@ -8,7 +11,7 @@ def info_part(name):
       <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name hosts="all">{name}</domain:name>
       </domain:info>"""
-    return xml_format(xml, name=name)
+    return xml_format(xml, name=idna.encode(name))
 
 
 def check_part(name):
@@ -17,7 +20,7 @@ def check_part(name):
       <domain:check xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
       </domain:check>"""
-    return xml_format(xml, name=name)
+    return xml_format(xml, name=idna.encode(name))
 
 
 def renew_part(name, curExpDate, period, unit):
@@ -28,13 +31,13 @@ def renew_part(name, curExpDate, period, unit):
         <domain:curExpDate>{curExpDate}</domain:curExpDate>
         <domain:period unit="{unit}">{period}</domain:period>
       </domain:check>"""
-    return xml_format(xml, name=name, curExpDate=curExpDate, period=period, unit=unit)
+    return xml_format(xml, name=idna.encode(name), curExpDate=curExpDate, period=period, unit=unit)
 
 
 def create_part(name, registrant, admin, tech, ns, pw='unused'):
     xml = xml_format("""
       <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>{name}</domain:name>""", name=name)
+        <domain:name>{name}</domain:name>""", name=idna.encode(name))
 
     xml += _ns_list(ns)
 
@@ -53,7 +56,7 @@ def create_part(name, registrant, admin, tech, ns, pw='unused'):
 def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), remove_techs=(), remove_statuses=(), add_ns=(), add_admins=(), add_techs=(), add_statuses=()):
     xml = xml_format("""
       <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>{name}</domain:name>""", name=name)
+        <domain:name>{name}</domain:name>""", name=idna.encode(name))
 
     if add_ns or add_admins or add_techs or add_statuses:
         xml += """
@@ -147,7 +150,7 @@ def transfer_req_part(name, token):
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
       </domain:transfer>"""
-    return xml_format(xml, name=name, pw=token)
+    return xml_format(xml, name=idna.encode(name), pw=token)
 
 
 def transfer_query_part(name):
@@ -156,7 +159,7 @@ def transfer_query_part(name):
       <domain:transfer xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
       </domain:transfer>"""
-    return xml_format(xml, name=name)
+    return xml_format(xml, name=idna.encode(name))
 
 
 def cancel_delete_part(name, clTRID=None):
@@ -169,7 +172,7 @@ def cancel_delete_part(name, clTRID=None):
       </sidn-ext-epp:command>"""
 
     # No command, only extension bit.
-    return xml_format(xml, name=name, clTRID=clTRID or 'unused')
+    return xml_format(xml, name=idna.encode(name), clTRID=clTRID or 'unused')
 
 
 def delete_part(name):
@@ -177,4 +180,4 @@ def delete_part(name):
       <domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>
       </domain:delete>"""
-    return xml_format(xml, name=name)
+    return xml_format(xml, name=idna.encode(name))
