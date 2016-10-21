@@ -118,28 +118,46 @@ class EPPPollResponse(EPPResponse):
         return self.element.find('epp:msgQ', NS)
 
     @cached_property
-    def message_count(self):
+    def queue_count(self):
+        """
+        Number of messages in the queue.
+        """
         if self.msgQ is None:
             return 0
         return int(self.msgQ.attrib['count'])
 
     @cached_property
-    def message_id(self):
+    def queue_id(self):
+        """
+        ID of the currently fetched message.
+        """
         if self.msgQ is None:
             return None
         return int(self.msgQ.attrib['id'])
 
     @cached_property
-    def message_date(self):
+    def queue_date(self):
+        """
+        Date of the currently fetched message.
+        """
         if self.msgQ is None:
             return None
         return get_node_date(self.msgQ, 'epp:qDate')
 
     @cached_property
     def message(self):
+        """
+        Textual content of the message
+        """
         if self.msgQ is None:
             return None
         return get_node_text(self.msgQ, 'epp:msg')
+
+
+class SidnPollResponse(EPPPollResponse):
+    """
+    SIDN Extension for polling responses.
+    """
 
     @cached_property
     def pollData(self):
@@ -188,6 +206,18 @@ class SidnPollData(XmlObject):
         :rtype: xml.etree.ElementTree.Element
         """
         return self.element.find('sidn-ext-epp:data/epp:resData', NS)
+
+    @cached_property
+    def object(self):
+        """
+        Return the object wrapped in the extended notification message.
+        """
+        element = self.resData[0]  # type: ElementTree.Element
+        if element.tag == '{urn:ietf:params:xml:ns:domain-1.0}trnData':  # full qualified name for "domain:trnData"
+            from sidn.handlers import DomainHandler
+            return DomainHandler._parse_transfer_status(self.resData)
+        else:
+            raise NotImplementedError("Unsupported extension node: {}".format(element.tag))
 
 
 def get_node_text(parent_node, node_name, default=None):

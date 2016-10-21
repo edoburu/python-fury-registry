@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
-class Contact(object):
+class EppContact(object):
     """
     Contact data object
     """
@@ -43,7 +43,7 @@ class Contact(object):
 
 
 @python_2_unicode_compatible
-class Domain(object):
+class EppDomain(object):
     """
     Domain data object
     """
@@ -66,8 +66,7 @@ class Domain(object):
     SERVER_TRANSFER_PROHIBITED = "serverTransferProhibited"
     SERVER_UPDATE_PROHIBITED = "serverUpdateProhibited"
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
-                 optOut=None, limited=None, period=None):
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
         #
@@ -87,16 +86,11 @@ class Domain(object):
         self.expire_date = exDate
         self.pw = pw
 
-        # SIDN extension fields
-        self.opt_out = optOut
-        self.limited = limited
-        self.period = period
-
         # Can be assigned by handler
         self._epp = None
 
     def __repr__(self):
-        return '<Domain {0}>'.format(self)
+        return '<{0} {0}>'.format(self.__class__.__name__, self)
 
     def __str__(self):
         return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
@@ -204,10 +198,34 @@ class Domain(object):
         return self._epp.domains.renew(expiration_date=self.expire_date, period=period, period_unit=period_unit)
 
 
-class DomainExt(object):
+class SidnDomain(EppDomain):
     """
-    Domain extension information by SIDN
+    Domain data object with SIDN extension fields
     """
+
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
+                 optOut=None, limited=None, period=None):
+        super(SidnDomain, self).__init__(
+            name=name,
+            roid=roid,
+            status=status,
+            registrant=registrant,
+            admin=admin,
+            tech=tech,
+            ns=ns,
+            clID=clID,
+            crID=crID,
+            crDate=crDate,
+            upDate=upDate,
+            exDate=exDate,
+            pw=pw
+        )
+
+        # SIDN extension fields
+        self.opt_out = optOut
+        self.limited = limited
+        self.period = period
+
 
 @python_2_unicode_compatible
 class DSKey(object):
@@ -286,7 +304,7 @@ class KeyData(object):
 
 
 @python_2_unicode_compatible
-class Host(object):
+class EppHost(object):
     """
     Host data object (e.g. for nameservers)
     """
@@ -343,7 +361,10 @@ class TransferStatus(object):
         self.expire_date = exDate
 
     def __repr__(self):
-        return '<TransferStatus {0}: {1}>'.format(self.name, self.status)
+        if self.is_pending:
+            return '<TransferStatus {0}: {1} by {2} till {3}>'.format(self.name, self.status, self.act_id, self.act_date)
+        else:
+            return '<TransferStatus {0}: {1} by {2} on {3}>'.format(self.name, self.status, self.act_id, self.act_date)
 
     def __str__(self):
         return self.name

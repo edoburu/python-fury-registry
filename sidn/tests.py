@@ -3,10 +3,12 @@ from unittest import TestCase
 from datetime import datetime
 from dateutil.tz import tzutc
 
-from sidn.client import EPP, EPPError, EPPPollResponse
+from sidn.client import EPP, EPPError, SidnPollResponse
 from sidn.constants import EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
 from sidn.handlers import ContactHandler, DomainHandler
 from sidn.response import get_node_text, register_namespaces, NS
+
+UTC = tzutc()
 
 
 class ParserTests(TestCase):
@@ -226,17 +228,21 @@ class ParserTests(TestCase):
         </trID>
       </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
+        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
-        self.assertEqual(response.message_count, 5)
-        self.assertEqual(response.message_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=tzutc()))
+        self.assertEqual(response.queue_count, 5)
+        self.assertEqual(response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC))
         self.assertEqual(response.message, 'Transfer requested.')
         self.assertEqual(response.result_msg, 'Command completed successfully; ack to dequeue')
         self.assertEqual(get_node_text(response.resData, 'obj:trnData/obj:name'), 'example.com')
         self.assertEqual(response.clTRID, 'ABC-12345')
         self.assertEqual(response.svTRID, '54321-XYZ')
+        self.assertTrue(bool(response))
 
-    def test_parse_poll_ext(self):
+    def test_parse_poll_ext_transfer_start(self):
+        """
+        Test the SIDN extended message that a poll on DRS returns.
+        """
         raw_response = '''<?xml version="1.0" encoding="utf-8"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0"
         xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
@@ -280,12 +286,69 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
+        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.pollData.command, 'domain:transfer-start')
         self.assertEqual(response.pollData.code, 1000)
         self.assertEqual(response.pollData.message, "Transfer of the domain name has begun.")
-        self.assertEqual(response.pollData.resData.find('domain:trnData/domain:name', NS).text, 'for-transfer-03.nl')
+        self.assertEqual(response.pollData.object.name, 'for-transfer-03.nl')
+
+    def test_parse_poll_ext_transfer(self):
+        """
+        Test poll notification that a transfer was completed.
+        """
+        raw_response = '''<?xml version="1.0" encoding="UTF-8"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <response>
+            <result code="1301">
+                <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+            </result>
+            <msgQ id="2260594" count="1">
+                <qDate>2016-10-21T11:45:00.000Z</qDate>
+                <msg>1016 Verhuizing domeinnaam for-transfer-05.nl verwerkt</msg>
+            </msgQ>
+            <resData>
+                <sidn-ext-epp:pollData>
+                    <sidn-ext-epp:command>domain:transfer</sidn-ext-epp:command>
+                    <sidn-ext-epp:data>
+                        <result code="1000">
+                            <msg>De domeinnaam is verhuisd.</msg>
+                        </result>
+                        <resData>
+                            <domain:trnData>
+                                <domain:name>for-transfer-05.nl</domain:name>
+                                <domain:trStatus>serverApproved</domain:trStatus>
+                                <domain:reID>TRAIP</domain:reID>
+                                <domain:reDate>2016-10-21T11:44:58.000Z</domain:reDate>
+                                <domain:acID>NLCOM</domain:acID>
+                                <domain:acDate>2016-10-21T11:45:00.111Z</domain:acDate>
+                            </domain:trnData>
+                        </resData>
+                        <trID>
+                            <svTRID>117307812</svTRID>
+                        </trID>
+                    </sidn-ext-epp:data>
+                </sidn-ext-epp:pollData>
+            </resData>
+            <trID>
+                <clTRID>unused</clTRID>
+                <svTRID>BF3075DF-05CD-2000-E2DC-126BB1758597</svTRID>
+            </trID>
+        </response>
+    </epp>'''
+
+        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
+        self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
+        self.assertEqual(response.pollData.command, 'domain:transfer')
+        self.assertEqual(response.pollData.code, 1000)
+        self.assertEqual(response.pollData.message, "De domeinnaam is verhuisd.")
+        self.assertEqual(response.pollData.object.name, "for-transfer-05.nl")
+        self.assertEqual(response.pollData.object.status, "serverApproved")
+        self.assertEqual(response.pollData.object.request_id, "TRAIP")  # TransIP
+        self.assertEqual(response.pollData.object.request_date, datetime(2016, 10, 21, 11, 44, 58, tzinfo=UTC))
+        self.assertEqual(response.pollData.object.act_id, "NLCOM")  # Computel Standby
+        self.assertEqual(response.pollData.object.act_date, datetime(2016, 10, 21, 11, 45, 0, 111000, tzinfo=UTC))
+        self.assertTrue(bool(response))
 
     def test_parse_empty_poll(self):
         """
@@ -303,9 +366,10 @@ class ParserTests(TestCase):
             </trID>
         </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
+        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_EMPTY)
-        self.assertEqual(response.message_count, 0)
-        self.assertEqual(response.message_date, None)
-        self.assertEqual(response.message, None)
+        self.assertEqual(response.queue_count, 0)
+        self.assertEqual(response.queue_date, None)
+        self.assertEqual(response.queue_id, None)
         self.assertEqual(response.result_msg, 'There are no messages in the queue.')
+        self.assertFalse(bool(response))

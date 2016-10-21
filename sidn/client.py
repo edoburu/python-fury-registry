@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 from sidn.constants import EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK
 from . import commands
 from . import handlers
-from sidn.response import NS, EPPResponse, EPPPollResponse
+from sidn.response import NS, EPPResponse, SidnPollResponse
 from sidn.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 logger = logging.getLogger(__name__)
@@ -201,7 +201,7 @@ class EPP(object):
 
         :param ack: Set to true to acknowledge the message, and remove it from the server.
         :param transaction_id:
-        :rtype: sidn.response.EPPPollResponse
+        :rtype: sidn.response.SidnPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         if ack:
@@ -209,7 +209,7 @@ class EPP(object):
         else:
             op = 'req'  # Get first message
         cmd = commands.epp.poll(op=op, transaction_id=transaction_id)
-        return self.cmd(cmd, response_class=EPPPollResponse)
+        return self.cmd(cmd, response_class=SidnPollResponse)
 
     @property
     def domains(self):

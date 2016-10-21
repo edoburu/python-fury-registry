@@ -62,7 +62,7 @@ class DomainHandler(BaseHandler):
         for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
             ns.append(hostobj.text)
 
-        return objects.Domain(
+        return objects.SidnDomain(
             name=idna.decode(get_node_text(infData, 'domain:name')),
             roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
             status=infData.find('domain:status', NS).attrib['s'],
@@ -284,7 +284,6 @@ class DomainHandler(BaseHandler):
         )
 
 
-
 class ContactHandler(BaseHandler):
     """
     Actions for contacts
@@ -403,7 +402,7 @@ class ContactHandler(BaseHandler):
         loc = infData.find("contact:postalInfo[@type='loc']", NS)
         addr = loc.find('contact:addr', NS)
 
-        return objects.Contact(
+        return objects.EppContact(
             id=get_node_text(infData, 'contact:id'),
             roid=get_node_text(infData, 'contact:roid'),
             status=infData.find('contact:status', NS).attrib['s'],
@@ -450,7 +449,7 @@ class HostHandler(BaseHandler):
         xml = commands.host.info_part(name=nameserver)
         resdata = self.epp.cmd(xml).resData
         # TODO: complete this.
-        return objects.Host(
+        return objects.EppHost(
             name=nameserver,
             addr=resdata.find('host:addr', NS).text
         )
