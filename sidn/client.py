@@ -198,24 +198,28 @@ class EPP(object):
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
-    def poll(self, ack=False, transaction_id=None):
+    def poll(self, transaction_id=None):
         """
         Poll for service notification messages.
 
         It returns the first message.
-        When :meth:`poll` is called again with ``ack`` to True, the message will be removed.
+        Call :meth:`poll_ack` afterwards with the message ID to remove it from the queue.
         The next call to :meth:`poll` will return the next available message.
 
-        :param ack: Set to true to acknowledge the message, and remove it from the server.
         :param transaction_id:
         :rtype: sidn.response.SidnPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
-        if ack:
-            op = 'ack'  # acknowledge read, and remove it
-        else:
-            op = 'req'  # Get first message
-        cmd = commands.epp.poll(op=op, transaction_id=transaction_id)
+        cmd = commands.epp.poll_req(transaction_id=transaction_id)
+        return self.cmd(cmd, response_class=SidnPollResponse)
+
+    def poll_ack(self, queue_id, transaction_id=None):
+        """
+        Acknowledge the processing of a message in the queue.
+        :rtype: sidn.response.SidnPollResponse
+        """
+        # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
+        cmd = commands.epp.poll_ack(queue_id, transaction_id=transaction_id)
         return self.cmd(cmd, response_class=SidnPollResponse)
 
     @property

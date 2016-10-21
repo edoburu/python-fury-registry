@@ -88,12 +88,23 @@ logout = """<?xml version="1.0" encoding="UTF-8"?>
 </epp>"""
 
 
-def poll(op='req', transaction_id=None):
+def poll_req(transaction_id=None):
     xml  = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
       <command>
-        <poll op="{op}"/>
+        <poll op="req"/>
         <clTRID>{clTRID}</clTRID>
       </command>
     </epp>"""
-    return xml_format(xml, op=op, clTRID=transaction_id or 'unused')
+    return xml_format(xml, clTRID=transaction_id or 'unused')
+
+
+def poll_ack(message_id, transaction_id=None):
+    xml  = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+      <command>
+        <poll op="ack" msgID="{msgID}"/>
+        <clTRID>{clTRID}</clTRID>
+      </command>
+    </epp>"""
+    return xml_format(xml, msgID=message_id, clTRID=transaction_id or 'unused')

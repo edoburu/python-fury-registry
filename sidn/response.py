@@ -138,7 +138,7 @@ class EPPPollResponse(EPPResponse):
     @cached_property
     def queue_date(self):
         """
-        Date of the currently fetched message.
+        Date of the currently fetched message (only for op="req")
         """
         if self.msgQ is None:
             return None
@@ -147,7 +147,7 @@ class EPPPollResponse(EPPResponse):
     @cached_property
     def message(self):
         """
-        Textual content of the message
+        Textual content of the message (only for op="req")
         """
         if self.msgQ is None:
             return None
