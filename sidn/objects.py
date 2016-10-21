@@ -321,6 +321,10 @@ class TransferStatus(object):
                        For all other status types, the value identifies the date and time when the request was completed.
         :param exDate: optional, the end of the domain object's validity period if the transfer command
                        caused or causes a change in the validity period.
+
+        To check whether the transfer is moved away, or is incoming, check the :attr:`request_id` field.
+        Note that a query for the transferstatus may also return an old status from a year ago,
+        so also check the :attr:`act_date`.
         """
         # Some fields are renamed for easier referencing,
         # while the constructor arguments map to the XML field names.
