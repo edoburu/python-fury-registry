@@ -98,6 +98,9 @@ class EPP(object):
 
     @staticmethod
     def _parse_response(raw_response, response_class=EPPResponse):
+        """
+        :rtype: EPPResponse
+        """
         # Standard wrapper:
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         #   <response>
