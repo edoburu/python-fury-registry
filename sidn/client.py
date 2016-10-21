@@ -3,7 +3,7 @@ import socket
 import ssl
 from xml.etree import ElementTree
 
-from sidn.constants import EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK
+from sidn.constants import EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK, EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING
 from . import commands
 from . import handlers
 from sidn.response import NS, EPPResponse, SidnPollResponse
@@ -93,6 +93,13 @@ class EPP(object):
         code = response.result_code
         if not silent or code not in (EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK):
             logger.info("- [%d] %s", code, response.result_msg)
+
+        # Check for 'Command failed; server closing connection'
+        if code in (EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING):
+            try:
+                self.socket.close()
+            except IOError:
+                pass  # Server disconnected
 
         return response
 
