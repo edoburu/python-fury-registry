@@ -54,7 +54,6 @@ class XmlObject(object):
             return '<{0} {1}>'.format(self.__class__.__name__, self)
 
 
-@python_2_unicode_compatible
 class EPPResponse(XmlObject):
     """
     Wrapper object for EPP responses
