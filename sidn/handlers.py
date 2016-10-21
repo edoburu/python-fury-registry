@@ -45,13 +45,16 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
         xml = self._build_command('info', commands.domain.info_part(name=domain_name))
-        resData = self.epp.cmd(xml).resData
-        domain = self._parse_info(resData)
+        response = self.epp.cmd(xml)
+        domain = self._parse_info(response)
         domain._epp = self.epp  # Sneak it in
         return domain
 
     @staticmethod
-    def _parse_info(resData):
+    def _parse_info(response):
+        resData = response.resData
+        ext = response.extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', NS)
+
         infData = resData.find('domain:infData', NS)
         authInfo = infData.find('domain:authInfo', NS)
 
@@ -73,6 +76,9 @@ class DomainHandler(BaseHandler):
             upDate=get_node_date(infData, 'domain:upDate'),
             exDate=get_node_date(infData, 'domain:exDate'),
             pw=get_node_text(authInfo, 'domain:pw'),
+            optOut=get_node_text(ext, 'sidn-ext-epp:optOut') == 'true',
+            limited=get_node_text(ext, 'sidn-ext-epp:limited') == 'true',
+            period=int(get_node_text(ext, 'sidn-ext-epp:period', 0)) or None,
         )
 
     def check(self, domain_name):

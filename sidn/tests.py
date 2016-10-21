@@ -125,12 +125,15 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        resData = EPP._parse_response(domain_info).resData
-        domain = DomainHandler._parse_info(resData)
+        response = EPP._parse_response(domain_info)
+        domain = DomainHandler._parse_info(response)
         self.assertEqual(domain.name, 'computel.nl')
         self.assertEqual(domain.ns, ['ns2.computel.nl', 'ns1.computel.nl'])
         self.assertEqual(domain.admin, 'COM017325-NLCOM')
         self.assertEqual(domain.tech, 'WAL002352-NLCOM')
+        self.assertEqual(domain.opt_out, False)
+        self.assertEqual(domain.limited, False)
+        self.assertEqual(domain.period, 3)
 
     def test_parse_contact_avail(self):
         """

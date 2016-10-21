@@ -66,7 +66,8 @@ class Domain(object):
     SERVER_TRANSFER_PROHIBITED = "serverTransferProhibited"
     SERVER_UPDATE_PROHIBITED = "serverUpdateProhibited"
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
+                 optOut=None, limited=None, period=None):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
         #
@@ -85,6 +86,11 @@ class Domain(object):
         self.updated_date = upDate
         self.expire_date = exDate
         self.pw = pw
+
+        # SIDN extension fields
+        self.opt_out = optOut
+        self.limited = limited
+        self.period = period
 
         # Can be assigned by handler
         self._epp = None

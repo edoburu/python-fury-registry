@@ -190,7 +190,7 @@ class SidnPollData(XmlObject):
         return self.element.find('sidn-ext-epp:data/epp:resData', NS)
 
 
-def get_node_text(parent_node, node_name):
+def get_node_text(parent_node, node_name, default=None):
     """
     Get the text content for a child node.
 
@@ -199,7 +199,7 @@ def get_node_text(parent_node, node_name):
     :rtype: unicode|None
     """
     if parent_node is None:
-        return None
+        return default
     # Handling of optional fields
     return parent_node.findtext(node_name, namespaces=NS)
 
