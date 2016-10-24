@@ -8,6 +8,9 @@ from sidn.utils import xml_format
 def create(dskeys=(), keyData=()):
     """
     The DNSSec create extension
+
+    :type dskeys: Iterator[sidn.objects.DSKey]
+    :type keyData: Iterator[sidn.objects.KeyData]
     """
     xml = """
           <secDNS:create xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
@@ -84,6 +87,9 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
 
 
 def dskey_to_xml(dskey):
+    """
+    :type dskey: sidn.objects.DSKey
+    """
     # Delegation Signer key information
     xml = """
           <secDNS:dsData>
@@ -109,6 +115,9 @@ def dskey_to_xml(dskey):
 
 
 def keydata_to_xml(keyData):
+    """
+    :type keyData: sidn.objects.KeyData
+    """
     # Client key information
     xml = """
             <secDNS:keyData>

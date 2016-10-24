@@ -108,9 +108,9 @@ class DomainHandler(BaseHandler):
         :param ns: List of nameserver host names
         :type ns: list
         :param dskeys: DNSSec keys (values not read by SIDN, only keyData field is used.)
-        :type dskeys: Tuple[sidn.objects.DSKey]
+        :type dskeys: Iterator[sidn.objects.DSKey]
         :param keyData: DNSSec keydata, as alternative for ``keys``, max 4 with SIDN.
-        :type keyData: Tuple[sidn.objects.KeyData]
+        :type keyData: Iterator[sidn.objects.KeyData]
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.1
         # https://tools.ietf.org/html/rfc5731#section-3.2.1
@@ -182,6 +182,8 @@ class DomainHandler(BaseHandler):
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
         """
         Update the DNSSec keys in a domain
+        :type remove_keydatas: Iterator[sidn.objects.DSKey]
+        :type add_keydatas: Iterator[sidn.objects.DSKey]
         """
         # SIDN only looks at the keydata fields.
         # https://tools.ietf.org/html/rfc5910#section-5.2.5
