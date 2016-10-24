@@ -117,10 +117,11 @@ class EppDomain(object):
     def tech_contact(self):
         return self._epp.contacts.get(self.tech)
 
-    def update(self, registrant=None, admin=None, tech=None, ns=None):
+    def update(self, registrant=None, admin=None, tech=None, ns=None, keydatas=None, dnssec_urgent=False):
         """
         Update all domain settings at once.
-        # TODO: Add dnssec fields here as well.
+        This operation only changes the fields which need to change.
+        Returns ``None`` when no settings had to be changed.
         """
         kwargs = {}
 
@@ -135,11 +136,22 @@ class EppDomain(object):
             kwargs['remove_tech'] = self.tech
             kwargs['add_tech'] = tech
 
-        if ns and set(ns) != set(self.ns):
+        if ns:
             current = set(self.ns)
             new = set(ns)
-            kwargs['remove_ns'] = sorted(current - new)
-            kwargs['add_ns'] = sorted(new - current)
+            if set(ns) != set(self.ns):
+                kwargs['remove_ns'] = sorted(current - new)
+                kwargs['add_ns'] = sorted(new - current)
+
+        if keydatas:
+            # The remove all / add everything is a quick implementation choice.
+            # TODO: only remove the DNSSec data that have to be removed.
+            kwargs['remove_all_keys'] = True
+            kwargs['add_keydatas'] = keydatas
+            kwargs['dnssec_urgent'] = dnssec_urgent
+
+        if not kwargs:
+            return None
 
         return self._epp.domains.update(self.name, **kwargs)
 
