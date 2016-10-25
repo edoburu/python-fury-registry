@@ -6,7 +6,9 @@ from dateutil.tz import tzutc
 from sidn.client import EPP, EPPError, SidnPollResponse
 from sidn.constants import EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
 from sidn.handlers import ContactHandler, DomainHandler
-from sidn.response import get_node_text, register_namespaces, NS
+from sidn.objects import EppContact, SidnDomain, KeyData
+from sidn.response import register_namespaces, NS
+from sidn.utils import get_node_text
 
 UTC = tzutc()
 
@@ -71,8 +73,8 @@ class ParserTests(TestCase):
             </trID>
         </response>
     </epp>'''
-        resData = EPP._parse_response(contact_info).resData
-        contact = ContactHandler._parse_info(resData)
+        response = EPP._parse_response(contact_info)
+        contact = EppContact.from_xml(response.resData, response.extension)
         self.assertEqual(contact.handle, 'WAL002352-NLCOM')
         self.assertEqual(contact.name, 'S.J. de Wal')
 
@@ -81,7 +83,7 @@ class ParserTests(TestCase):
         Parse domain info response.
         """
         domain_info = '''
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
         <response>
             <result code="1000">
                 <msg>The domain name has been queried.</msg>
@@ -114,6 +116,14 @@ class ParserTests(TestCase):
                 </domain:infData>
             </resData>
             <extension>
+                <secDNS:infData>
+                    <secDNS:keyData>
+                        <secDNS:flags>257</secDNS:flags>
+                        <secDNS:protocol>3</secDNS:protocol>
+                        <secDNS:alg>8</secDNS:alg>
+                        <secDNS:pubKey>AwEAAao2zeD+21pkAt7Aga437btAcpT5xvXfxbneHzYgOW4XyqogQ0d6cAmX0lMrnDw8JuU56QHV9Gm7oSZjOG77RoIRvhaeGgLezizFNZ8PJujyfdKl79ZX02cUjDRkt5dqR2gsqPcEUtv5gARTmM2fCPeDwU+hX/asXTLc/79ukKryaqNEMiQOpOY+Zve4qJKRCUhq1MEcMvMEq5GQuFyOuRUEzif+vIkXQ9tjJr3YeVAvfsSk9UoUk7jNz6NPp/7gx4wK1dAHv8adSTYCMVUbJcvBXj8hq33Gg02W8Fgz0wtFEeu3f4+eK5yOtInDsko8XvhwT7bj1nOYd6ulNsNurlE=</secDNS:pubKey>
+                    </secDNS:keyData>
+                </secDNS:infData>
                 <sidn-ext-epp:ext>
                     <sidn-ext-epp:infData>
                         <sidn-ext-epp:domain>
@@ -128,7 +138,7 @@ class ParserTests(TestCase):
     </epp>'''
 
         response = EPP._parse_response(domain_info)
-        domain = DomainHandler._parse_info(response)
+        domain = SidnDomain.from_xml(response.resData, response.extension)
         self.assertEqual(domain.name, 'computel.nl')
         self.assertEqual(domain.ns, ['ns2.computel.nl', 'ns1.computel.nl'])
         self.assertEqual(domain.admin, 'COM017325-NLCOM')
@@ -136,6 +146,10 @@ class ParserTests(TestCase):
         self.assertEqual(domain.opt_out, False)
         self.assertEqual(domain.limited, False)
         self.assertEqual(domain.period, 3)
+        self.assertEqual(domain.dnssec.keydatas[0].alg, KeyData.ALG_SHA256)
+        self.assertEqual(domain.dnssec.keydatas[0].protocol, KeyData.PROTOCOL3)
+        self.assertEqual(domain.dnssec.keydatas[0].flags, KeyData.FLAG_KSK)
+        self.assertTrue(domain.dnssec.keydatas[0].pubKey.startswith('AwEAAao2zeD'))
 
     def test_parse_contact_avail(self):
         """
@@ -160,8 +174,8 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        resData = EPP._parse_response(avail_response).resData
-        is_available = ContactHandler._parse_avail(resData)
+        response = EPP._parse_response(avail_response)
+        is_available = ContactHandler._parse_avail(response)
         self.assertFalse(is_available)
 
     def test_parse_epp_error_ext(self):

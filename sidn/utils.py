@@ -4,7 +4,10 @@ Internal utils
 import re
 import sys
 import struct
+import dateutil.parser
 from xml.sax import saxutils
+
+from sidn.constants import NS
 
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
@@ -106,3 +109,40 @@ def int32_from_net(data):
 
 def int32_to_net(value):
     return struct.pack(INT32_FORMAT, value)
+
+
+def get_node_text(parent_node, node_name, default=None):
+    """
+    Get the text content for a child node.
+
+    :type parent_node: xml.etree.ElementTree.Element
+    :type node_name: str
+    :rtype: unicode|None
+    """
+    if parent_node is None:
+        return default
+    # Handling of optional fields
+    return parent_node.findtext(node_name, namespaces=NS)
+
+
+def get_node_date(parent_node, node_name):
+    """
+    Read the date value for a child node.
+
+    :type parent_node: xml.etree.ElementTree.Element
+    :type node_name: str
+    :rtype: datetime|None
+    """
+    text = get_node_text(parent_node, node_name)
+    return parse_iso_date(text)
+
+
+def parse_iso_date(date):
+    """
+    Parse the ISO date format the EPP submits.
+    """
+    if date is None:
+        return None
+    else:
+        # Dates like: 1995-12-10T23:00:00.000Z
+        return dateutil.parser.parse(date)

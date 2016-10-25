@@ -1,10 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
-import idna
-
-from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
-from sidn.response import NS, get_node_text, get_node_date
+from sidn.constants import NS, EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
 from . import commands
 from . import objects
 
@@ -46,40 +43,10 @@ class DomainHandler(BaseHandler):
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
         xml = self._build_command('info', commands.domain.info_part(name=domain_name))
         response = self.epp.cmd(xml)
-        domain = self._parse_info(response)
+
+        domain = objects.SidnDomain.from_xml(response.resData, response.extension)
         domain._epp = self.epp  # Sneak it in
         return domain
-
-    @staticmethod
-    def _parse_info(response):
-        resData = response.resData
-        ext = response.extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', NS)
-
-        infData = resData.find('domain:infData', NS)
-        authInfo = infData.find('domain:authInfo', NS)
-
-        ns = []
-        for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
-            ns.append(hostobj.text)
-
-        return objects.SidnDomain(
-            name=idna.decode(get_node_text(infData, 'domain:name')),
-            roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
-            status=infData.find('domain:status', NS).attrib['s'],
-            registrant=get_node_text(infData, 'domain:registrant'),
-            admin=get_node_text(infData, "domain:contact[@type='admin']"),
-            tech=get_node_text(infData, "domain:contact[@type='tech']"),
-            ns=ns,
-            clID=get_node_text(infData, 'domain:clID'),  # current registrar
-            crID=get_node_text(infData, 'domain:crID'),  # initial registrar
-            crDate=get_node_date(infData, 'domain:crDate'),
-            upDate=get_node_date(infData, 'domain:upDate'),
-            exDate=get_node_date(infData, 'domain:exDate'),
-            pw=get_node_text(authInfo, 'domain:pw'),
-            optOut=get_node_text(ext, 'sidn-ext-epp:optOut') == 'true',
-            limited=get_node_text(ext, 'sidn-ext-epp:limited') == 'true',
-            period=int(get_node_text(ext, 'sidn-ext-epp:period', 0)) or None,
-        )
 
     def check(self, domain_name):
         """
@@ -87,15 +54,14 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
         xml = self._build_command('check', commands.domain.check_part(name=domain_name))
-        res = self.epp.cmd(xml)
-        return self._parse_avail(res.resData)
+        response = self.epp.cmd(xml)
+        return self._parse_avail(response)
 
     @staticmethod
-    def _parse_avail(resData):
+    def _parse_avail(response):
         # Note that the domain:cd element may be repeated
         # The element may also contain a <domain:reason> element.
-        status = resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail']
-        return status in ('1', 'true')
+        return response.resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail'] in ('1', 'true')
 
     def create(self, name, registrant, contacts, ns, dskeys=(), keyData=()):
         """
@@ -246,8 +212,8 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
-        res = self.epp.cmd(xml)
-        return self._parse_transfer_status(res.resData)
+        response = self.epp.cmd(xml)
+        return self._parse_transfer_status(response)
 
     def approve_transfer(self, name):
         """
@@ -257,8 +223,8 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
-        res = self.epp.cmd(xml)
-        return self._parse_transfer_status(res.resData)
+        response = self.epp.cmd(xml)
+        return self._parse_transfer_status(response)
 
     def reject_transfer(self, name):
         """
@@ -268,22 +234,13 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')
-        res = self.epp.cmd(xml)
-        return self._parse_transfer_status(res.resData)
+        response = self.epp.cmd(xml)
+        return self._parse_transfer_status(response)
 
     @staticmethod
-    def _parse_transfer_status(resData):
-        trnData = resData.find('domain:trnData', NS)
-
-        return objects.TransferStatus(
-            name=get_node_text(trnData, 'domain:name'),
-            trStatus=get_node_text(trnData, 'domain:trStatus'),
-            reID=get_node_text(trnData, 'domain:reID'),  # requested client
-            reDate=get_node_date(trnData, 'domain:reDate'),
-            acID=get_node_text(trnData, 'domain:acID'),  # acting client
-            acDate=get_node_date(trnData, 'domain:acDate'),
-            exDate=get_node_date(trnData, 'domain:exDate'),
-        )
+    def _parse_transfer_status(response):
+        trnData = response.resData.find('domain:trnData', NS)
+        return objects.TransferStatus.from_xml(trnData)
 
 
 class ContactHandler(BaseHandler):
@@ -299,17 +256,25 @@ class ContactHandler(BaseHandler):
 
         from sidn.client import EPPError
         try:
-            res = self.epp.cmd(xml)
+            response = self.epp.cmd(xml)
         except EPPError as e:
             if e.code == EPP_DATA_MGMT_POLICY and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED:
                 return False
             raise
-        return self._parse_avail(res.resData)
+
+        return self._parse_avail(response)
 
     @staticmethod
-    def _parse_avail(resData):
-        status = resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail']
-        return status in ('1', 'true')
+    def _parse_avail(response):
+        return response.resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail'] in ('1', 'true')
+
+    def get(self, handle):
+        """
+        Fetch contact data
+        """
+        xml = self._build_command('info', commands.contact.info_part(handle))
+        response = self.epp.cmd(xml)
+        return objects.EppContact.from_xml(response.resData, response.extension)
 
     def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None,
                phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
@@ -389,37 +354,6 @@ class ContactHandler(BaseHandler):
         )
         xml = self._build_command('update', command, command_extensions=(ext,))
         self.epp.cmd(xml)
-
-    def get(self, handle):
-        """
-        Fetch contact data
-        """
-        xml = self._build_command('info', commands.contact.info_part(handle))
-        resdata = self.epp.cmd(xml).resData
-        return self._parse_info(resdata)
-
-    @staticmethod
-    def _parse_info(resData):
-        infData = resData.find('contact:infData', NS)
-        loc = infData.find("contact:postalInfo[@type='loc']", NS)
-        addr = loc.find('contact:addr', NS)
-
-        return objects.EppContact(
-            id=get_node_text(infData, 'contact:id'),
-            roid=get_node_text(infData, 'contact:roid'),
-            status=infData.find('contact:status', NS).attrib['s'],
-            name=get_node_text(loc, 'contact:name'),
-            org=get_node_text(loc, 'contact:org'),
-            street= get_node_text(addr, 'contact:street'),
-            city=get_node_text(addr, 'contact:city'),
-            pc=get_node_text(addr, 'contact:pc'),
-            cc=get_node_text(addr, 'contact:cc'),
-            voice=get_node_text(infData, 'contact:voice'),
-            fax=get_node_text(infData, 'contact:fax'),
-            email=get_node_text(infData, 'contact:email'),
-            crDate=get_node_date(infData, 'contact:crDate'),
-            upDate=get_node_date(infData, 'contact:upDate'),
-        )
 
     def delete(self, name):
         """

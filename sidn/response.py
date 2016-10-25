@@ -1,20 +1,9 @@
-import dateutil.parser
 import sys
 from xml.etree import ElementTree
 
-from sidn.utils import python_2_unicode_compatible, cached_property
-
-NS = {
-    # Possible namespaces in the response
-    # See greeting message for all possible supported extensions
-    'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
-    'obj': 'urn:ietf:params:xml:ns:obj-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
-    'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
-    'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
-    'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
-    'secDNS': 'urn:ietf:params:xml:ns:secDNS-1.1',  # DNSSec; https://tools.ietf.org/html/rfc5910
-    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
-}
+from sidn.constants import NS
+from sidn.utils import  python_2_unicode_compatible, cached_property, get_node_text, get_node_date
+from . import objects
 
 
 def register_namespaces():
@@ -214,44 +203,9 @@ class SidnPollData(XmlObject):
         """
         element = self.resData[0]  # type: ElementTree.Element
         if element.tag == '{urn:ietf:params:xml:ns:domain-1.0}trnData':  # full qualified name for "domain:trnData"
-            from sidn.handlers import DomainHandler
-            return DomainHandler._parse_transfer_status(self.resData)
+            trnData = self.resData.find('domain:trnData', NS)
+            return objects.TransferStatus.from_xml(trnData)
         else:
             raise NotImplementedError("Unsupported extension node: {}".format(element.tag))
 
 
-def get_node_text(parent_node, node_name, default=None):
-    """
-    Get the text content for a child node.
-
-    :type parent_node: xml.etree.ElementTree.Element
-    :type node_name: str
-    :rtype: unicode|None
-    """
-    if parent_node is None:
-        return default
-    # Handling of optional fields
-    return parent_node.findtext(node_name, namespaces=NS)
-
-
-def get_node_date(parent_node, node_name):
-    """
-    Read the date value for a child node.
-
-    :type parent_node: xml.etree.ElementTree.Element
-    :type node_name: str
-    :rtype: datetime|None
-    """
-    text = get_node_text(parent_node, node_name)
-    return parse_iso_date(text)
-
-
-def parse_iso_date(date):
-    """
-    Parse the ISO date format the EPP submits.
-    """
-    if date is None:
-        return None
-    else:
-        # Dates like: 1995-12-10T23:00:00.000Z
-        return dateutil.parser.parse(date)

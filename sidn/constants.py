@@ -4,6 +4,18 @@ EPP response codes.
 Copied from the abandoned https://pypi.python.org/pypi/EPP package
 """
 
+NS = {
+    # Possible namespaces in the response
+    # See greeting message for all possible supported extensions
+    'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
+    'obj': 'urn:ietf:params:xml:ns:obj-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
+    'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
+    'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
+    'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
+    'secDNS': 'urn:ietf:params:xml:ns:secDNS-1.1',  # DNSSec; https://tools.ietf.org/html/rfc5910
+    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
+}
+
 # Command completed successfully
 EPP_OK = 1000
 

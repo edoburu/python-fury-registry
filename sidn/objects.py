@@ -1,14 +1,56 @@
 import logging
-from .utils import python_2_unicode_compatible
+import idna
+from itertools import chain
+
+from sidn.constants import NS
+
+from .utils import python_2_unicode_compatible, get_node_text, get_node_date
 
 logger = logging.getLogger(__name__)
 
 
+class ParsedObject(object):
+    """
+    Base interface to parse XML noptes.
+    """
+
+    @classmethod
+    def from_xml(cls, node, extension=None):
+        return cls(**cls.parse_xml_fields(node, extension=extension))
+
+    @classmethod
+    def parse_xml_fields(cls, node, extension=None):
+        raise NotImplementedError("missing parse_xml_fields")
+
+
 @python_2_unicode_compatible
-class EppContact(object):
+class EppContact(ParsedObject):
     """
     Contact data object
     """
+
+    @classmethod
+    def parse_xml_fields(cls, resData, extension=None):
+        infData = resData.find('contact:infData', NS)
+        postalInfo = infData.find("contact:postalInfo[@type='loc']", NS)
+        addr = postalInfo.find('contact:addr', NS)
+
+        return dict(
+            id=get_node_text(infData, 'contact:id'),
+            roid=get_node_text(infData, 'contact:roid'),
+            status=infData.find('contact:status', NS).attrib['s'],
+            name=get_node_text(postalInfo, 'contact:name'),
+            org=get_node_text(postalInfo, 'contact:org'),
+            street= get_node_text(addr, 'contact:street'),
+            city=get_node_text(addr, 'contact:city'),
+            pc=get_node_text(addr, 'contact:pc'),
+            cc=get_node_text(addr, 'contact:cc'),
+            voice=get_node_text(infData, 'contact:voice'),
+            fax=get_node_text(infData, 'contact:fax'),
+            email=get_node_text(infData, 'contact:email'),
+            crDate=get_node_date(infData, 'contact:crDate'),
+            upDate=get_node_date(infData, 'contact:upDate'),
+        )
 
     def __init__(self, id, roid, status, name, org, street, city, pc, cc, voice, fax, email, crDate, upDate):
         # Some fields are renamed for easier referencing,
@@ -43,7 +85,7 @@ class EppContact(object):
 
 
 @python_2_unicode_compatible
-class EppDomain(object):
+class EppDomain(ParsedObject):
     """
     Domain data object
     """
@@ -65,6 +107,31 @@ class EppDomain(object):
     SERVER_RENEW_PROHIBITED = "serverRenewProhibited"
     SERVER_TRANSFER_PROHIBITED = "serverTransferProhibited"
     SERVER_UPDATE_PROHIBITED = "serverUpdateProhibited"
+
+    @classmethod
+    def parse_xml_fields(cls, resdata, extension=None):
+        infData = resdata.find('domain:infData', NS)
+        authInfo = resdata.find('domain:authInfo', NS)
+
+        ns = []
+        for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
+            ns.append(hostobj.text)
+
+        return dict(
+            name=idna.decode(get_node_text(infData, 'domain:name')),
+            roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
+            status=infData.find('domain:status', NS).attrib['s'],
+            registrant=get_node_text(infData, 'domain:registrant'),
+            admin=get_node_text(infData, "domain:contact[@type='admin']"),
+            tech=get_node_text(infData, "domain:contact[@type='tech']"),
+            ns=ns,
+            clID=get_node_text(infData, 'domain:clID'),  # current registrar
+            crID=get_node_text(infData, 'domain:crID'),  # initial registrar
+            crDate=get_node_date(infData, 'domain:crDate'),
+            upDate=get_node_date(infData, 'domain:upDate'),
+            exDate=get_node_date(infData, 'domain:exDate'),
+            pw=get_node_text(authInfo, 'domain:pw'),
+        )
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
@@ -214,9 +281,30 @@ class SidnDomain(EppDomain):
     """
     Domain data object with SIDN extension fields
     """
+    @classmethod
+    def parse_xml_fields(cls, resdata, extension=None):
+        # Base EPP base fields
+        fields = super(SidnDomain, cls).parse_xml_fields(resdata, extension)
+
+        # Parse extension fields
+        if extension is not None:
+            sidn_ext = extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', NS)
+            dnssec = extension.find('secDNS:infData', NS)
+
+            if sidn_ext is not None:
+                fields.update(dict(
+                    optOut = get_node_text(sidn_ext, 'sidn-ext-epp:optOut') == 'true',
+                    limited = get_node_text(sidn_ext, 'sidn-ext-epp:limited') == 'true',
+                    period = int(get_node_text(sidn_ext, 'sidn-ext-epp:period', 0)) or None,
+                ))
+
+            if dnssec is not None:
+                fields['dnssec'] = DNSSec.from_xml(dnssec)
+
+        return fields
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
-                 optOut=None, limited=None, period=None):
+                 optOut=None, limited=None, period=None, dnssec=None):
         super(SidnDomain, self).__init__(
             name=name,
             roid=roid,
@@ -238,15 +326,54 @@ class SidnDomain(EppDomain):
         self.limited = limited
         self.period = period
 
+        # DNSSec extension field
+        self.dnssec = dnssec
+
+
+class DNSSec(ParsedObject):
+    """
+    DNSSec info
+    """
+
+    @classmethod
+    def parse_xml_fields(cls, node, extension=None):
+        keydatas = []
+        dskeys = []
+        for node in node.findall('secDNS:keyData', NS):
+            keydatas.append(KeyData.from_xml(node))
+        for node in node.findall('secDNS:dsData', NS):
+            dskeys.append(DSKey.from_xml(node))
+        return dict(
+            keydatas=keydatas,
+            dskeys=dskeys
+        )
+
+    def __init__(self, keydatas=(), dskeys=()):
+        self.keydatas = keydatas
+        self.dskeys = dskeys
+
+    def __repr__(self):
+        return '<DNSSec[{0}]>'.format(", ".join(repr(x) for x in chain(self.dskeys, self.keydatas)))
+
 
 @python_2_unicode_compatible
-class DSKey(object):
+class DSKey(ParsedObject):
     """
     Delegation Signer key
 
     SIDN doesn't use the ``dsData`` fields.
     It only reads the ``keyData`` field.
     """
+
+    @classmethod
+    def parse_xml_fields(cls, node, extension=None):
+        return dict(
+            keyTag=get_node_text(node, 'secDNS:keyTag'),
+            alg=int(get_node_text(node, 'secDNS:alg')),
+            digestType=int(get_node_text(node, 'secDNS:digestType')),
+            digest=get_node_text(node, 'secDNS:digest'),
+            keyData=KeyData.from_xml(node.find('secDNS:keyData', NS)),
+        )
 
     def __init__(self, keyTag, alg, digestType, digest, keyData=()):
         """
@@ -271,7 +398,7 @@ class DSKey(object):
 
 
 @python_2_unicode_compatible
-class KeyData(object):
+class KeyData(ParsedObject):
     """
     DNSSec client key data
     """
@@ -290,6 +417,15 @@ class KeyData(object):
     FLAG_ZSK = 256
     #: Key signing key
     FLAG_KSK = 257
+
+    @classmethod
+    def parse_xml_fields(cls, node, extension=None):
+        return dict(
+            flags=int(get_node_text(node, 'secDNS:flags')),
+            protocol=int(get_node_text(node, 'secDNS:protocol')),
+            alg=int(get_node_text(node, 'secDNS:alg')),
+            pubKey=get_node_text(node, 'secDNS:pubKey'),
+        )
 
     def __init__(self, flags, protocol, alg, pubKey):
         """
@@ -332,7 +468,7 @@ class EppHost(object):
         return self.name
 
 
-class TransferStatus(object):
+class TransferStatus(ParsedObject):
     """
     EPP Transfer status response object
     """
@@ -342,6 +478,18 @@ class TransferStatus(object):
     PENDING = "pending"
     SERVER_APPROVED = "serverApproved"  # Transfer OK
     SERVER_CANCELLED = "serverCancelled'"
+
+    @classmethod
+    def parse_xml_fields(cls, trnData, extension=None):
+        return dict(
+            name=get_node_text(trnData, 'domain:name'),
+            trStatus=get_node_text(trnData, 'domain:trStatus'),
+            reID=get_node_text(trnData, 'domain:reID'),  # requested client
+            reDate=get_node_date(trnData, 'domain:reDate'),
+            acID=get_node_text(trnData, 'domain:acID'),  # acting client
+            acDate=get_node_date(trnData, 'domain:acDate'),
+            exDate=get_node_date(trnData, 'domain:exDate'),
+        )
 
     def __init__(self, name, trStatus, reID, reDate, acID, acDate, exDate=None):
         """
