@@ -196,12 +196,12 @@ class EppDomain(ParsedObject):
             kwargs['registrant'] = registrant
 
         if admin and admin != self.admin:
-            kwargs['remove_admins'] = self.admin
-            kwargs['add_admins'] = admin
+            kwargs['remove_admins'] = (self.admin,)
+            kwargs['add_admins'] = (admin,)
 
         if tech and tech != self.tech:
-            kwargs['remove_techs'] = self.tech
-            kwargs['add_techs'] = tech
+            kwargs['remove_techs'] = (self.tech,)
+            kwargs['add_techs'] = (tech,)
 
         if ns:
             current = set(self.ns)
