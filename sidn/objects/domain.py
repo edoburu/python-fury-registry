@@ -4,6 +4,7 @@ import idna
 from sidn.constants import XMLNS
 from sidn.utils import python_2_unicode_compatible, get_node_text, get_node_date
 
+from sidn.client import EPP  # for PyCharm
 from .base import ParsedObject
 from .secdns import DNSSec
 
@@ -95,7 +96,7 @@ class EppDomain(ParsedObject):
         self.dnssec = dnssec
 
         # Can be assigned by handler
-        self._epp = None
+        self._epp = None  # type: EPP
 
     def __repr__(self):
         return '<{0} {0}>'.format(self.__class__.__name__, self)
@@ -147,7 +148,7 @@ class EppDomain(ParsedObject):
         if ns:
             current = set(self.ns)
             new = set(ns)
-            if set(ns) != set(self.ns):
+            if current != new:
                 kwargs['remove_ns'] = sorted(current - new)
                 kwargs['add_ns'] = sorted(new - current)
 
@@ -185,7 +186,7 @@ class EppDomain(ParsedObject):
         if self.registrant == new_handle:
             return None
         else:
-            return self._epp.domains.update(registrant=new_handle)
+            return self._epp.domains.update(self.name, registrant=new_handle)
 
     def update_admin(self, new_handle):
         """
@@ -194,7 +195,7 @@ class EppDomain(ParsedObject):
         if new_handle == self.admin:
             return None
         else:
-            response = self._epp.domains.update(remove_techs=(self.admin,), add_techs=(new_handle,))
+            response = self._epp.domains.update(self.name, remove_techs=(self.admin,), add_techs=(new_handle,))
             self.admin = new_handle
             return response
 
@@ -205,7 +206,7 @@ class EppDomain(ParsedObject):
         if new_handle == self.tech:
             return None
         else:
-            response = self._epp.domains.update(remove_techs=(self.tech,), add_techs=(new_handle,))
+            response = self._epp.domains.update(self.name, remove_techs=(self.tech,), add_techs=(new_handle,))
             self.tech = new_handle
             return response
 
@@ -231,7 +232,7 @@ class EppDomain(ParsedObject):
         :type period: int
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
-        return self._epp.domains.renew(expiration_date=self.expire_date, period=period, period_unit=period_unit)
+        return self._epp.domains.renew(self.name, expiration_date=self.expire_date, period=period, period_unit=period_unit)
 
 
 class SidnDomain(EppDomain):
