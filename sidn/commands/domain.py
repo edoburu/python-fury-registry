@@ -31,7 +31,9 @@ def renew_part(name, curExpDate, period, unit):
         <domain:curExpDate>{curExpDate}</domain:curExpDate>
         <domain:period unit="{unit}">{period}</domain:period>
       </domain:renew>"""
-    if isinstance(curExpDate, (date, datetime)):
+    if curExpDate is None:
+        curExpDate = date.today().strftime("%Y-%m-%d")  # e.g. registered today
+    elif isinstance(curExpDate, (date, datetime)):
         curExpDate = curExpDate.strftime("%Y-%m-%d")
     return xml_format(xml, name=idna.encode(name), curExpDate=curExpDate, period=str(int(period)), unit=unit)
 
