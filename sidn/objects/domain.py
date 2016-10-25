@@ -4,9 +4,12 @@ import idna
 from sidn.constants import XMLNS
 from sidn.utils import python_2_unicode_compatible, get_node_text, get_node_date
 
-from sidn.client import EPP  # for PyCharm
 from .base import ParsedObject
 from .secdns import DNSSec
+
+if 0:
+    from sidn.client import EPP  # For PyCharm type checking
+
 
 logger = logging.getLogger(__name__)
 
