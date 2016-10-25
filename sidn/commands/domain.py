@@ -83,7 +83,7 @@ def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), 
         xml += """
         <domain:rem>"""
 
-        if add_ns:
+        if remove_ns:
             xml += _ns_list(remove_ns)
 
         for admin in remove_admins:
