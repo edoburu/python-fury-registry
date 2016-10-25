@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ParsedObject(object):
     """
-    Base interface to parse XML noptes.
+    Base interface to parse XML nodes.
     """
 
     @classmethod
@@ -117,7 +117,7 @@ class EppDomain(ParsedObject):
         for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
             ns.append(hostobj.text)
 
-        return dict(
+        fields = dict(
             name=idna.decode(get_node_text(infData, 'domain:name')),
             roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
             status=infData.find('domain:status', NS).attrib['s'],
@@ -133,7 +133,19 @@ class EppDomain(ParsedObject):
             pw=get_node_text(authInfo, 'domain:pw'),
         )
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw):
+        # Parse extension fields
+        if extension is not None:
+            dnssec = extension.find('secDNS:infData', NS)
+
+            if dnssec is not None:
+                fields['dnssec'] = DNSSec.from_xml(dnssec)
+
+        return fields
+
+    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw, dnssec=None):
+        """
+        :type dnssec: DNSSec
+        """
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
         #
@@ -152,6 +164,9 @@ class EppDomain(ParsedObject):
         self.updated_date = upDate
         self.expire_date = exDate
         self.pw = pw
+
+        # DNSSec extension field
+        self.dnssec = dnssec
 
         # Can be assigned by handler
         self._epp = None
@@ -211,11 +226,27 @@ class EppDomain(ParsedObject):
                 kwargs['add_ns'] = sorted(new - current)
 
         if keydatas:
-            # The remove all / add everything is a quick implementation choice.
-            # TODO: only remove the DNSSec data that have to be removed.
-            kwargs['remove_all_keys'] = True
-            kwargs['add_keydatas'] = keydatas
-            kwargs['dnssec_urgent'] = dnssec_urgent
+            add = []
+            remove = []
+            if not self.dnssec:
+                # Add all.
+                kwargs['remove_all_keys'] = True
+                kwargs['add_keydatas'] = keydatas
+                kwargs['dnssec_urgent'] = dnssec_urgent
+            else:
+                # Try a partial add, only remove old keys.
+                for keydata in keydatas:
+                    # Not in existing!
+                    if keydata not in self.dnssec:
+                        add.append(keydatas)
+                for keydata in self.dnssec.keydatas:
+                    if keydata not in keydatas:
+                        remove.append(keydata)
+
+                if add or remove:
+                    kwargs['remove_keydatas'] = remove
+                    kwargs['add_keydatas'] = add
+                    kwargs['dnssec_urgent'] = dnssec_urgent
 
         if not kwargs:
             return None
@@ -289,7 +320,6 @@ class SidnDomain(EppDomain):
         # Parse extension fields
         if extension is not None:
             sidn_ext = extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', NS)
-            dnssec = extension.find('secDNS:infData', NS)
 
             if sidn_ext is not None:
                 fields.update(dict(
@@ -298,13 +328,10 @@ class SidnDomain(EppDomain):
                     period = int(get_node_text(sidn_ext, 'sidn-ext-epp:period', 0)) or None,
                 ))
 
-            if dnssec is not None:
-                fields['dnssec'] = DNSSec.from_xml(dnssec)
-
         return fields
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
-                 optOut=None, limited=None, period=None, dnssec=None):
+                 dnssec=None, optOut=None, limited=None, period=None):
         super(SidnDomain, self).__init__(
             name=name,
             roid=roid,
@@ -318,16 +345,14 @@ class SidnDomain(EppDomain):
             crDate=crDate,
             upDate=upDate,
             exDate=exDate,
-            pw=pw
+            pw=pw,
+            dnssec=dnssec
         )
 
         # SIDN extension fields
         self.opt_out = optOut
         self.limited = limited
         self.period = period
-
-        # DNSSec extension field
-        self.dnssec = dnssec
 
 
 class DNSSec(ParsedObject):
@@ -351,6 +376,9 @@ class DNSSec(ParsedObject):
     def __init__(self, keydatas=(), dskeys=()):
         self.keydatas = keydatas
         self.dskeys = dskeys
+
+    def __contains__(self, item):
+        return item in self.keydatas or item in self.dskeys
 
     def __repr__(self):
         return '<DNSSec[{0}]>'.format(", ".join(repr(x) for x in chain(self.dskeys, self.keydatas)))
@@ -395,6 +423,19 @@ class DSKey(ParsedObject):
 
     def __str__(self):
         return self.digest
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, DSKey) and
+            self.keyTag == other.keyTag and
+            self.alg == other.alg and
+            self.digestType == other.digestType and
+            self.digest == other.digest and
+            self.keyData == other.keyData
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 @python_2_unicode_compatible
@@ -449,6 +490,18 @@ class KeyData(ParsedObject):
 
     def __str__(self):
         return " ".join(map(str, (self.flags, self.protocol, self.alg, self.pubKey)))
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, KeyData) and
+            self.flags == other.flags and
+            self.protocol == other.protocol and
+            self.alg == other.alg and
+            self.pubKey == other.pubKey
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 @python_2_unicode_compatible

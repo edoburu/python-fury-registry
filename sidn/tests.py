@@ -1,3 +1,4 @@
+from copy import copy
 from unittest import TestCase
 
 from datetime import datetime
@@ -150,6 +151,11 @@ class ParserTests(TestCase):
         self.assertEqual(domain.dnssec.keydatas[0].protocol, KeyData.PROTOCOL3)
         self.assertEqual(domain.dnssec.keydatas[0].flags, KeyData.FLAG_KSK)
         self.assertTrue(domain.dnssec.keydatas[0].pubKey.startswith('AwEAAao2zeD'))
+
+        # testing DNSSec.__contains() and KeyData.__eq__().
+        # This is also used for EppDomain.update()
+        dnssec = domain.dnssec
+        self.assertTrue(copy(dnssec.keydatas[0]) in domain.dnssec)
 
     def test_parse_contact_avail(self):
         """
