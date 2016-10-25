@@ -28,12 +28,9 @@ class HostHandler(BaseHandler):
 
     def get(self, nameserver):
         xml = commands.host.info_part(name=nameserver)
-        resdata = self.epp.cmd(xml).resData
+        response = self.epp.cmd(xml)
         # TODO: complete this.
-        return objects.EppHost(
-            name=nameserver,
-            addr=resdata.find('host:addr', XMLNS).text
-        )
+        return objects.EppHost.from_xml(response.resData)
 
     def delete(self, name):
         """

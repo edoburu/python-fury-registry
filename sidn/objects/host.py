@@ -1,22 +1,43 @@
-import logging
-
-from sidn.utils import python_2_unicode_compatible
-
-logger = logging.getLogger(__name__)
+from sidn.constants import XMLNS
+from sidn.utils import python_2_unicode_compatible, get_node_text, get_node_date
+from .base import ParsedObject
 
 
 @python_2_unicode_compatible
-class EppHost(object):
+class EppHost(ParsedObject):
     """
     Host data object (e.g. for nameservers)
     """
 
-    def __init__(self, name, addr):
+    @classmethod
+    def parse_xml_fields(cls, resdata, extension=None):
+        infData = resdata.find('host:infData', XMLNS)
+
+        ips = []
+        for addr in infData.findall('host:addr', XMLNS):
+            ips.append(addr.text)
+
+        return dict(
+            name=get_node_text(infData, 'host:name'),
+            roid=get_node_text(infData, 'host:roid'),  # Repository object identifier (assigned on creation)
+            status=infData.find('host:status', XMLNS).attrib['s'],
+            addr=ips,
+            clID=get_node_text(infData, 'host:clID'),  # current registrar
+            crID=get_node_text(infData, 'host:crID'),  # initial registrar
+            crDate=get_node_date(infData, 'host:crDate'),
+        )
+
+    def __init__(self, name, roid, status, addr, clID, crID, crDate):
         self.name = name
+        self.roid = roid
+        self.status = status
         self.addr = addr
+        self.cl_id = clID
+        self.cr_id = crID
+        self.created_date = crDate
 
     def __repr__(self):
-        return '<Host {0}>'.format(self)
+        return '<Host {0} {1}>'.format(self, " ".join(self.addr))
 
     def __str__(self):
         return self.name
