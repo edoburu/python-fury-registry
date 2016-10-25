@@ -30,7 +30,7 @@ def renew_part(name, curExpDate, period, unit):
         <domain:curExpDate>{curExpDate}</domain:curExpDate>
         <domain:period unit="{unit}">{period}</domain:period>
       </domain:check>"""
-    return xml_format(xml, name=idna.encode(name), curExpDate=curExpDate, period=period, unit=unit)
+    return xml_format(xml, name=idna.encode(name), curExpDate=curExpDate, period=str(int(period)), unit=unit)
 
 
 def create_part(name, registrant, admin, tech, ns, pw='unused'):
