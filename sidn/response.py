@@ -1,7 +1,7 @@
 import sys
 from xml.etree import ElementTree
 
-from sidn.constants import NS
+from sidn.constants import XMLNS
 from sidn.utils import  python_2_unicode_compatible, cached_property, get_node_text, get_node_date
 from . import objects
 
@@ -11,7 +11,7 @@ def register_namespaces():
     Register the namespaces in the ElementTree globals.
     This improves the output for debugging, but will override any previously registered prefixes.
     """
-    for prefix, uri in NS.items():
+    for prefix, uri in XMLNS.items():
         ElementTree.register_namespace(prefix, uri)
 
 
@@ -53,7 +53,7 @@ class EPPResponse(XmlObject):
         """
         :rtype: xml.etree.ElementTree.Element
         """
-        return self.element.find('epp:result', NS)
+        return self.element.find('epp:result', XMLNS)
 
     @cached_property
     def result_code(self):
@@ -61,7 +61,7 @@ class EPPResponse(XmlObject):
 
     @cached_property
     def result_msg(self):
-        return self.result.find('epp:msg', NS).text
+        return self.result.find('epp:msg', XMLNS).text
 
     @cached_property
     def resData(self):
@@ -71,22 +71,22 @@ class EPPResponse(XmlObject):
 
         :rtype: xml.etree.ElementTree.Element
         """
-        resData = self.element.find('epp:resData', NS)
+        resData = self.element.find('epp:resData', XMLNS)
         if resData is None:
             raise AttributeError("There is no resData node in this response")
         return resData
 
     @cached_property
     def extension(self):
-        return self.element.find('epp:extension', NS)
+        return self.element.find('epp:extension', XMLNS)
 
     @cached_property
     def clTRID(self):
-        return get_node_text(self.element.find('epp:trID', NS), 'epp:clTRID')
+        return get_node_text(self.element.find('epp:trID', XMLNS), 'epp:clTRID')
 
     @cached_property
     def svTRID(self):
-        return get_node_text(self.element.find('epp:trID', NS), 'epp:svTRID')
+        return get_node_text(self.element.find('epp:trID', XMLNS), 'epp:svTRID')
 
 
 class EPPPollResponse(EPPResponse):
@@ -104,7 +104,7 @@ class EPPPollResponse(EPPResponse):
         """
         :rtype: xml.etree.ElementTree.Element
         """
-        return self.element.find('epp:msgQ', NS)
+        return self.element.find('epp:msgQ', XMLNS)
 
     @cached_property
     def queue_count(self):
@@ -153,7 +153,7 @@ class SidnPollResponse(EPPPollResponse):
         """
         Return the SIDN extension data
         """
-        return SidnPollData(self.resData.find('sidn-ext-epp:pollData', NS))
+        return SidnPollData(self.resData.find('sidn-ext-epp:pollData', XMLNS))
 
 
 class SidnPollData(XmlObject):
@@ -178,7 +178,7 @@ class SidnPollData(XmlObject):
 
     @cached_property
     def result(self):
-        return self.element.find('sidn-ext-epp:data/epp:result', NS)
+        return self.element.find('sidn-ext-epp:data/epp:result', XMLNS)
 
     @cached_property
     def code(self):
@@ -194,7 +194,7 @@ class SidnPollData(XmlObject):
         The SIDN poll data has another resData node inside.
         :rtype: xml.etree.ElementTree.Element
         """
-        return self.element.find('sidn-ext-epp:data/epp:resData', NS)
+        return self.element.find('sidn-ext-epp:data/epp:resData', XMLNS)
 
     @cached_property
     def object(self):
@@ -203,7 +203,7 @@ class SidnPollData(XmlObject):
         """
         element = self.resData[0]  # type: ElementTree.Element
         if element.tag == '{urn:ietf:params:xml:ns:domain-1.0}trnData':  # full qualified name for "domain:trnData"
-            trnData = self.resData.find('domain:trnData', NS)
+            trnData = self.resData.find('domain:trnData', XMLNS)
             return objects.TransferStatus.from_xml(trnData)
         else:
             raise NotImplementedError("Unsupported extension node: {}".format(element.tag))

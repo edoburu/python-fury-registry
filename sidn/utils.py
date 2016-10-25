@@ -7,7 +7,7 @@ import struct
 import dateutil.parser
 from xml.sax import saxutils
 
-from sidn.constants import NS
+from sidn.constants import XMLNS
 
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
@@ -122,7 +122,7 @@ def get_node_text(parent_node, node_name, default=None):
     if parent_node is None:
         return default
     # Handling of optional fields
-    return parent_node.findtext(node_name, namespaces=NS)
+    return parent_node.findtext(node_name, namespaces=XMLNS)
 
 
 def get_node_date(parent_node, node_name):

@@ -5,10 +5,10 @@ from datetime import datetime
 from dateutil.tz import tzutc
 
 from sidn.client import EPP, EPPError, SidnPollResponse
-from sidn.constants import EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
-from sidn.handlers import ContactHandler, DomainHandler
+from sidn.constants import XMLNS, EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
+from sidn.handlers import ContactHandler
 from sidn.objects import EppContact, SidnDomain, KeyData
-from sidn.response import register_namespaces, NS
+from sidn.response import register_namespaces
 from sidn.utils import get_node_text
 
 UTC = tzutc()

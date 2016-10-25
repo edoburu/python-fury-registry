@@ -1,7 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
-from sidn.constants import NS, EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
+from sidn.constants import XMLNS, EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
 from . import commands
 from . import objects
 
@@ -61,7 +61,7 @@ class DomainHandler(BaseHandler):
     def _parse_avail(response):
         # Note that the domain:cd element may be repeated
         # The element may also contain a <domain:reason> element.
-        return response.resData.find('domain:chkData/domain:cd/domain:name', NS).attrib['avail'] in ('1', 'true')
+        return response.resData.find('domain:chkData/domain:cd/domain:name', XMLNS).attrib['avail'] in ('1', 'true')
 
     def create(self, name, registrant, contacts, ns, dskeys=(), keyData=()):
         """
@@ -239,7 +239,7 @@ class DomainHandler(BaseHandler):
 
     @staticmethod
     def _parse_transfer_status(response):
-        trnData = response.resData.find('domain:trnData', NS)
+        trnData = response.resData.find('domain:trnData', XMLNS)
         return objects.TransferStatus.from_xml(trnData)
 
 
@@ -266,7 +266,7 @@ class ContactHandler(BaseHandler):
 
     @staticmethod
     def _parse_avail(response):
-        return response.resData.find('contact:chkData/contact:cd/contact:id', NS).attrib['avail'] in ('1', 'true')
+        return response.resData.find('contact:chkData/contact:cd/contact:id', XMLNS).attrib['avail'] in ('1', 'true')
 
     def get(self, handle):
         """
@@ -330,7 +330,7 @@ class ContactHandler(BaseHandler):
         )
         xml = self._build_command('create', command, command_extensions=(ext,))
         res = self.epp.cmd(xml).resData
-        return res.find('contact:creData/contact:id', NS).text
+        return res.find('contact:creData/contact:id', XMLNS).text
 
     def update(self, handle, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
         """
@@ -387,7 +387,7 @@ class HostHandler(BaseHandler):
         # TODO: complete this.
         return objects.EppHost(
             name=nameserver,
-            addr=resdata.find('host:addr', NS).text
+            addr=resdata.find('host:addr', XMLNS).text
         )
 
     def delete(self, name):

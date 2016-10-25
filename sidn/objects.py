@@ -2,7 +2,7 @@ import logging
 import idna
 from itertools import chain
 
-from sidn.constants import NS
+from sidn.constants import XMLNS
 
 from .utils import python_2_unicode_compatible, get_node_text, get_node_date
 
@@ -31,14 +31,14 @@ class EppContact(ParsedObject):
 
     @classmethod
     def parse_xml_fields(cls, resData, extension=None):
-        infData = resData.find('contact:infData', NS)
-        postalInfo = infData.find("contact:postalInfo[@type='loc']", NS)
-        addr = postalInfo.find('contact:addr', NS)
+        infData = resData.find('contact:infData', XMLNS)
+        postalInfo = infData.find("contact:postalInfo[@type='loc']", XMLNS)
+        addr = postalInfo.find('contact:addr', XMLNS)
 
         return dict(
             id=get_node_text(infData, 'contact:id'),
             roid=get_node_text(infData, 'contact:roid'),
-            status=infData.find('contact:status', NS).attrib['s'],
+            status=infData.find('contact:status', XMLNS).attrib['s'],
             name=get_node_text(postalInfo, 'contact:name'),
             org=get_node_text(postalInfo, 'contact:org'),
             street= get_node_text(addr, 'contact:street'),
@@ -110,17 +110,17 @@ class EppDomain(ParsedObject):
 
     @classmethod
     def parse_xml_fields(cls, resdata, extension=None):
-        infData = resdata.find('domain:infData', NS)
-        authInfo = resdata.find('domain:authInfo', NS)
+        infData = resdata.find('domain:infData', XMLNS)
+        authInfo = resdata.find('domain:authInfo', XMLNS)
 
         ns = []
-        for hostobj in infData.find('domain:ns', NS).findall('domain:hostObj', NS):
+        for hostobj in infData.find('domain:ns', XMLNS).findall('domain:hostObj', XMLNS):
             ns.append(hostobj.text)
 
         fields = dict(
             name=idna.decode(get_node_text(infData, 'domain:name')),
             roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
-            status=infData.find('domain:status', NS).attrib['s'],
+            status=infData.find('domain:status', XMLNS).attrib['s'],
             registrant=get_node_text(infData, 'domain:registrant'),
             admin=get_node_text(infData, "domain:contact[@type='admin']"),
             tech=get_node_text(infData, "domain:contact[@type='tech']"),
@@ -135,7 +135,7 @@ class EppDomain(ParsedObject):
 
         # Parse extension fields
         if extension is not None:
-            dnssec = extension.find('secDNS:infData', NS)
+            dnssec = extension.find('secDNS:infData', XMLNS)
 
             if dnssec is not None:
                 fields['dnssec'] = DNSSec.from_xml(dnssec)
@@ -319,7 +319,7 @@ class SidnDomain(EppDomain):
 
         # Parse extension fields
         if extension is not None:
-            sidn_ext = extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', NS)
+            sidn_ext = extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', XMLNS)
 
             if sidn_ext is not None:
                 fields.update(dict(
@@ -364,9 +364,9 @@ class DNSSec(ParsedObject):
     def parse_xml_fields(cls, node, extension=None):
         keydatas = []
         dskeys = []
-        for node in node.findall('secDNS:keyData', NS):
+        for node in node.findall('secDNS:keyData', XMLNS):
             keydatas.append(KeyData.from_xml(node))
-        for node in node.findall('secDNS:dsData', NS):
+        for node in node.findall('secDNS:dsData', XMLNS):
             dskeys.append(DSKey.from_xml(node))
         return dict(
             keydatas=keydatas,
@@ -400,7 +400,7 @@ class DSKey(ParsedObject):
             alg=int(get_node_text(node, 'secDNS:alg')),
             digestType=int(get_node_text(node, 'secDNS:digestType')),
             digest=get_node_text(node, 'secDNS:digest'),
-            keyData=KeyData.from_xml(node.find('secDNS:keyData', NS)),
+            keyData=KeyData.from_xml(node.find('secDNS:keyData', XMLNS)),
         )
 
     def __init__(self, keyTag, alg, digestType, digest, keyData=()):

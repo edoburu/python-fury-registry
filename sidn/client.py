@@ -3,10 +3,10 @@ import socket
 import ssl
 from xml.etree import ElementTree
 
-from sidn.constants import EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK, EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING
+from sidn.constants import XMLNS, EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK, EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING
 from . import commands
 from . import handlers
-from sidn.response import NS, EPPResponse, SidnPollResponse
+from sidn.response import EPPResponse, SidnPollResponse
 from sidn.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 logger = logging.getLogger(__name__)
@@ -117,17 +117,17 @@ class EPP(object):
         # </epp>
         #
         xml = ElementTree.XML(raw_response)
-        response = xml.find('epp:response', NS)
+        response = xml.find('epp:response', XMLNS)
 
         # Check <result> node
         # Note for failures, multiple <result> nodes may be present for multiple error conditions.
-        result = response.find('epp:result', NS)
+        result = response.find('epp:result', XMLNS)
         result_code = int(result.attrib['code'])
         if result_code >= 2000:
-            msg = result.find('epp:msg', NS)
-            ext = response.find('epp:extension', NS)
+            msg = result.find('epp:msg', XMLNS)
+            ext = response.find('epp:extension', XMLNS)
             if ext is not None:
-                msg_node = ext.find('sidn-ext-epp:ext/sidn-ext-epp:response/sidn-ext-epp:msg', NS)
+                msg_node = ext.find('sidn-ext-epp:ext/sidn-ext-epp:response/sidn-ext-epp:msg', XMLNS)
                 ext_code = msg_node.attrib['code']
                 ext_message = msg_node.text
             else:
@@ -176,11 +176,11 @@ class EPP(object):
         #     </svcMenu>
         #   </greeting>
         # </epp>
-        greeting = xml.find('epp:greeting', NS)
-        svcMenu = greeting.find('epp:svcMenu', NS)
+        greeting = xml.find('epp:greeting', XMLNS)
+        svcMenu = greeting.find('epp:svcMenu', XMLNS)
 
-        svid = greeting.find('epp:svID', NS).text
-        version = svcMenu.find('epp:version', NS).text
+        svid = greeting.find('epp:svID', XMLNS).text
+        version = svcMenu.find('epp:version', XMLNS).text
         logger.info("Connected to %s (v%s)\n", svid, version)
 
     def login(self, username, password):

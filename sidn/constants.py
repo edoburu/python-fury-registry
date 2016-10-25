@@ -4,7 +4,7 @@ EPP response codes.
 Copied from the abandoned https://pypi.python.org/pypi/EPP package
 """
 
-NS = {
+XMLNS = {
     # Possible namespaces in the response
     # See greeting message for all possible supported extensions
     'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
