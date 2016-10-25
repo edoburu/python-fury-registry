@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import idna
+from datetime import date, datetime
 
 from sidn.utils import xml_format, escape
 
@@ -29,7 +30,9 @@ def renew_part(name, curExpDate, period, unit):
         <domain:name>{name}</domain:name>
         <domain:curExpDate>{curExpDate}</domain:curExpDate>
         <domain:period unit="{unit}">{period}</domain:period>
-      </domain:check>"""
+      </domain:renew>"""
+    if isinstance(curExpDate, (date, datetime)):
+        curExpDate = curExpDate.strftime("%Y-%m-%d")
     return xml_format(xml, name=idna.encode(name), curExpDate=curExpDate, period=str(int(period)), unit=unit)
 
 
