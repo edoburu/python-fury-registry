@@ -1,87 +1,13 @@
 import logging
 import idna
-from itertools import chain
 
 from sidn.constants import XMLNS
+from sidn.utils import python_2_unicode_compatible, get_node_text, get_node_date
 
-from .utils import python_2_unicode_compatible, get_node_text, get_node_date
+from .base import ParsedObject
+from .secdns import DNSSec
 
 logger = logging.getLogger(__name__)
-
-
-class ParsedObject(object):
-    """
-    Base interface to parse XML nodes.
-    """
-
-    @classmethod
-    def from_xml(cls, node, extension=None):
-        return cls(**cls.parse_xml_fields(node, extension=extension))
-
-    @classmethod
-    def parse_xml_fields(cls, node, extension=None):
-        raise NotImplementedError("missing parse_xml_fields")
-
-
-@python_2_unicode_compatible
-class EppContact(ParsedObject):
-    """
-    Contact data object
-    """
-
-    @classmethod
-    def parse_xml_fields(cls, resData, extension=None):
-        infData = resData.find('contact:infData', XMLNS)
-        postalInfo = infData.find("contact:postalInfo[@type='loc']", XMLNS)
-        addr = postalInfo.find('contact:addr', XMLNS)
-
-        return dict(
-            id=get_node_text(infData, 'contact:id'),
-            roid=get_node_text(infData, 'contact:roid'),
-            status=infData.find('contact:status', XMLNS).attrib['s'],
-            name=get_node_text(postalInfo, 'contact:name'),
-            org=get_node_text(postalInfo, 'contact:org'),
-            street= get_node_text(addr, 'contact:street'),
-            city=get_node_text(addr, 'contact:city'),
-            pc=get_node_text(addr, 'contact:pc'),
-            cc=get_node_text(addr, 'contact:cc'),
-            voice=get_node_text(infData, 'contact:voice'),
-            fax=get_node_text(infData, 'contact:fax'),
-            email=get_node_text(infData, 'contact:email'),
-            crDate=get_node_date(infData, 'contact:crDate'),
-            upDate=get_node_date(infData, 'contact:upDate'),
-        )
-
-    def __init__(self, id, roid, status, name, org, street, city, pc, cc, voice, fax, email, crDate, upDate):
-        # Some fields are renamed for easier referencing,
-        # while the constructor arguments map to the XML field names.
-        self.handle = id
-        self.roid = roid
-        self.status = status
-        self.name = name
-        self.organisation = org
-        self.street = street
-        self.city = city
-        self.postcode = pc
-        self.country_code = cc
-        self.phone = voice
-        self.fax = fax
-        self.email = email
-        self.created_date = crDate
-        self.updated_date = upDate
-
-    def __repr__(self):
-        return '<Contact {0}>'.format(self)
-
-    def __str__(self):
-        return "[{handle}] {name}, {street}, {postcode} {city} ({country_code})".format(
-            handle=self.handle,
-            name=self.name,
-            street=self.street,
-            postcode=self.postcode,
-            city=self.city,
-            country_code=self.country_code
-        )
 
 
 @python_2_unicode_compatible
@@ -144,7 +70,7 @@ class EppDomain(ParsedObject):
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw, dnssec=None):
         """
-        :type dnssec: DNSSec
+        :type dnssec: sidn.objects.DNSSec
         """
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
@@ -353,172 +279,6 @@ class SidnDomain(EppDomain):
         self.opt_out = optOut
         self.limited = limited
         self.period = period
-
-
-class DNSSec(ParsedObject):
-    """
-    DNSSec info
-    """
-
-    @classmethod
-    def parse_xml_fields(cls, node, extension=None):
-        keydatas = []
-        dskeys = []
-        for node in node.findall('secDNS:keyData', XMLNS):
-            keydatas.append(KeyData.from_xml(node))
-        for node in node.findall('secDNS:dsData', XMLNS):
-            dskeys.append(DSKey.from_xml(node))
-        return dict(
-            keydatas=keydatas,
-            dskeys=dskeys
-        )
-
-    def __init__(self, keydatas=(), dskeys=()):
-        self.keydatas = keydatas
-        self.dskeys = dskeys
-
-    def __contains__(self, item):
-        return item in self.keydatas or item in self.dskeys
-
-    def __repr__(self):
-        return '<DNSSec[{0}]>'.format(", ".join(repr(x) for x in chain(self.dskeys, self.keydatas)))
-
-
-@python_2_unicode_compatible
-class DSKey(ParsedObject):
-    """
-    Delegation Signer key
-
-    SIDN doesn't use the ``dsData`` fields.
-    It only reads the ``keyData`` field.
-    """
-
-    @classmethod
-    def parse_xml_fields(cls, node, extension=None):
-        return dict(
-            keyTag=get_node_text(node, 'secDNS:keyTag'),
-            alg=int(get_node_text(node, 'secDNS:alg')),
-            digestType=int(get_node_text(node, 'secDNS:digestType')),
-            digest=get_node_text(node, 'secDNS:digest'),
-            keyData=KeyData.from_xml(node.find('secDNS:keyData', XMLNS)),
-        )
-
-    def __init__(self, keyTag, alg, digestType, digest, keyData=()):
-        """
-        :type keyTag: int
-        :type alg: int
-        :param digestType: See https://tools.ietf.org/html/rfc4034#appendix-A.2
-        :type digestType: int
-        :type digest: str
-        :type keyData: Tuple[KeyData]
-        """
-        self.keyTag = keyTag  # unsignedShort
-        self.alg = alg  # unsignedByte
-        self.digestType = digestType  # unsignedByte
-        self.digest = digest  # hexBinary
-        self.keyData = keyData  # secDNS:keyDataType
-
-    def __repr__(self):
-        return '<DSKey {0}>'.format(self)
-
-    def __str__(self):
-        return self.digest
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, DSKey) and
-            self.keyTag == other.keyTag and
-            self.alg == other.alg and
-            self.digestType == other.digestType and
-            self.digest == other.digest and
-            self.keyData == other.keyData
-        )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
-@python_2_unicode_compatible
-class KeyData(ParsedObject):
-    """
-    DNSSec client key data
-    """
-    PROTOCOL3 = 3
-
-    #: DSA/SHA-1
-    ALG_DSA = 3
-    #: Elliptic Curve
-    ALG_ECC = 4
-    #: RSA/SHA-1
-    ALG_SHA1 = 5
-    #: RSA/SHA-256
-    ALG_SHA256 = 8
-
-    #: Zone signing key
-    FLAG_ZSK = 256
-    #: Key signing key
-    FLAG_KSK = 257
-
-    @classmethod
-    def parse_xml_fields(cls, node, extension=None):
-        return dict(
-            flags=int(get_node_text(node, 'secDNS:flags')),
-            protocol=int(get_node_text(node, 'secDNS:protocol')),
-            alg=int(get_node_text(node, 'secDNS:alg')),
-            pubKey=get_node_text(node, 'secDNS:pubKey'),
-        )
-
-    def __init__(self, flags, protocol, alg, pubKey):
-        """
-        :param flags: Values 256 (ZSK) en 257 (KSK) are allowed.
-        :type flags: int
-        :param protocol: Fixed value 3, see
-        :type protocol: int
-        :param alg: See http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
-        :type alg: int
-        :param pubKey: Base64 encoded public key
-        :type pubKey: str
-        """
-        # https://tools.ietf.org/html/rfc4034#section-2.1.1
-        self.flags = flags  # unsignedShort
-        self.protocol = protocol  # unsignedByte
-        self.alg = alg  # unsignedByte
-        self.pubKey = pubKey  # secDNS:keyType
-
-    def __repr__(self):
-        return '<KeyData: {0}>'.format(self)
-
-    def __str__(self):
-        return " ".join(map(str, (self.flags, self.protocol, self.alg, self.pubKey)))
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, KeyData) and
-            self.flags == other.flags and
-            self.protocol == other.protocol and
-            self.alg == other.alg and
-            self.pubKey == other.pubKey
-        )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
-@python_2_unicode_compatible
-class EppHost(object):
-    """
-    Host data object (e.g. for nameservers)
-    """
-
-    def __init__(self, name, addr):
-        self.name = name
-        self.addr = addr
-
-    def __repr__(self):
-        return '<Host {0}>'.format(self)
-
-    def __str__(self):
-        return self.name
 
 
 class TransferStatus(ParsedObject):
