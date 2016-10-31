@@ -41,7 +41,7 @@ class EppDomain(ParsedObject):
     @classmethod
     def parse_xml_fields(cls, resdata, extension=None):
         infData = resdata.find('domain:infData', XMLNS)
-        authInfo = resdata.find('domain:authInfo', XMLNS)
+        authInfo = infData.find('domain:authInfo', XMLNS)
 
         ns = []
         for hostobj in infData.find('domain:ns', XMLNS).findall('domain:hostObj', XMLNS):
