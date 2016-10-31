@@ -102,7 +102,7 @@ class EppDomain(ParsedObject):
         self._epp = None  # type: EPP
 
     def __repr__(self):
-        return '<{0} {0}>'.format(self.__class__.__name__, self)
+        return '<{0} {1}>'.format(self.__class__.__name__, self)
 
     def __str__(self):
         return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
