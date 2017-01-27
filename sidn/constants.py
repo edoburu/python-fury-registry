@@ -150,6 +150,9 @@ SIDN_EXT_ACTION_INCOMPATIBLE_DOMAIN_STATUS = 'C0001b'  # for 2304 (EPP_OBJECT_ST
 # The specified domain name is not managed by you.
 SIDN_EXT_NOT_MANAGED_BY_ACCOUNT = 'C0038b'  # for 2308 (EPP_DATA_MGMT_POLICY)
 
+# The specified token did not originate from the specified domain name.
+SIDN_EXT_TRANSFER_TOKEN_INVALID = 'C0098a'  # for 2308 (EPP_DATA_MGMT_POLICY)
+
 # No transfers are recorded for this domain name.
 SIDN_EXT_NO_XFR_RECORDED = 'C0100'  # for 2301 (EPP_OBJECT_NOT_PENDING_XFR)
 
