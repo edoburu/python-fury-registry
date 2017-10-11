@@ -34,11 +34,13 @@ class EPP(object):
     The EPP client
     """
 
-    def __init__(self, host, port=700, username=None, password=None, certfile=None, timeout=2):
+    def __init__(self, host, port=700, username=None, password=None, certfile=None, timeout=60):
         """
         Initialize the client.
         This establishes a connection to the SIDN DRS5 system via EPP.
 
+        :param timeout: The timeout in seconds
+        :type timeout: Optional[float]
         :raises socket.error: In case the connection failed.
         """
         self.ssl = None
