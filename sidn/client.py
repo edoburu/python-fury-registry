@@ -146,7 +146,7 @@ class EPP(object):
         if size_field:
             size = int32_from_net(size_field) - 4
             remaining = size
-            xml_bytes = ''
+            xml_bytes = b''
             while remaining > 0:
                 xml_bytes += self.ssl.read(remaining)
                 remaining = size - len(xml_bytes)
@@ -159,7 +159,7 @@ class EPP(object):
     def _write(self, xml):
         # Convert to the raw data to be send.
         # utf-8 may take multiple bytes per character.
-        xml_bytes = xml.encode('utf-8') + "\r\n"
+        xml_bytes = (xml + "\r\n").encode('utf-8')
         # +4 for the length field itself (section 4 mandates that)
         length = int32_to_net(len(xml_bytes) + 4)
         self.ssl.send(length)

@@ -9,6 +9,9 @@ from xml.sax import saxutils
 
 from sidn.constants import XMLNS
 
+if sys.version_info[0] >= 3:
+    long = int
+
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
 
@@ -59,7 +62,7 @@ def _xml_escape(**data):
     """
     Escape the data for inclusion in XML
     """
-    return dict((k, escape(v)) for k, v in data.iteritems())
+    return dict((k, escape(v)) for k, v in data.items())
 
 
 def escape(value):
