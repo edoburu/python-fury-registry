@@ -47,18 +47,20 @@ class EPP(object):
         self.ssl = None
         self.host = host
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(timeout)
-        self.socket.connect((host, port))
-        try:
-            self.ssl = ssl.wrap_socket(self.socket, certfile=certfile)
-        except socket.error:
-            logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
-            raise
-
+        self.ssl = self._connect()
         self._read_greeting()
         if username and password:
             self.login(username, password)
+
+    def _connect(self, username=None, password=None, certfile=None, timeout=60):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(timeout)
+        self.socket.connect((self.host, self.port))
+        try:
+            return ssl.wrap_socket(self.socket, certfile=certfile)
+        except socket.error:
+            logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
+            raise
 
     def __repr__(self):
         return "<EPP: {0}:{1}>".format(self.host, self.port)
