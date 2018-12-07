@@ -253,9 +253,9 @@ class SidnDomain(EppDomain):
 
             if sidn_ext is not None:
                 fields.update(dict(
-                    optOut = get_node_text(sidn_ext, 'sidn-ext-epp:optOut') == 'true',
-                    limited = get_node_text(sidn_ext, 'sidn-ext-epp:limited') == 'true',
-                    period = int(get_node_text(sidn_ext, 'sidn-ext-epp:period', 0)) or None,
+                    optOut=get_node_text(sidn_ext, 'sidn-ext-epp:optOut') == 'true',
+                    limited=get_node_text(sidn_ext, 'sidn-ext-epp:limited') == 'true',
+                    period=int(get_node_text(sidn_ext, 'sidn-ext-epp:period', 0)) or None,
                 ))
 
         return fields

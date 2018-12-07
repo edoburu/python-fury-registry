@@ -38,6 +38,7 @@ class cached_property(object):
     Optional ``name`` argument allows you to make cached properties of other
     methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
     """
+
     def __init__(self, func, name=None):
         self.func = func
         self.__doc__ = getattr(func, '__doc__')

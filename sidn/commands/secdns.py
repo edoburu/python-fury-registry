@@ -17,7 +17,7 @@ def create(dskeys=(), keyData=()):
           <secDNS:create xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
 
     # Not used by SIDN
-    #if maxSigLife:
+    # if maxSigLife:
     #    xml += """
     #    <secDNS:maxSigLife>{0}</secDNS:maxSigLife>""".format(int(maxSigLife))
 
@@ -36,7 +36,7 @@ def create(dskeys=(), keyData=()):
 
 def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=(), add_keydatas=(), urgent=False):
     if not remove_all and not remove_dskeys and not remove_keydatas and \
-        not add_dskeys and not add_keydatas:
+            not add_dskeys and not add_keydatas:
         raise ValueError("At least one DNSSec argument should be provided to update()!")
 
     urgent_attr = ''
@@ -76,7 +76,7 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
         </secDNS:add>"""
 
     # Not used by SIDN
-    #if maxSigLife:
+    # if maxSigLife:
     #    ext_xml += """
     #    <secDNS:chg>
     #      <secDNS:maxSigLife>{0}</secDNS:maxSigLife>

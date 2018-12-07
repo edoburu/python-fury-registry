@@ -17,6 +17,7 @@ class EPPError(RuntimeError):
     """
     Error response returned by the server.
     """
+
     def __init__(self, code, message, ext_code=None, ext_message=None):
         if ext_code:
             super(EPPError, self).__init__(u"{0} (code {1}/{2})".format(ext_message, code, ext_code))

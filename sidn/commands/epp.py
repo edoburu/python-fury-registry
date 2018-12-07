@@ -31,11 +31,11 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
                             u"    </extension>\n").format("\n".join(command_extensions))
 
         main_xml = (
-          "  <command>\n"
-          "    <{command_name}{op_attr}>{command_xml}\n"
-          "    </{command_name}>\n{ext}"
-          "    <clTRID>{clTRID}</clTRID>\n"
-          "  </command>\n").format(
+            "  <command>\n"
+            "    <{command_name}{op_attr}>{command_xml}\n"
+            "    </{command_name}>\n{ext}"
+            "    <clTRID>{clTRID}</clTRID>\n"
+            "  </command>\n").format(
             command_name=command_name,
             command_xml=command_xml or '',
             ext=command_ext,
@@ -52,8 +52,8 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
 
     return """<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n""" \
            """<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">\n{main_xml}</epp>""".format(
-            main_xml=main_xml
-    )
+               main_xml=main_xml
+           )
 
 
 def login(username, password):
@@ -80,6 +80,7 @@ def login(username, password):
 </epp>"""
     return xml_format(xml, username=username, password=password)
 
+
 logout = """<?xml version="1.0" encoding="UTF-8"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
   <command>
@@ -89,7 +90,7 @@ logout = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 def poll_req(transaction_id=None):
-    xml  = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
       <command>
         <poll op="req"/>
@@ -100,7 +101,7 @@ def poll_req(transaction_id=None):
 
 
 def poll_ack(message_id, transaction_id=None):
-    xml  = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
       <command>
         <poll op="ack" msgID="{msgID}"/>

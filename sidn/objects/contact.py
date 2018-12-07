@@ -22,7 +22,7 @@ class EppContact(ParsedObject):
             status=infData.find('contact:status', XMLNS).attrib['s'],
             name=get_node_text(postalInfo, 'contact:name'),
             org=get_node_text(postalInfo, 'contact:org'),
-            street= get_node_text(addr, 'contact:street'),
+            street=get_node_text(addr, 'contact:street'),
             city=get_node_text(addr, 'contact:city'),
             pc=get_node_text(addr, 'contact:pc'),
             cc=get_node_text(addr, 'contact:cc'),
