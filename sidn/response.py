@@ -2,7 +2,7 @@ import sys
 from xml.etree import ElementTree
 
 from sidn.constants import XMLNS
-from sidn.utils import  python_2_unicode_compatible, cached_property, get_node_text, get_node_date
+from sidn.utils import python_2_unicode_compatible, cached_property, get_node_text, get_node_date
 from . import objects
 
 
@@ -33,7 +33,10 @@ class XmlObject(object):
 
         Call :func:`register_namespaces` in case you like to have readable XML prefixes.
         """
-        return ElementTree.tostring(self.element)
+        xml = ElementTree.tostring(self.element)
+        if isinstance(xml, bytes):  # Python 3
+            xml = xml.decode()
+        return xml
 
     if sys.version_info[0] == 2:
         def __repr__(self):
