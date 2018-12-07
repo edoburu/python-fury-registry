@@ -2,11 +2,11 @@
 Internal utils
 """
 import re
-import sys
 import struct
-import dateutil.parser
+import sys
 from xml.sax import saxutils
 
+import dateutil.parser
 from sidn.constants import XMLNS
 
 if sys.version_info[0] >= 3:

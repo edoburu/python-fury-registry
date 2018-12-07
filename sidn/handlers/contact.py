@@ -1,9 +1,8 @@
 """
 All specialized commands are performed by these handlers.
 """
-from sidn.constants import XMLNS, EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED
-from sidn import commands
-from sidn import objects
+from sidn import commands, objects
+from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED, XMLNS
 
 from .base import BaseHandler
 

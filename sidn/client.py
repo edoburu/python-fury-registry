@@ -3,12 +3,12 @@ import socket
 import ssl
 from xml.etree import ElementTree
 
-from sidn.constants import XMLNS, EPP_OK, EPP_QUEUE_EMPTY, EPP_LOGOUT_OK, EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING, \
-    EPP_AUTH_SESSION_LIMIT
-from . import commands
-from . import handlers
+from sidn.constants import EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT, EPP_FAILED_CLOSING, EPP_LOGOUT_OK, EPP_OK, \
+    EPP_QUEUE_EMPTY, XMLNS
 from sidn.response import EPPResponse, SidnPollResponse
 from sidn.utils import int32_from_net, int32_to_net, mask_sensitive_fields
+
+from . import commands, handlers
 
 logger = logging.getLogger(__name__)
 

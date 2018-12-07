@@ -1,9 +1,8 @@
 """
 All specialized commands are performed by these handlers.
 """
+from sidn import commands, objects
 from sidn.constants import XMLNS
-from sidn import commands
-from sidn import objects
 
 from .base import BaseHandler
 

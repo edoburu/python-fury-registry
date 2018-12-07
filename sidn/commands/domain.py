@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-import idna
 from datetime import date, datetime
 
-from sidn.utils import xml_format, escape
+import idna
+from sidn.utils import escape, xml_format
 
 
 def _idna_encode(name):

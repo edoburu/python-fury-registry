@@ -24,4 +24,3 @@ class BaseHandler(object):
             clTRID=transaction_id,
             epp_extensions=epp_extensions
         )
-

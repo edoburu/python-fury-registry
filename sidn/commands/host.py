@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-from sidn.utils import xml_format, escape
+
+from sidn.utils import escape, xml_format
 
 
 def create_part(name, ipv4, ipv6):

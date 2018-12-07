@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
+
 import re
-from sidn.utils import xml_format, escape
+
+from sidn.utils import escape, xml_format
 
 RE_PHONE_COUNTRY = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
 RE_PHONE = re.compile("^(\+[0-9]{1,3}\.[0-9]{1,14})?$")

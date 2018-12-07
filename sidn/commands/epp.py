@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
-from sidn.utils import xml_format, escape
 
+from sidn.utils import escape, xml_format
 
 # EPP: https://tools.ietf.org/html/rfc5730
 #

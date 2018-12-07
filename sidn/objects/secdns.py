@@ -1,7 +1,7 @@
 from itertools import chain
 
 from sidn.constants import XMLNS
-from sidn.utils import python_2_unicode_compatible, get_node_text, get_node_date
+from sidn.utils import get_node_date, get_node_text, python_2_unicode_compatible
 
 from .base import ParsedObject
 

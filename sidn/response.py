@@ -2,7 +2,8 @@ import sys
 from xml.etree import ElementTree
 
 from sidn.constants import XMLNS
-from sidn.utils import python_2_unicode_compatible, cached_property, get_node_text, get_node_date
+from sidn.utils import cached_property, get_node_date, get_node_text, python_2_unicode_compatible
+
 from . import objects
 
 
@@ -210,5 +211,3 @@ class SidnPollData(XmlObject):
             return objects.TransferStatus.from_xml(trnData)
         else:
             raise NotImplementedError("Unsupported extension node: {}".format(element.tag))
-
-

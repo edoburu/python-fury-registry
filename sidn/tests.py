@@ -1,14 +1,12 @@
 from copy import copy
+from datetime import datetime
 from unittest import TestCase
 
-from datetime import datetime
 from dateutil.tz import tzutc
-
 from sidn.client import EPP, EPPError, SidnPollResponse
-from sidn.constants import XMLNS, EPP_QUEUE_NOT_EMPTY, EPP_QUEUE_EMPTY
+from sidn.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY, XMLNS
 from sidn.handlers import ContactHandler
-from sidn.objects import EppContact, SidnDomain, KeyData
-from sidn.objects import EppHost
+from sidn.objects import EppContact, EppHost, KeyData, SidnDomain
 from sidn.response import register_namespaces
 from sidn.utils import get_node_text
 
