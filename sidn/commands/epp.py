@@ -25,7 +25,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
     else:
         # Allow parts to pass an command + extension via a tuple
         command_ext = ''
-        command_extensions = filter(None, command_extensions) if command_extensions else None
+        command_extensions = list(filter(None, command_extensions)) if command_extensions else None
         if command_extensions:
             command_ext += (u"    <extension>{0}\n"
                             u"    </extension>\n").format("\n".join(command_extensions))
@@ -43,7 +43,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
             clTRID=clTRID or 'unused',
         )
 
-    extensions_xml = filter(None, epp_extensions)
+    extensions_xml = list(filter(None, epp_extensions))
     if extensions_xml:
         # Exceptions at top-level.
         # Note an <extension> block can also occur inside the command_xml.
