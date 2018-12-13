@@ -20,6 +20,39 @@ class CommandTests(TestCase):
         super(CommandTests, cls).setUpClass()
         register_namespaces()
 
+    def test_build_domain_create(self):
+        xml = commands.domain.create_part(
+            name='example.nl',
+            registrant='REG',
+            admin='ADMIN',
+            tech='TECH',
+            ns=['ns1.example.nl', 'ns2.example.nl']
+        )
+
+        xml = DomainHandler(None)._build_command('create', xml)
+        self.assertEqual(
+            xml, '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>example.nl</domain:name>
+          <domain:ns>
+            <domain:hostObj>ns1.example.nl</domain:hostObj>
+            <domain:hostObj>ns2.example.nl</domain:hostObj>
+          </domain:ns>
+        <domain:registrant>REG</domain:registrant>
+        <domain:contact type="admin">ADMIN</domain:contact>
+        <domain:contact type="tech">TECH</domain:contact>
+        <domain:authInfo>
+          <domain:pw>unused</domain:pw>
+        </domain:authInfo>
+      </domain:create>
+    </create>
+    <clTRID>unused</clTRID>
+  </command>
+</epp>''')
+
     def test_build_domain_get(self):
         """
         Parse contact info response
@@ -38,6 +71,45 @@ class CommandTests(TestCase):
     <clTRID>unused</clTRID>
   </command>
 </epp>''')
+
+    def test_build_domain_check(self):
+        """
+        Parse contact info response
+        """
+        xml = DomainHandler(None)._build_command('check', commands.domain.check_part(name='example.nl'))
+        self.assertEqual(
+            xml,
+            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <check>
+      <domain:check xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>example.nl</domain:name>
+      </domain:check>
+    </check>
+    <clTRID>unused</clTRID>
+  </command>
+</epp>''')
+
+    def test_build_domain_delete(self):
+        """
+        Parse contact info response
+        """
+        xml = DomainHandler(None)._build_command('delete', commands.domain.delete_part(name='example.nl'))
+        self.assertEqual(
+            xml,
+            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <delete>
+      <domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>example.nl</domain:name>
+      </domain:delete>
+    </delete>
+    <clTRID>unused</clTRID>
+  </command>
+</epp>''')
+
 
     def test_build_contact_get(self):
         """
