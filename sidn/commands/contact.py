@@ -144,7 +144,7 @@ def _contact_extension(command, **data):
 
 def delete_part(handle):
     xml = """
-      <contact:delete xmlns:domain="urn:ietf:params:xml:ns:contact-1.0">
+      <contact:delete xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <contact:id>{handle}</contact:id>
       </contact:delete>"""
     return xml_format(xml, handle=handle)
