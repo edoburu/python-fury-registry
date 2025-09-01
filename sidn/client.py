@@ -53,11 +53,13 @@ class EPP(object):
             self.login(username, password)
 
     def _connect(self, username=None, password=None, certfile=None, timeout=60):
+        context = ssl.create_default_context(cafile=certfile)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(timeout)
         self.socket.connect((self.host, self.port))
         try:
-            return ssl.wrap_socket(self.socket, certfile=certfile)
+            return context.wrap_socket(self.socket, server_hostname=self.host)
         except socket.error:
             logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
             raise
