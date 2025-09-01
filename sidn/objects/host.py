@@ -1,10 +1,9 @@
 from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text, python_2_unicode_compatible
+from sidn.utils import get_node_date, get_node_text
 
 from .base import ParsedObject
 
 
-@python_2_unicode_compatible
 class EppHost(ParsedObject):
     """
     Host data object (e.g. for nameservers)
@@ -38,7 +37,7 @@ class EppHost(ParsedObject):
         self.created_date = crDate
 
     def __repr__(self):
-        return '<Host {0} {1}>'.format(self, " ".join(self.addr))
+        return '<Host {} {}>'.format(self, " ".join(self.addr))
 
     def __str__(self):
         return self.name

@@ -17,7 +17,7 @@ class CommandTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(CommandTests, cls).setUpClass()
+        super().setUpClass()
         register_namespaces()
 
     def test_build_domain_create(self):

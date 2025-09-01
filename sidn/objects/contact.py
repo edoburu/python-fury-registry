@@ -1,10 +1,9 @@
 from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text, python_2_unicode_compatible
+from sidn.utils import get_node_date, get_node_text
 
 from .base import ParsedObject
 
 
-@python_2_unicode_compatible
 class EppContact(ParsedObject):
     """
     Contact data object
@@ -52,7 +51,7 @@ class EppContact(ParsedObject):
         self.updated_date = upDate
 
     def __repr__(self):
-        return '<Contact {0}>'.format(self)
+        return f'<Contact {self}>'
 
     def __str__(self):
         return "[{handle}] {name}, {street}, {postcode} {city} ({country_code})".format(

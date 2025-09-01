@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from sidn.utils import escape, xml_format
 
 # EPP: https://tools.ietf.org/html/rfc5730
@@ -27,8 +25,8 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
         command_ext = ''
         command_extensions = list(filter(None, command_extensions)) if command_extensions else None
         if command_extensions:
-            command_ext += (u"    <extension>{0}\n"
-                            u"    </extension>\n").format("\n".join(command_extensions))
+            command_ext += ("    <extension>{}\n"
+                            "    </extension>\n").format("\n".join(command_extensions))
 
         main_xml = (
             "  <command>\n"
@@ -39,7 +37,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
             command_name=command_name,
             command_xml=command_xml or '',
             ext=command_ext,
-            op_attr=' op="{0}"'.format(escape(op)) if op else '',
+            op_attr=f' op="{escape(op)}"' if op else '',
             clTRID=clTRID or 'unused',
         )
 
@@ -47,7 +45,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
     if extensions_xml:
         # Exceptions at top-level.
         # Note an <extension> block can also occur inside the command_xml.
-        main_xml += ("  <extension>{0}\n"
+        main_xml += ("  <extension>{}\n"
                      "  </extension>\n").format("\n".join(extensions_xml))
 
     return """<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n""" \

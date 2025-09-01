@@ -1,7 +1,7 @@
 from sidn import commands
 
 
-class BaseHandler(object):
+class BaseHandler:
     """
     Internal interface for all handlers.
     """

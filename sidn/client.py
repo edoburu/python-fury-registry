@@ -20,9 +20,9 @@ class EPPError(RuntimeError):
 
     def __init__(self, code, message, ext_code=None, ext_message=None):
         if ext_code:
-            super(EPPError, self).__init__(u"{0} (code {1}/{2})".format(ext_message, code, ext_code))
+            super().__init__(f"{ext_message} (code {code}/{ext_code})")
         else:
-            super(EPPError, self).__init__(u"{0} (code {1})".format(message, code))
+            super().__init__(f"{message} (code {code})")
 
         self.code = code
         self.message = message
@@ -30,7 +30,7 @@ class EPPError(RuntimeError):
         self.ext_message = ext_message
 
 
-class EPP(object):
+class EPP:
     """
     The EPP client
     """
@@ -60,12 +60,12 @@ class EPP(object):
         self.socket.connect((self.host, self.port))
         try:
             return context.wrap_socket(self.socket, server_hostname=self.host)
-        except socket.error:
+        except OSError:
             logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
             raise
 
     def __repr__(self):
-        return "<EPP: {0}:{1}>".format(self.host, self.port)
+        return f"<EPP: {self.host}:{self.port}>"
 
     def __del__(self):
         # Auto logout on instance destruction.
@@ -78,7 +78,7 @@ class EPP(object):
 
         try:
             self.socket.close()
-        except IOError:
+        except OSError:
             pass  # Server disconnected
 
     def cmd(self, xml, silent=False, response_class=EPPResponse):
@@ -94,7 +94,7 @@ class EPP(object):
         self._write(xml)
         raw_response = self._read()
         if raw_response is None:
-            raise IOError("Server disconnected")
+            raise OSError("Server disconnected")
 
         # Convert to response objects
         response = self._parse_response(raw_response, response_class=response_class)
@@ -106,7 +106,7 @@ class EPP(object):
         if code in (EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT):
             try:
                 self.socket.close()
-            except IOError:
+            except OSError:
                 pass  # Server disconnected
 
         return response

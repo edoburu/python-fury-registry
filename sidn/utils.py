@@ -9,46 +9,8 @@ from xml.sax import saxutils
 import dateutil.parser
 from sidn.constants import XMLNS
 
-if sys.version_info[0] >= 3:
-    long = int
-
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
-
-
-def python_2_unicode_compatible(klass):
-    """
-    A decorator that defines __unicode__ and __str__ methods under Python 2.
-    Under Python 3 it does nothing.
-
-    To support Python 2 and 3 with a single code base, define a __str__ method
-    returning text and apply this decorator to the class.
-    """
-    if sys.version_info[0] == 2:
-        klass.__unicode__ = klass.__str__
-        klass.__str__ = lambda self: self.__unicode__().encode('utf-8')
-    return klass
-
-
-class cached_property(object):
-    """
-    Decorator that converts a method with a single self argument into a
-    property cached on the instance.
-
-    Optional ``name`` argument allows you to make cached properties of other
-    methods. (e.g.  url = cached_property(get_absolute_url, name='url') )
-    """
-
-    def __init__(self, func, name=None):
-        self.func = func
-        self.__doc__ = getattr(func, '__doc__')
-        self.name = name or func.__name__
-
-    def __get__(self, instance, type=None):
-        if instance is None:
-            return self
-        res = instance.__dict__[self.name] = self.func(instance)
-        return res
 
 
 def xml_format(xml, **data):
@@ -63,7 +25,7 @@ def _xml_escape(**data):
     """
     Escape the data for inclusion in XML
     """
-    return dict((k, escape(v)) for k, v in data.items())
+    return {k: escape(v) for k, v in data.items()}
 
 
 def escape(value):
@@ -72,7 +34,7 @@ def escape(value):
     """
     if value is None:
         return None
-    elif isinstance(value, (int, long)):
+    elif isinstance(value, int):
         return str(value)
     else:
         return saxutils.escape(value)

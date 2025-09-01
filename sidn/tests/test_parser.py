@@ -20,7 +20,7 @@ class ParserTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(ParserTests, cls).setUpClass()
+        super().setUpClass()
         register_namespaces()
 
     def test_parse_contact(self):

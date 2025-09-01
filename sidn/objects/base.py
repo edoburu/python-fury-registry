@@ -1,6 +1,4 @@
-
-
-class ParsedObject(object):
+class ParsedObject:
     """
     Base interface to parse XML nodes.
     """

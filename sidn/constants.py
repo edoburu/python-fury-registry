@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 EPP response codes.
 Copied from the abandoned https://pypi.python.org/pypi/EPP package

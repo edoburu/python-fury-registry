@@ -1,20 +1,20 @@
 import logging
+import typing
 
 import idna
 from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text, python_2_unicode_compatible
+from sidn.utils import get_node_date, get_node_text
 
 from .base import ParsedObject
 from .secdns import DNSSec
 
-if 0:
+if typing.TYPE_CHECKING:
     from sidn.client import EPP  # For PyCharm type checking
 
 
 logger = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class EppDomain(ParsedObject):
     """
     Domain data object
@@ -102,7 +102,7 @@ class EppDomain(ParsedObject):
         self._epp = None  # type: EPP
 
     def __repr__(self):
-        return '<{0} {1}>'.format(self.__class__.__name__, self)
+        return f'<{self.__class__.__name__} {self}>'
 
     def __str__(self):
         return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
@@ -245,7 +245,7 @@ class SidnDomain(EppDomain):
     @classmethod
     def parse_xml_fields(cls, resdata, extension=None):
         # Base EPP base fields
-        fields = super(SidnDomain, cls).parse_xml_fields(resdata, extension)
+        fields = super().parse_xml_fields(resdata, extension)
 
         # Parse extension fields
         if extension is not None:
@@ -262,7 +262,7 @@ class SidnDomain(EppDomain):
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
                  dnssec=None, optOut=None, limited=None, period=None):
-        super(SidnDomain, self).__init__(
+        super().__init__(
             name=name,
             roid=roid,
             status=status,
@@ -339,9 +339,9 @@ class TransferStatus(ParsedObject):
 
     def __repr__(self):
         if self.is_pending:
-            return '<TransferStatus {0}: {1} by {2} till {3}>'.format(self.name, self.status, self.act_id, self.act_date)
+            return f'<TransferStatus {self.name}: {self.status} by {self.act_id} till {self.act_date}>'
         else:
-            return '<TransferStatus {0}: {1} by {2} on {3}>'.format(self.name, self.status, self.act_id, self.act_date)
+            return f'<TransferStatus {self.name}: {self.status} by {self.act_id} on {self.act_date}>'
 
     def __str__(self):
         return self.name

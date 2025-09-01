@@ -1,8 +1,8 @@
-import sys
+from functools import cached_property
 from xml.etree import ElementTree
 
 from sidn.constants import XMLNS
-from sidn.utils import cached_property, get_node_date, get_node_text, python_2_unicode_compatible
+from sidn.utils import get_node_date, get_node_text
 
 from . import objects
 
@@ -16,8 +16,7 @@ def register_namespaces():
         ElementTree.register_namespace(prefix, uri)
 
 
-@python_2_unicode_compatible
-class XmlObject(object):
+class XmlObject:
     """
     Wrapper object for EPP responses
     """
@@ -39,12 +38,8 @@ class XmlObject(object):
             xml = xml.decode()
         return xml
 
-    if sys.version_info[0] == 2:
-        def __repr__(self):
-            return '<{0} {1}>'.format(self.__class__.__name__, unicode(self).encode('utf-8'))
-    else:
-        def __repr__(self):
-            return '<{0} {1}>'.format(self.__class__.__name__, self)
+    def __repr__(self):
+        return f'<{self.__class__.__name__} {self}>'
 
 
 class EPPResponse(XmlObject):
@@ -210,4 +205,4 @@ class SidnPollData(XmlObject):
             trnData = self.resData.find('domain:trnData', XMLNS)
             return objects.TransferStatus.from_xml(trnData)
         else:
-            raise NotImplementedError("Unsupported extension node: {}".format(element.tag))
+            raise NotImplementedError(f"Unsupported extension node: {element.tag}")
