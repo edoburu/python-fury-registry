@@ -3,7 +3,6 @@ Internal utils
 """
 import re
 import struct
-import sys
 from xml.sax import saxutils
 
 import dateutil.parser

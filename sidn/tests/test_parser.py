@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from dateutil.tz import tzutc
 from sidn.client import EPP, EPPError, SidnPollResponse
-from sidn.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY, XMLNS
+from sidn.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY
 from sidn.handlers import ContactHandler
 from sidn.objects import EppContact, EppHost, KeyData, SidnDomain
 from sidn.response import register_namespaces

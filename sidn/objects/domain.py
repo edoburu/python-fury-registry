@@ -9,7 +9,7 @@ from .base import ParsedObject
 from .secdns import DNSSec
 
 if typing.TYPE_CHECKING:
-    from sidn.client import EPP  # For PyCharm type checking
+    from sidn.client import EPP  # noqa: F401 (For PyCharm type checking)
 
 
 logger = logging.getLogger(__name__)
