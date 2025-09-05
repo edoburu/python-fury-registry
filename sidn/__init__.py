@@ -1,1 +1,1 @@
-__version__ = "1.4"  # PEP440
+__version__ = "2.0"  # PEP440
