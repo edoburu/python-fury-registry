@@ -294,7 +294,7 @@ class TransferStatus(ParsedObject):
     CLIENT_REJECTED = "clientRejected"
     PENDING = "pending"
     SERVER_APPROVED = "serverApproved"  # Transfer OK
-    SERVER_CANCELLED = "serverCancelled'"
+    SERVER_CANCELLED = "serverCancelled"
 
     @classmethod
     def parse_xml_fields(cls, trnData, extension=None):
