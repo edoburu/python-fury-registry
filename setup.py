@@ -20,12 +20,12 @@ def find_version(*parts):
 
 
 setup(
-    name='sidn',
-    version=find_version('sidn', '__init__.py'),
+    name='fury-registry',
+    version=find_version('fury_registry', '__init__.py'),
     author='Diederik van der Boor, Jochem Oosterveen',
     author_email='opensource@edoburu.nl',
     packages=find_packages(),
-    description='Python EPP client for SIDN/DRS5',
+    description='Python EPP client for Hello Registry',
     long_description=read('README.rst'),
     install_requires=[
         "python-dateutil",

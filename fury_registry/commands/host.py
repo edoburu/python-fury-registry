@@ -1,4 +1,4 @@
-from sidn.utils import xml_format
+from fury_registry.utils import xml_format
 
 
 def create_part(name, ipv4, ipv6):

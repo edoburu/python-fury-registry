@@ -2,20 +2,20 @@
 Serialize DNSSec objects to EPP XML
 """
 
-from sidn.utils import xml_format
+from fury_registry.utils import xml_format
 
 
 def create(dskeys=(), keyData=()):
     """
     The DNSSec create extension
 
-    :type dskeys: Iterator[sidn.objects.DSKey]
-    :type keyData: Iterator[sidn.objects.KeyData]
+    :type dskeys: Iterator[fury_registry.objects.DSKey]
+    :type keyData: Iterator[fury_registry.objects.KeyData]
     """
     xml = """
           <secDNS:create xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
 
-    # Not used by SIDN
+    # Not used by Hello/SIDN
     # if maxSigLife:
     #    xml += """
     #    <secDNS:maxSigLife>{0}</secDNS:maxSigLife>""".format(int(maxSigLife))
@@ -74,7 +74,7 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
         xml += """
         </secDNS:add>"""
 
-    # Not used by SIDN
+    # Not used by Hello/SIDN
     # if maxSigLife:
     #    ext_xml += """
     #    <secDNS:chg>
@@ -88,7 +88,7 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
 
 def dskey_to_xml(dskey):
     """
-    :type dskey: sidn.objects.DSKey
+    :type dskey: fury_registry.objects.DSKey
     """
     # Delegation Signer key information
     xml = """
@@ -116,7 +116,7 @@ def dskey_to_xml(dskey):
 
 def keydata_to_xml(keyData):
     """
-    :type keyData: sidn.objects.KeyData
+    :type keyData: fury_registry.objects.KeyData
     """
     # Client key information
     xml = """

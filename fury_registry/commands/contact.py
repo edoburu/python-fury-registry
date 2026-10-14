@@ -1,6 +1,6 @@
 import re
 
-from sidn.utils import escape, xml_format
+from fury_registry.utils import escape, xml_format
 
 RE_PHONE_COUNTRY = re.compile(r'^(?P<prefix>\+|0+)(?P<country>[0-9]{1,2})[- .]')
 RE_PHONE = re.compile(r"^(\+[0-9]{1,3}\.[0-9]{1,14})?$")
@@ -22,7 +22,7 @@ def check_part(handle):
     return xml_format(xml, handle=handle)
 
 
-def create_parts(handle, **data):
+def create_part(handle, **data):
     xml = xml_format("""
       <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <contact:id>{handle}</contact:id>""", handle=handle)
@@ -31,9 +31,7 @@ def create_parts(handle, **data):
 
     xml += """
       </contact:create>"""
-
-    ext_part = _contact_extension('create', **data)
-    return xml, ext_part
+    return xml
 
 
 def update_parts(handle, **data):
@@ -49,9 +47,6 @@ def update_parts(handle, **data):
     xml += """
         </contact:chg>
       </contact:update>"""
-
-    ext = _contact_extension('chg', **data)
-    return xml, ext
 
 
 def _contact_info(**data):
@@ -113,31 +108,6 @@ def _contact_info(**data):
           <contact:pw>2fooBAR</contact:pw>
         </contact:authInfo>"""
     return xml_format(xml, **data)
-
-
-def _contact_extension(command, **data):
-    xml = """
-        <sidn-ext-epp:ext xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
-          <sidn-ext-epp:{command}>
-            <sidn-ext-epp:contact>""".format(command=command)
-
-    # Mandatory: legal form field.
-    xml += """
-              <sidn-ext-epp:legalForm>{legalForm}</sidn-ext-epp:legalForm>""".format(
-        legalForm=data.get('legalForm') or "ANDERS"
-    )
-
-    if data.get('legalFormRegNo'):
-        xml += """
-              <sidn-ext-epp:legalFormRegNo>{legalFormRegNo}</sidn-ext-epp:legalFormRegNo>""".format(
-            legalFormRegNo=escape(data['legalFormRegNo'])
-        )
-
-    xml += """
-            </sidn-ext-epp:contact>
-          </sidn-ext-epp:{command}>
-        </sidn-ext-epp:ext>""".format(command=command)
-    return xml
 
 
 def delete_part(handle):

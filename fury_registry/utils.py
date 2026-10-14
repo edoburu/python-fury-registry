@@ -6,7 +6,7 @@ import struct
 from xml.sax import saxutils
 
 import dateutil.parser
-from sidn.constants import XMLNS
+from fury_registry.constants import XMLNS
 
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')

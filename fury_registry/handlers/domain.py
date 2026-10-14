@@ -1,8 +1,8 @@
 """
 All specialized commands are performed by these handlers.
 """
-from sidn import commands, objects
-from sidn.constants import XMLNS
+from fury_registry import commands, objects
+from fury_registry.constants import XMLNS
 
 from .base import BaseHandler
 
@@ -16,7 +16,7 @@ class DomainHandler(BaseHandler):
         """
         Request the info of a domain
 
-        It raises an :class:`~sidn.client.EPPError` when:
+        It raises an :class:`~fury_registry.client.EPPError` when:
         * the domain does not exist: code 2303 (``EPP_OBJECT_DOES_NOT_EXIST``, with ``SIDN_EXT_DOMAIN_DOES_NOT_EXIST``).
         * the domain is managed by other accounts: code 2308 (``EPP_DATA_MGMT_POLICY``, with ``SIDN_EXT_NOT_MANAGED_BY_ACCOUNT``)
         """
@@ -24,7 +24,7 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('info', commands.domain.info_part(name=domain_name))
         response = self.epp.cmd(xml)
 
-        domain = objects.SidnDomain.from_xml(response.resData, response.extension)
+        domain = objects.FuryDomain.from_xml(response.resData, response.extension)
         domain._epp = self.epp  # Sneak it in
         return domain
 
@@ -54,18 +54,17 @@ class DomainHandler(BaseHandler):
         :param ns: List of nameserver host names
         :type ns: list
         :param dskeys: DNSSec keys (values not read by SIDN, only keyData field is used.)
-        :type dskeys: Iterator[sidn.objects.DSKey]
+        :type dskeys: Iterator[fury_registry.objects.DSKey]
         :param keyData: DNSSec keydata, as alternative for ``keys``, max 4 with SIDN.
-        :type keyData: Iterator[sidn.objects.KeyData]
+        :type keyData: Iterator[fury_registry.objects.KeyData]
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.1
         # https://tools.ietf.org/html/rfc5731#section-3.2.1
         xml = commands.domain.create_part(
             name=name,
+            ns=ns,
             registrant=registrant,
-            admin=contacts['admin'],  # Only supported options by DRS5
-            tech=contacts['tech'],
-            ns=ns
+            contacts=contacts,
         )
 
         if dskeys or keyData:
@@ -79,25 +78,23 @@ class DomainHandler(BaseHandler):
         return self.epp.cmd(xml)
 
     def update(self, name, registrant=None,
-               remove_admins=(), remove_techs=(), remove_statuses=(), remove_ns=(),
+               remove_contacts=None, remove_statuses=(), remove_ns=(),
                remove_all_keys=False, remove_keydatas=(),
-               add_admins=(), add_techs=(), add_statuses=(), add_ns=(),
+               add_contacts=None, add_statuses=(), add_ns=(),
                add_keydatas=(), dnssec_urgent=False):
         """
         Update the domain.
 
         :param name: The domain name
         :param registrant: New registrant handle, if given.
-        :param remove_admins: iterable of admin handles to remove.
-        :param remove_techs: iterable of tech handles to remove.
+        :param remove_contacts: dict of contact handles to remove (admin: ..., tech: ...)
         :param remove_ns: iterable of nameservers to remove.
-        :param add_admins: iterable of admin handles to add.
-        :param add_techs: iterable of tech handles to add.
+        :param add_contacts: iterable of contact handles to add.
         :param add_ns: iterable of nameservers to add.
 
         Note that DRS5 only allows one admin handle;
         after the removal/adding of handles there should be 1 handle again.
-        You can use the convenience methods on the :class:`~sidn.objects.Domain` class
+        You can use the convenience methods on the :class:`~fury_registry.objects.Domain` class
         to remove existing handles, and assign new ones.
         """
         command_extensions = ()
@@ -115,12 +112,10 @@ class DomainHandler(BaseHandler):
             name=name,
             registrant=registrant,
             remove_ns=remove_ns,
-            remove_admins=remove_admins,
-            remove_techs=remove_techs,
+            remove_contacts=remove_contacts,
             remove_statuses=remove_statuses,
             add_ns=add_ns,
-            add_admins=add_admins,
-            add_techs=add_techs,
+            add_contacts=add_contacts,
             add_statuses=add_statuses,
         ), command_extensions=command_extensions)
         return self.epp.cmd(xml)
@@ -128,8 +123,8 @@ class DomainHandler(BaseHandler):
     def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
         """
         Update the DNSSec keys in a domain
-        :type remove_keydatas: Iterator[sidn.objects.DSKey]
-        :type add_keydatas: Iterator[sidn.objects.DSKey]
+        :type remove_keydatas: Iterator[fury_registry.objects.DSKey]
+        :type add_keydatas: Iterator[fury_registry.objects.DSKey]
         """
         # SIDN only looks at the keydata fields.
         # https://tools.ietf.org/html/rfc5910#section-5.2.5
@@ -152,12 +147,12 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('delete', commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
-    def cancel_delete(self, name):
+    def restore(self, name):
         """
         Cancel deletion
         """
-        # Extension by SIDN
-        xml = self._build_command(None, None, command_extensions=(commands.domain.cancel_delete_part(name),))
+        # Fury extension
+        xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(commands.domain.restore_part(name),))
         return self.epp.cmd(xml)
 
     def renew(self, name, expiration_date, period, period_unit='y'):
@@ -185,10 +180,10 @@ class DomainHandler(BaseHandler):
         """
         Query the status of current domain transfer.
 
-        When the domain is not in transfer, an :class:`~sidn.client.EPPError` will be raised,
+        When the domain is not in transfer, an :class:`~fury_registry.client.EPPError` will be raised,
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
 
-        :rtype: sidn.objects.TransferStatus
+        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
@@ -199,7 +194,7 @@ class DomainHandler(BaseHandler):
         """
         Query the status of current domain transfer.
 
-        :rtype: sidn.objects.TransferStatus
+        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
@@ -210,7 +205,7 @@ class DomainHandler(BaseHandler):
         """
         Query the status of current domain transfer.
 
-        :rtype: sidn.objects.TransferStatus
+        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')

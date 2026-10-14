@@ -1,5 +1,5 @@
-from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text
+from fury_registry.constants import XMLNS
+from fury_registry.utils import get_node_date, get_node_text
 
 from .base import ParsedObject
 

@@ -3,10 +3,10 @@ import socket
 import ssl
 from xml.etree import ElementTree
 
-from sidn.constants import EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT, EPP_FAILED_CLOSING, EPP_LOGOUT_OK, EPP_OK, \
+from fury_registry.constants import EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT, EPP_FAILED_CLOSING, EPP_LOGOUT_OK, EPP_OK, \
     EPP_QUEUE_EMPTY, XMLNS
-from sidn.response import EPPResponse, SidnPollResponse
-from sidn.utils import int32_from_net, int32_to_net, mask_sensitive_fields
+from fury_registry.response import EPPResponse, EPPPollResponse
+from fury_registry.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 from . import commands, handlers
 
@@ -18,16 +18,16 @@ class EPPError(RuntimeError):
     Error response returned by the server.
     """
 
-    def __init__(self, code, message, ext_code=None, ext_message=None):
+    def __init__(self, code, message, ext_code=None, ext_reason=None):
         if ext_code:
-            super().__init__(f"{ext_message} (code {code}/{ext_code})")
+            super().__init__(f"{ext_reason} (code {code}/{ext_code})")
         else:
             super().__init__(f"{message} (code {code})")
 
         self.code = code
         self.message = message
         self.ext_code = ext_code
-        self.ext_message = ext_message
+        self.ext_reason = ext_reason
 
 
 class EPP:
@@ -38,7 +38,7 @@ class EPP:
     def __init__(self, host, port=700, username=None, password=None, certfile=None, timeout=60):
         """
         Initialize the client.
-        This establishes a connection to the SIDN DRS5 system via EPP.
+        This establishes a connection to a Fury registry server via EPP.
 
         :param timeout: The timeout in seconds
         :type timeout: Optional[float]
@@ -85,10 +85,10 @@ class EPP:
         """
         Execute a raw request on the server.
 
-        :rtype: sidn.response.EPPResponse
+        :rtype: fury_registry.response.EPPResponse
         """
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("SIDN request: %s", mask_sensitive_fields(xml))
+            logger.debug("EPP request: %s", mask_sensitive_fields(xml))
 
         # Write and read
         self._write(xml)
@@ -133,15 +133,10 @@ class EPP:
         result_code = int(result.attrib['code'])
         if result_code >= 2000:
             msg = result.find('epp:msg', XMLNS)
-            ext = response.find('epp:extension', XMLNS)
-            if ext is not None:
-                msg_node = ext.find('sidn-ext-epp:ext/sidn-ext-epp:response/sidn-ext-epp:msg', XMLNS)
-                ext_code = msg_node.attrib['code']
-                ext_message = msg_node.text
-            else:
-                ext_code = ext_message = None
+            ext_code = response.find('epp:extValue/epp:value/fury:ciraCode', XMLNS)
+            ext_reason = response.find('epp:extValue/epp:reason', XMLNS)
 
-            raise EPPError(result_code, msg.text, ext_code, ext_message)
+            raise EPPError(result_code, msg.text, ext_code, ext_reason)
         return response_class(response)
 
     def _read(self):
@@ -156,7 +151,7 @@ class EPP:
                 xml_bytes += self.ssl.read(remaining)
                 remaining = size - len(xml_bytes)
 
-            logger.debug("SIDN Response: %s", xml_bytes.decode('utf-8'))
+            logger.debug("Hello Response: %s", xml_bytes.decode('utf-8'))
             return xml_bytes  # raw result for ElementTree to convert.
         else:
             return None
@@ -215,25 +210,25 @@ class EPP:
         The next call to :meth:`poll` will return the next available message.
 
         :param transaction_id:
-        :rtype: sidn.response.SidnPollResponse
+        :rtype: fury_registry.response.EPPPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         cmd = commands.epp.poll_req(transaction_id=transaction_id)
-        return self.cmd(cmd, response_class=SidnPollResponse)
+        return self.cmd(cmd, response_class=EPPPollResponse)
 
     def poll_ack(self, queue_id, transaction_id=None):
         """
         Acknowledge the processing of a message in the queue.
-        :rtype: sidn.response.SidnPollResponse
+        :rtype: fury_registry.response.EPPPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         cmd = commands.epp.poll_ack(queue_id, transaction_id=transaction_id)
-        return self.cmd(cmd, response_class=SidnPollResponse)
+        return self.cmd(cmd, response_class=EPPPollResponse)
 
     @property
     def domains(self):
         """
-        :rtype: sidn.handlers.DomainHandler
+        :rtype: fury_registry.handlers.DomainHandler
         """
         # These are not assigned to the class, to avoid circular references.
         # Only keep references temporary, so __del__ will be called.
@@ -242,13 +237,13 @@ class EPP:
     @property
     def contacts(self):
         """
-        :rtype: sidn.handlers.ContactHandler
+        :rtype: fury_registry.handlers.ContactHandler
         """
         return handlers.ContactHandler(self)
 
     @property
     def hosts(self):
         """
-        :rtype: sidn.handlers.HostHandler
+        :rtype: fury_registry.handlers.HostHandler
         """
         return handlers.HostHandler(self)

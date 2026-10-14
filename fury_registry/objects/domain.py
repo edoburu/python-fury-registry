@@ -1,15 +1,16 @@
 import logging
 import typing
+from datetime import datetime
 
 import idna
-from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text
+from fury_registry.constants import XMLNS
+from fury_registry.utils import get_node_date, get_node_text
 
 from .base import ParsedObject
 from .secdns import DNSSec
 
 if typing.TYPE_CHECKING:
-    from sidn.client import EPP  # noqa: F401 (For PyCharm type checking)
+    from fury_registry.client import EPP  # noqa: F401 (For PyCharm type checking)
 
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class EppDomain(ParsedObject):
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw, dnssec=None):
         """
-        :type dnssec: sidn.objects.DNSSec
+        :type dnssec: fury_registry.objects.DNSSec
         """
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
@@ -238,7 +239,7 @@ class EppDomain(ParsedObject):
         return self._epp.domains.renew(self.name, expiration_date=self.expire_date, period=period, period_unit=period_unit)
 
 
-class SidnDomain(EppDomain):
+class FuryDomain(EppDomain):
     """
     Domain data object with SIDN extension fields
     """
@@ -249,19 +250,19 @@ class SidnDomain(EppDomain):
 
         # Parse extension fields
         if extension is not None:
-            sidn_ext = extension.find('sidn-ext-epp:ext/sidn-ext-epp:infData/sidn-ext-epp:domain', XMLNS)
+            # Redemption Grace Period
+            rgp_status = extension.find('rgp:infData', XMLNS)
+            fury_rgp_info = extension.find('fury-rgp:rgpInfo', XMLNS)
 
-            if sidn_ext is not None:
-                fields.update(dict(
-                    optOut=get_node_text(sidn_ext, 'sidn-ext-epp:optOut') == 'true',
-                    limited=get_node_text(sidn_ext, 'sidn-ext-epp:limited') == 'true',
-                    period=int(get_node_text(sidn_ext, 'sidn-ext-epp:period', 0)) or None,
-                ))
+            if rgp_status is not None:
+                fields['rgp_status'] = get_node_text(rgp_status, 'rgp:rgpStatus')
+            if fury_rgp_info is not None:
+                fields['rgp_status_end'] = get_node_date(fury_rgp_info, 'fury-rgp:rgpStatusEnd') or None
 
         return fields
 
     def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
-                 dnssec=None, optOut=None, limited=None, period=None):
+                 dnssec=None, rgp_status=None, rgp_status_end: datetime | None=None):
         super().__init__(
             name=name,
             roid=roid,
@@ -279,10 +280,8 @@ class SidnDomain(EppDomain):
             dnssec=dnssec
         )
 
-        # SIDN extension fields
-        self.opt_out = optOut
-        self.limited = limited
-        self.period = period
+        self.rgp_status = rgp_status  # Redemption Grace Status extension
+        self.rgp_status_end = rgp_status_end  # Fury extension field
 
 
 class TransferStatus(ParsedObject):

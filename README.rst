@@ -1,11 +1,12 @@
-EPP Python client for SIDN
-==========================
+EPP Python client for Fury Registries
+=====================================
 
-This is a Python client to communicate with the DRS5 interface of SIDN, the Dutch domain registrar.
+This is a Python client to communicate with the Fury EPP registry interfaces,
+used by SIDN (the Dutch domain registrar) and others.
 
 The communication happens over the generic EPP protocol, which each registrar can extend.
 This package has the potential to be generic, but currently the EPP commands are written
-with DRS5 variations in mind.
+with Fury registry variations in mind.
 
 Usage
 -----
@@ -14,18 +15,18 @@ Install it:
 
 .. code-block:: bash
 
-    pip install sidn
+    pip install fury-registry
 
 Code:
 
 .. code-block:: python
 
-    from sidn import EPP
+    from fury_registry import EPP
 
     client = EPP(
-        host='testdrs.domain-registry.nl',
-        username='..',  # your DRS user name
-        password='..',  # your DRS password
+        host='epp.ote.nic.nl',
+        username='...',  # your EPP user name
+        password='...',  # your EPP password
         certfile="/path/to/certfile.pem",  # Optional parameter
     )
 

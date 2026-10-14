@@ -6,13 +6,26 @@ Copied from the abandoned https://pypi.python.org/pypi/EPP package
 XMLNS = {
     # Possible namespaces in the response
     # See greeting message for all possible supported extensions
-    'epp': 'urn:ietf:params:xml:ns:epp-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
-    'obj': 'urn:ietf:params:xml:ns:obj-1.0',  # Base EPP; https://tools.ietf.org/html/rfc5730
-    'domain': 'urn:ietf:params:xml:ns:domain-1.0',  # Domain name mapping; https://tools.ietf.org/html/rfc5731
-    'host': 'urn:ietf:params:xml:ns:host-1.0',  # Host mapping; https://tools.ietf.org/html/rfc5732
-    'contact': 'urn:ietf:params:xml:ns:contact-1.0',  # Contact mapping; https://tools.ietf.org/html/rfc5733
-    'secDNS': 'urn:ietf:params:xml:ns:secDNS-1.1',  # DNSSec; https://tools.ietf.org/html/rfc5910
-    'sidn-ext-epp': 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0',  # SIDN specific bits
+    # Base:
+    "epp": "urn:ietf:params:xml:ns:epp-1.0",  # Base EPP; https://www.rfc-editor.org/info/rfc5730
+    "obj": "urn:ietf:params:xml:ns:obj-1.0",  # Base EPP; https://www.rfc-editor.org/info/rfc5730
+    "domain": "urn:ietf:params:xml:ns:domain-1.0",  # Domain name mapping; https://www.rfc-editor.org/info/rfc5731
+    "host": "urn:ietf:params:xml:ns:host-1.0",  # Host mapping; https://www.rfc-editor.org/info/rfc5732
+    "contact": "urn:ietf:params:xml:ns:contact-1.0",  # Contact mapping; https://www.rfc-editor.org/info/rfc5733
+    # IETF extensions:
+    "secDNS": "urn:ietf:params:xml:ns:secDNS-1.1",  # DNSSec; https://www.rfc-editor.org/info/rfc5910
+    "org": "urn:ietf:params:xml:ns:epp:org-1.0",  # Organization mappings; https://www.rfc-editor.org/info/rfc8543/
+    "orgext": "urn:ietf:params:xml:ns:epp:orgext-1.0",  # Organization extensions; https://www.rfc-editor.org/info/html/rfc8544
+    "rgp": "urn:ietf:params:xml:ns:rgp-1.0",  # Redemption Grace Period https://www.rfc-editor.org/info/rfc3915/
+    "fee": "urn:ietf:params:xml:ns:fee-0.11",  # Registar fees https://www.rfc-editor.org/info/rfc8748/
+    "xmldsig": "http://www.w3.org/2000/09/xmldsig#",  # Signatures https://www.w3.org/TR/xmldsig-core/
+    "launch": "urn:ietf:params:xml:ns:launch-1.0",  # Launch phase; https://www.rfc-editor.org/info/rfc8334/
+    "mark": "urn:ietf:params:xml:ns:mark-1.0",  # Trademarks https://www.rfc-editor.org/info/rfc7848/
+    "smd": "urn:ietf:params:xml:ns:signedMark-1.0",  # Signed Trademarks https://www.rfc-editor.org/info/rfc7848/
+    # Fury extensions:
+    "fury": "urn:ietf:params:xml:ns:fury-2.0",  # Fury extension; https://www.cira.ca/en/resources/documents/registry/cira-fury-21-epp-extension/
+    "fury-rgp": "urn:ietf:params:xml:ns:fury-rgp-1.0",  # Fury Redemption Grace Period extension https://www.cira.ca/en/resources/documents/registry/cira-fury-rgp-1-epp-extension
+    "idn": "urn:ietf:params:xml:ns:idn-1.0",  # Internationalized Domain names; https://www.cira.ca/en/resources/documents/registry/cira-idn-1-epp-extension/
 }
 
 # Command completed successfully
@@ -143,9 +156,6 @@ EPP_AUTH_SESSION_LIMIT = 2502
 
 # ---- extended codes by SIDN ----
 
-# This transaction is incompatible with the domain names current status.
-SIDN_EXT_ACTION_INCOMPATIBLE_DOMAIN_STATUS = 'C0001b'  # for 2304 (EPP_OBJECT_STATUS)
-
 # The specified domain name is not managed by you.
 SIDN_EXT_NOT_MANAGED_BY_ACCOUNT = 'C0038b'  # for 2308 (EPP_DATA_MGMT_POLICY)
 
@@ -158,19 +168,5 @@ SIDN_EXT_NO_XFR_RECORDED = 'C0100'  # for 2301 (EPP_OBJECT_NOT_PENDING_XFR)
 # The specified handle is not associated with this account.
 SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'
 
-# The street field can't be used for a PO-Box. ("Postbus")
-SIDN_EXT_PO_NOT_ALLOWED = 'F0007'
-
-# A domain name cannot contain more than one dot.
-SIDN_EXT_DOMAIN_SINGLE_DOT = 'F0017'
-
-# A domain name must end with ‘.nl‘.
-SIDN_EXT_EXTENSION_DOES_NOT_EXIST = 'F0018'
-
 # The specified domain name is unknown.
 SIDN_EXT_DOMAIN_DOES_NOT_EXIST = 'T0001'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
-
-SIDN_EXT_REGISTRAR_DOES_NOT_EXIST = 'T0003'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
-
-# The specified name server is unknown.
-SIDN_EXT_NS_DOES_NOT_EXIST = 'T0008'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)

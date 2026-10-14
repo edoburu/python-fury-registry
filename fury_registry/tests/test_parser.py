@@ -3,12 +3,12 @@ from datetime import datetime
 from unittest import TestCase
 
 from dateutil.tz import tzutc
-from sidn.client import EPP, EPPError, SidnPollResponse
-from sidn.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY
-from sidn.handlers import ContactHandler
-from sidn.objects import EppContact, EppHost, KeyData, SidnDomain
-from sidn.response import register_namespaces
-from sidn.utils import get_node_text
+from fury_registry.client import EPP, EPPError, EPPPollResponse
+from fury_registry.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY
+from fury_registry.handlers import ContactHandler
+from fury_registry.objects import EppContact, EppHost, KeyData, FuryDomain
+from fury_registry.response import register_namespaces
+from fury_registry.utils import get_node_text
 
 UTC = tzutc()
 
@@ -57,16 +57,6 @@ class ParserTests(TestCase):
                     <contact:upDate>2011-03-14T15:49:34.000Z</contact:upDate>
                 </contact:infData>
             </resData>
-            <extension>
-                <sidn-ext-epp:ext>
-                    <sidn-ext-epp:infData>
-                        <sidn-ext-epp:contact>
-                            <sidn-ext-epp:legalForm>ANDERS</sidn-ext-epp:legalForm>
-                            <sidn-ext-epp:limited>false</sidn-ext-epp:limited>
-                        </sidn-ext-epp:contact>
-                    </sidn-ext-epp:infData>
-                </sidn-ext-epp:ext>
-            </extension>
             <trID>
                 <clTRID>unused</clTRID>
                 <svTRID>6442820A-3393-5B84-422B-9ED566B6042B</svTRID>
@@ -116,6 +106,9 @@ class ParserTests(TestCase):
                 </domain:infData>
             </resData>
             <extension>
+                <fury-rgp:rgpInfo xmlns:fury-rgp="urn:ietf:params:xml:ns:fury-rgp-1.0">
+                    <fury-rgp:rgpStatusEnd>2020-12-28T22:00:00.0Z</fury-rgp:rgpStatusEnd>
+                </fury-rgp:rgpInfo>
                 <secDNS:infData>
                     <secDNS:keyData>
                         <secDNS:flags>257</secDNS:flags>
@@ -124,21 +117,12 @@ class ParserTests(TestCase):
                         <secDNS:pubKey>AwEAAao2zeD+21pkAt7Aga437btAcpT5xvXfxbneHzYgOW4XyqogQ0d6cAmX0lMrnDw8JuU56QHV9Gm7oSZjOG77RoIRvhaeGgLezizFNZ8PJujyfdKl79ZX02cUjDRkt5dqR2gsqPcEUtv5gARTmM2fCPeDwU+hX/asXTLc/79ukKryaqNEMiQOpOY+Zve4qJKRCUhq1MEcMvMEq5GQuFyOuRUEzif+vIkXQ9tjJr3YeVAvfsSk9UoUk7jNz6NPp/7gx4wK1dAHv8adSTYCMVUbJcvBXj8hq33Gg02W8Fgz0wtFEeu3f4+eK5yOtInDsko8XvhwT7bj1nOYd6ulNsNurlE=</secDNS:pubKey>
                     </secDNS:keyData>
                 </secDNS:infData>
-                <sidn-ext-epp:ext>
-                    <sidn-ext-epp:infData>
-                        <sidn-ext-epp:domain>
-                            <sidn-ext-epp:optOut>false</sidn-ext-epp:optOut>
-                            <sidn-ext-epp:limited>false</sidn-ext-epp:limited>
-                            <sidn-ext-epp:period>3</sidn-ext-epp:period>
-                        </sidn-ext-epp:domain>
-                    </sidn-ext-epp:infData>
-                </sidn-ext-epp:ext>
             </extension>
         </response>
     </epp>'''
 
         response = EPP._parse_response(domain_info)
-        domain = SidnDomain.from_xml(response.resData, response.extension)
+        domain = FuryDomain.from_xml(response.resData, response.extension)
         self.assertEqual(domain.name, 'computel.nl')
         self.assertEqual(domain.ns, ['ns2.computel.nl', 'ns1.computel.nl'])
         self.assertEqual(domain.admin, 'COM017325-NLCOM')
@@ -150,6 +134,7 @@ class ParserTests(TestCase):
         self.assertEqual(domain.dnssec.keydatas[0].protocol, KeyData.PROTOCOL3)
         self.assertEqual(domain.dnssec.keydatas[0].flags, KeyData.FLAG_KSK)
         self.assertTrue(domain.dnssec.keydatas[0].pubKey.startswith('AwEAAao2zeD'))
+        self.assertEqual(domain.rgp_status_end.isoformat(), '2020-12-28T22:00:00+00:00')
 
         # testing DNSSec.__contains() and KeyData.__eq__().
         # This is also used for EppDomain.update()
@@ -245,7 +230,7 @@ class ParserTests(TestCase):
             self.assertEqual(e.code, 2308)
             self.assertEqual(e.message, 'Validation of the transaction failed.')
             self.assertEqual(e.ext_code, 'C0115')
-            self.assertEqual(e.ext_message, 'The specified handle is not associated with this account.')
+            self.assertEqual(e.ext_reason, 'The specified handle is not associated with this account.')
         else:
             self.assertTrue(False, "EPPError not raised")
 
@@ -280,7 +265,7 @@ class ParserTests(TestCase):
         </trID>
       </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.queue_count, 5)
         self.assertEqual(response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC))
@@ -338,7 +323,7 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.pollData.command, 'domain:transfer-start')
         self.assertEqual(response.pollData.code, 1000)
@@ -389,7 +374,7 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.pollData.command, 'domain:transfer')
         self.assertEqual(response.pollData.code, 1000)
@@ -418,7 +403,7 @@ class ParserTests(TestCase):
             </trID>
         </response>
     </epp>'''
-        response = EPP._parse_response(raw_response, response_class=SidnPollResponse)  # type: SidnPollResponse
+        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_EMPTY)
         self.assertEqual(response.queue_count, 0)
         self.assertEqual(response.queue_date, None)

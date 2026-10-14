@@ -1,7 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
-from sidn import commands, objects
+from fury_registry import commands, objects
 
 from .base import BaseHandler
 

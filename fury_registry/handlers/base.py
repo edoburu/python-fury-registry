@@ -1,4 +1,4 @@
-from sidn import commands
+from fury_registry import commands
 
 
 class BaseHandler:
@@ -8,7 +8,7 @@ class BaseHandler:
 
     def __init__(self, epp):
         """
-        :type epp: sidn.client.EPP
+        :type epp: fury_registry.client.EPP
         """
         self.epp = epp
 

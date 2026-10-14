@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from dateutil.tz import tzutc
 
-from sidn import commands
-from sidn.handlers import DomainHandler, ContactHandler
-from sidn.response import register_namespaces
+from fury_registry import commands
+from fury_registry.handlers import DomainHandler, ContactHandler
+from fury_registry.response import register_namespaces
 
 UTC = tzutc()
 
@@ -23,10 +23,12 @@ class CommandTests(TestCase):
     def test_build_domain_create(self):
         xml = commands.domain.create_part(
             name='example.nl',
+            ns=['ns1.example.nl', 'ns2.example.nl'],
             registrant='REG',
-            admin='ADMIN',
-            tech='TECH',
-            ns=['ns1.example.nl', 'ns2.example.nl']
+            contacts={
+                'admin': 'ADMIN',
+                'tech': 'TECH',
+            }
         )
 
         xml = DomainHandler(None)._build_command('create', xml)

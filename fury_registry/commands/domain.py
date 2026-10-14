@@ -1,20 +1,24 @@
 from datetime import date, datetime
 
 import idna
-from sidn.utils import escape, xml_format
+from fury_registry.utils import escape, xml_format
 
+PRIVATE = {"admin": "agreed2", "tech": "agreed2"}  # TODO: frozendict() in Python 3.15
 
 def _idna_encode(name):
     # Make sure the object is returned as string in Python 3
     return idna.encode(name).decode()
 
 
-def info_part(name):
+def info_part(name, password="unused"):
     xml = """
       <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name hosts="all">{name}</domain:name>
+        <domain:authInfo>
+          <domain:pw>{password}</domain:pw>
+        </domain:authInfo>
       </domain:info>"""
-    return xml_format(xml, name=_idna_encode(name))
+    return xml_format(xml, name=_idna_encode(name), password=password)
 
 
 def check_part(name):
@@ -41,44 +45,49 @@ def renew_part(name, curExpDate, period, unit):
     return xml_format(xml, name=_idna_encode(name), curExpDate=curExpDate, period=str(int(period)), unit=unit)
 
 
-def create_part(name, registrant, admin, tech, ns, pw='unused'):
+def create_part(name, ns, registrant="agreed2", contacts=PRIVATE, pw='unused'):
+    """Use admin/tech/ns="agreed2" to create the privacy domain."""
     xml = xml_format("""
       <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>{name}</domain:name>""", name=_idna_encode(name))
+        <domain:name>{name}</domain:name>
+        <domain:period unit="y">1</domain:period>""", name=_idna_encode(name))
 
     xml += _ns_list(ns)
 
     xml += xml_format("""
-        <domain:registrant>{registrant}</domain:registrant>
-        <domain:contact type="admin">{admin}</domain:contact>
-        <domain:contact type="tech">{tech}</domain:contact>
+        <domain:registrant>{registrant}</domain:registrant>""", registrant=registrant)
+
+    for key, value in contacts.items():
+        xml += xml_format("""
+            <domain:contact type="admin">{admin}</domain:contact>""", key=key, value=value)
+
+    xml += xml_format("""
         <domain:authInfo>
           <domain:pw>{pw}</domain:pw>
         </domain:authInfo>
-      </domain:create>""", registrant=registrant, admin=admin, tech=tech, pw=pw)
+      </domain:create>""", pw=pw)
 
     return xml
 
 
-def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), remove_techs=(), remove_statuses=(), add_ns=(), add_admins=(), add_techs=(), add_statuses=()):
+def update_part(name, registrant=None, pw=None, remove_ns=(), remove_contacts=None, remove_statuses=(), add_ns=(), add_contacts=(), add_statuses=()):
     xml = xml_format("""
       <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <domain:name>{name}</domain:name>""", name=_idna_encode(name))
+    
+    changed = True
 
-    if add_ns or add_admins or add_techs or add_statuses:
+    if add_ns or add_contacts or add_statuses:
         xml += """
         <domain:add>"""
 
         if add_ns:
             xml += _ns_list(add_ns)
 
-        for admin in add_admins:
-            xml += xml_format("""
-          <domain:contact type="admin">{admin}</domain:contact>""", admin=admin)
-
-        for tech in add_techs:
-            xml += xml_format("""
-          <domain:contact type="tech">{tech}</domain:contact>""", tech=tech)
+        if add_contacts:
+            for kind, handle in add_contacts.items():
+                xml += xml_format("""
+              <domain:contact type="{kind}">{handle}</domain:contact>""", kind=kind, handle=handle)
 
         for status in add_statuses:
             xml += xml_format("""
@@ -86,21 +95,19 @@ def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), 
 
         xml += """
         </domain:add>"""
+        changed = True
 
-    if remove_ns or remove_admins or remove_techs or remove_statuses:
+    if remove_ns or remove_contacts or remove_statuses:
         xml += """
         <domain:rem>"""
 
         if remove_ns:
             xml += _ns_list(remove_ns)
 
-        for admin in remove_admins:
-            xml += xml_format("""
-          <domain:contact type="admin">{admin}</domain:contact>""", admin=admin)
-
-        for tech in remove_techs:
-            xml += xml_format("""
-          <domain:contact type="tech">{tech}</domain:contact>""", tech=tech)
+        if remove_contacts:
+            for kind, handle in remove_contacts:
+                xml += xml_format("""
+              <domain:contact type="{kind}">{handle}</domain:contact>""", kind=kind, handle=handle)
 
         for status in remove_statuses:
             xml += xml_format("""
@@ -108,6 +115,7 @@ def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), 
 
         xml += """
         </domain:rem>"""
+        changed = True
 
     if registrant is not None or pw is not None:
         xml += """
@@ -125,6 +133,11 @@ def update_part(name, registrant=None, pw=None, remove_ns=(), remove_admins=(), 
 
         xml += """
         </domain:chg>"""
+        changed = True
+
+    if not changed:
+        # For restore delete action
+        xml += "        <domain:chg/>"
 
     xml += """
       </domain:update>"""
@@ -169,17 +182,14 @@ def transfer_query_part(name):
     return xml_format(xml, name=_idna_encode(name))
 
 
-def cancel_delete_part(name, clTRID=None):
-    xml = """
-      <sidn-ext-epp:command xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
-        <sidn-ext-epp:domainCancelDelete>
-          <sidn-ext-epp:name>{name}</sidn-ext-epp:name>
-        </sidn-ext-epp:domainCancelDelete>
-        <sidn-ext-epp:clTRID>{clTRID}</sidn-ext-epp:clTRID>
-      </sidn-ext-epp:command>"""
-
-    # No command, only extension bit.
-    return xml_format(xml, name=_idna_encode(name), clTRID=clTRID or 'unused')
+def restore_part(op="request"):
+    """
+    :param op: Either "request or "report"
+    """
+    return xml_format("""
+      <rgp:update xmlns:rgp="urn:ietf:params:xml:ns:rgp-1.0">
+        <rgp:restore op="{op}"/>
+      </rgp:update>""", op=op)
 
 
 def delete_part(name):

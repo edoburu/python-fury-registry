@@ -1,8 +1,8 @@
 from functools import cached_property
 from xml.etree import ElementTree
 
-from sidn.constants import XMLNS
-from sidn.utils import get_node_date, get_node_text
+from fury_registry.constants import XMLNS
+from fury_registry.utils import get_node_date, get_node_text
 
 from . import objects
 
@@ -96,13 +96,8 @@ class EPPPollResponse(EPPResponse):
     def __bool__(self):
         return self.msgQ is not None  # self.result_code == EPP_QUEUE_NOT_EMPTY
 
-    __nonzero__ = __bool__  # python 2
-
     @cached_property
-    def msgQ(self):
-        """
-        :rtype: xml.etree.ElementTree.Element
-        """
+    def msgQ(self) -> ElementTree.Element|None:
         return self.element.find('epp:msgQ', XMLNS)
 
     @cached_property
@@ -141,64 +136,10 @@ class EPPPollResponse(EPPResponse):
             return None
         return get_node_text(self.msgQ, 'epp:msg')
 
-
-class SidnPollResponse(EPPPollResponse):
-    """
-    SIDN Extension for polling responses.
-    """
-
     @cached_property
-    def pollData(self):
+    def trnData(self):
         """
-        Return the SIDN extension data
-        """
-        return SidnPollData(self.resData.find('sidn-ext-epp:pollData', XMLNS))
-
-
-class SidnPollData(XmlObject):
-    """
-    The SIDN extension for poll data.
-    """
-    DOMAIN_TRANSFER_START = "domain:transfer-start"
-    DOMAIN_TRANSFER = "domain:transfer"
-    DOMAIN_DELETE = "domain:delete"
-
-    @cached_property
-    def command(self):
-        """
-        The command that is stored in the :attr:`resData`.
-        This can be:
-
-        * ``domain:transfer-start`` (:attr:`DOMAIN_TRANSFER_START`)
-        * ``domain:transfer`` (:attr:`DOMAIN_TRANSFER`)
-        * ``domain:delete`` (:attr:`DOMAIN_DELETE`)
-        """
-        return get_node_text(self.element, 'sidn-ext-epp:command')
-
-    @cached_property
-    def result(self):
-        return self.element.find('sidn-ext-epp:data/epp:result', XMLNS)
-
-    @cached_property
-    def code(self):
-        return int(self.result.attrib['code'])
-
-    @cached_property
-    def message(self):
-        return get_node_text(self.result, 'epp:msg')
-
-    @cached_property
-    def resData(self):
-        """
-        The SIDN poll data has another resData node inside.
-        :rtype: xml.etree.ElementTree.Element
-        """
-        return self.element.find('sidn-ext-epp:data/epp:resData', XMLNS)
-
-    @cached_property
-    def object(self):
-        """
-        Return the object wrapped in the extended notification message.
+        Return the object wrapped in the resData.
         """
         element = self.resData[0]  # type: ElementTree.Element
         if element.tag == '{urn:ietf:params:xml:ns:domain-1.0}trnData':  # full qualified name for "domain:trnData"

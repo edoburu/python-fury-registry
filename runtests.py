@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import unittest
 
-from sidn.tests import *  # noqa
+from fury_registry.tests import *  # noqa
 
 if __name__ == '__main__':
     unittest.main()

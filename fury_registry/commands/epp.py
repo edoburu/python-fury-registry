@@ -1,8 +1,25 @@
-from sidn.utils import escape, xml_format
+from fury_registry.utils import escape, xml_format
 
 # EPP: https://tools.ietf.org/html/rfc5730
 #
 # clTRID = client transaction id
+
+LOGIN_EXTENSIONS = (
+    # See constants.XMLNS for descriptions of these namespaces
+    "urn:ietf:params:xml:ns:fury-2.0",
+    "urn:ietf:params:xml:ns:fury-rgp-1.0",
+    "urn:ietf:params:xml:ns:idn-1.0",
+    "urn:ietf:params:xml:ns:secDNS-1.1",
+    "urn:ietf:params:xml:ns:launch-1.0",
+    "urn:ietf:params:xml:ns:mark-1.0",
+    "urn:ietf:params:xml:ns:signedMark-1.0",
+    "http://www.w3.org/2000/09/xmldsig#",
+    "urn:ietf:params:xml:ns:rgp-1.0",
+    "urn:ietf:params:xml:ns:fee-0.9",
+    "urn:ietf:params:xml:ns:fee-0.11",
+    "urn:ietf:params:xml:ns:epp:org-1.0",
+    "urn:ietf:params:xml:ns:epp:orgext-1.0",
+)
 
 
 def build_command(command_name, command_xml=None, op=None, command_extensions=(), clTRID=None, epp_extensions=()):
@@ -18,7 +35,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
                            NOTE: the ``command_xml`` may also contain an ``<extension>`` block!
     """
     if command_name is None:
-        # Only an <extension> at top-level. Used for SIDN domainCancelDelete
+        # Only an <extension> at top-level. Used for custom commands (e.g. request All Properties)
         main_xml = ''
     else:
         # Allow parts to pass an command + extension via a tuple
@@ -66,16 +83,28 @@ def login(username, password):
         <lang>en</lang>
       </options>
       <svcs>
-        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
-        <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:epp-1.0</objURI>
         <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
-        <svcExtension>
-          <extURI>urn:ietf:params:xml:ns:sidn-ext-epp-1.0</extURI>
-        </svcExtension>
+        <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>"""
+
+    if LOGIN_EXTENSIONS:
+        xml += """
+        <svcExtension>"""
+
+        for extension in LOGIN_EXTENSIONS:
+            xml += f"""
+          <extURI>{extension}</extURI>"""
+
+        xml += """
+        </svcExtension>"""
+
+    xml += """
       </svcs>
     </login>
   </command>
 </epp>"""
+
     return xml_format(xml, username=username, password=password)
 
 

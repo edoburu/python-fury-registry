@@ -1,8 +1,8 @@
 """
 All specialized commands are performed by these handlers.
 """
-from sidn import commands, objects
-from sidn.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED, XMLNS
+from fury_registry import commands, objects
+from fury_registry.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED, XMLNS
 
 from .base import BaseHandler
 
@@ -18,7 +18,7 @@ class ContactHandler(BaseHandler):
         """
         xml = self._build_command('check', commands.contact.check_part(handle))
 
-        from sidn.client import EPPError
+        from fury_registry.client import EPPError
         try:
             response = self.epp.cmd(xml)
         except EPPError as e:
@@ -41,30 +41,9 @@ class ContactHandler(BaseHandler):
         return objects.EppContact.from_xml(response.resData, response.extension)
 
     def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None,
-               phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
+               phone=None, fax=None, email=None, properties=None):
         """
         Create a contact.
-
-        Allowed Dutch legalForm options:
-
-        * ``ANDERS``      - Anders
-        * ``BGG``         - Buitenlandse EG vennootschap
-        * ``BRO``         - Buitenlandse rechtsvorm/onderneming/nevenvestiging
-        * ``BV``          - Besloten Vennootschap
-        * ``BVI/O``       - B.V. in oprichting
-        * ``COOP``        - Cooperatie
-        * ``CV``          - Commanditaire Vennootschap
-        * ``EENMANSZAAK`` - Eenmanszaak
-        * ``EESV``        - Europees Economisch Samenwerkingsverband
-        * ``KERK``        - Kerkgenootschap
-        * ``MAATSCHAP``   - Maatschap
-        * ``NV``          - Naamloze Vennootschap
-        * ``OWM``         - Onderlinge Waarborg Maatschappij
-        * ``PERSOON``     - Natuurlijk persoon
-        * ``REDR``        - Rederij
-        * ``STICHTING``   - Stichting
-        * ``VERENIGING  - Vereniging
-        * ``VOF         - Vennootschap onder firma
 
         :param id: object ID, will be ignored.
         :param name: Unicode name for the person.
@@ -78,7 +57,7 @@ class ContactHandler(BaseHandler):
         :param email: Email, optional.
         :returns: The contact handle.
         """
-        command, ext = commands.contact.create_parts(
+        command = commands.contact.create_part(
             handle=id,  # Mandatory, but will be ignored
             name=name,
             org=organisation,  # department in DRS5
@@ -89,20 +68,20 @@ class ContactHandler(BaseHandler):
             voice=phone,
             fax=fax,
             email=email,
-            legalForm=legalForm,
-            legalFormRegNo=legalFormRegNo,
+            properties=properties
         )
-        xml = self._build_command('create', command, command_extensions=(ext,))
+        ext = (command.properties.create_part(properties),) if properties else ()
+        xml = self._build_command('create', command, command_extensions=ext)
         res = self.epp.cmd(xml).resData
         return res.find('contact:creData/contact:id', XMLNS).text
 
-    def update(self, handle, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, legalForm='ANDERS', legalFormRegNo=None):
+    def update(self, handle, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, properties=None):
         """
         Update an existing contact.
 
         Any omitted fields will be reset, so make sure to pass all data.
         """
-        command, ext = commands.contact.update_parts(
+        command = commands.contact.update_parts(
             handle=handle,
             name=name,
             org=organisation,  # department in DRS5
@@ -113,10 +92,10 @@ class ContactHandler(BaseHandler):
             voice=phone,
             fax=fax,
             email=email,
-            legalForm=legalForm,
-            legalFormRegNo=legalFormRegNo,
+            properties=properties
         )
-        xml = self._build_command('update', command, command_extensions=(ext,))
+        ext = (commands.properties.update_part(properties),) if properties else ()
+        xml = self._build_command('update', command, command_extensions=ext)
         self.epp.cmd(xml)
 
     def delete(self, name):
