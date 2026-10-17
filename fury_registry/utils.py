@@ -98,16 +98,6 @@ def get_node_date(parent_node, node_name):
     :type node_name: str
     :rtype: datetime|None
     """
+    # Dates like: 1995-12-10T23:00:00.000Z
     text = get_node_text(parent_node, node_name)
-    return parse_iso_date(text)
-
-
-def parse_iso_date(date):
-    """
-    Parse the ISO date format the EPP submits.
-    """
-    if date is None:
-        return None
-    else:
-        # Dates like: 1995-12-10T23:00:00.000Z
-        return dateutil.parser.parse(date)
+    return dateutil.parser.parse(text) if text else None
