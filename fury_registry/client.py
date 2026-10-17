@@ -168,6 +168,10 @@ class EPP:
     def _read_greeting(self):
         # Read greeting
         raw_response = self._read()
+        if raw_response is None:
+            logger.debug("No greeting message found, disconnected?")
+            return
+
         xml = ElementTree.XML(raw_response)
 
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
