@@ -47,12 +47,12 @@ class EPP:
         self.ssl = None
         self.host = host
         self.port = port
-        self.ssl = self._connect()
+        self.ssl = self._connect(certfile=certfile, timeout=timeout)
         self._read_greeting()
         if username and password:
             self.login(username, password)
 
-    def _connect(self, username=None, password=None, certfile=None, timeout=60):
+    def _connect(self, certfile=None, timeout=60):
         context = ssl.create_default_context(cafile=certfile)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
