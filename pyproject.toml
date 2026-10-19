@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fury-registry"
+dynamic = ["version"]
+authors = [
+    { name = "Diederik van der Boor", email = "opensource@edoburu.nl" },
+    { name = "Jochem Oosterveen" },
+]
+description = "Python EPP client for Hello Registry"
+readme = "README.rst"
+dependencies = [
+    "python-dateutil",
+    "idna",
+]
+requires-python = ">=3.11"
+
+[tool.hatch.version]
+path = "fury_registry/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fury_registry"]
