@@ -45,35 +45,12 @@ def mask_sensitive_fields(cmd):
     return cmd
 
 
-def _get_int32_format():
-    """
-    Get the struct pack/unpack syntax for 32 bit integers.
-    """
-    # http://www.bortzmeyer.org/4934.html
-    # Get the size of C integers. We need 32 bits unsigned.
-    format_32 = ">I"  # big endian unsigned int
-    if struct.calcsize(format_32) < 4:
-        format_32 = ">L"  # big endian unsigned long
-        if struct.calcsize(format_32) != 4:
-            raise Exception("Cannot find a 32 bits integer")
-    elif struct.calcsize(format_32) > 4:
-        format_32 = ">H"  # big endian unsigned short
-        if struct.calcsize(format_32) != 4:
-            raise Exception("Cannot find a 32 bits integer")
-    else:
-        pass
-    return format_32
-
-
-INT32_FORMAT = _get_int32_format()
-
-
 def int32_from_net(data):
-    return struct.unpack(INT32_FORMAT, data)[0]
+    return struct.unpack(">I", data)[0]
 
 
 def int32_to_net(value):
-    return struct.pack(INT32_FORMAT, value)
+    return struct.pack(">I", value)
 
 
 def get_node_text(parent_node, node_name, default=None):
