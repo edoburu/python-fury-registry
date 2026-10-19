@@ -1,6 +1,7 @@
 """
 Serialize DNSSec objects to EPP XML
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -9,7 +10,7 @@ from fury_registry.objects import DSKey, KeyData
 from fury_registry.utils import xml_format
 
 
-def create(dskeys: Iterable[DSKey]=(), keyData: Iterable[KeyData]=()):
+def create(dskeys: Iterable[DSKey] = (), keyData: Iterable[KeyData] = ()):
     """
     The DNSSec create extension
     """
@@ -34,12 +35,24 @@ def create(dskeys: Iterable[DSKey]=(), keyData: Iterable[KeyData]=()):
     return xml
 
 
-def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=(), add_keydatas=(), urgent=False):
-    if not remove_all and not remove_dskeys and not remove_keydatas and \
-            not add_dskeys and not add_keydatas:
+def update(
+    remove_all=False,
+    remove_dskeys=(),
+    remove_keydatas=(),
+    add_dskeys=(),
+    add_keydatas=(),
+    urgent=False,
+):
+    if (
+        not remove_all
+        and not remove_dskeys
+        and not remove_keydatas
+        and not add_dskeys
+        and not add_keydatas
+    ):
         raise ValueError("At least one DNSSec argument should be provided to update()!")
 
-    urgent_attr = ''
+    urgent_attr = ""
     if urgent:
         urgent_attr = ' urgent="true"'
 
@@ -132,5 +145,5 @@ def keydata_to_xml(keyData: KeyData):
         flags=keyData.flags,
         protocol=keyData.protocol,
         alg=keyData.alg,
-        pubKey=keyData.pubKey
+        pubKey=keyData.pubKey,
     )

@@ -3,5 +3,5 @@ import unittest
 
 from fury_registry.tests import *
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

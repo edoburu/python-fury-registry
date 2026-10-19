@@ -38,7 +38,7 @@ class XmlObject:
         return xml
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self}>'
+        return f"<{self.__class__.__name__} {self}>"
 
 
 class EPPResponse(XmlObject):
@@ -47,16 +47,16 @@ class EPPResponse(XmlObject):
     """
 
     @cached_property
-    def result(self) -> ElementTree.Element|None:
-        return self.element.find('epp:result', XMLNS)
+    def result(self) -> ElementTree.Element | None:
+        return self.element.find("epp:result", XMLNS)
 
     @cached_property
     def result_code(self) -> int:
-        return int(self.result.attrib['code'])
+        return int(self.result.attrib["code"])
 
     @cached_property
-    def result_msg(self) -> str|None:
-        return self.result.find('epp:msg', XMLNS).text
+    def result_msg(self) -> str | None:
+        return self.result.find("epp:msg", XMLNS).text
 
     @cached_property
     def resData(self) -> ElementTree.Element:
@@ -64,22 +64,22 @@ class EPPResponse(XmlObject):
         Return the resdata node from the response.
         Use `:meth:`~xml.etree.ElementTree.Element.find` to find child nodes.
         """
-        resData = self.element.find('epp:resData', XMLNS)
+        resData = self.element.find("epp:resData", XMLNS)
         if resData is None:
             raise AttributeError("There is no resData node in this response")
         return resData
 
     @cached_property
     def extension(self):
-        return self.element.find('epp:extension', XMLNS)
+        return self.element.find("epp:extension", XMLNS)
 
     @cached_property
     def clTRID(self):
-        return get_node_text(self.element.find('epp:trID', XMLNS), 'epp:clTRID')
+        return get_node_text(self.element.find("epp:trID", XMLNS), "epp:clTRID")
 
     @cached_property
     def svTRID(self):
-        return get_node_text(self.element.find('epp:trID', XMLNS), 'epp:svTRID')
+        return get_node_text(self.element.find("epp:trID", XMLNS), "epp:svTRID")
 
 
 class EPPPollResponse(EPPResponse):
@@ -91,8 +91,8 @@ class EPPPollResponse(EPPResponse):
         return self.msgQ is not None  # self.result_code == EPP_QUEUE_NOT_EMPTY
 
     @cached_property
-    def msgQ(self) -> ElementTree.Element|None:
-        return self.element.find('epp:msgQ', XMLNS)
+    def msgQ(self) -> ElementTree.Element | None:
+        return self.element.find("epp:msgQ", XMLNS)
 
     @cached_property
     def queue_count(self):
@@ -101,7 +101,7 @@ class EPPPollResponse(EPPResponse):
         """
         if self.msgQ is None:
             return 0
-        return int(self.msgQ.attrib['count'])
+        return int(self.msgQ.attrib["count"])
 
     @cached_property
     def queue_id(self):
@@ -110,7 +110,7 @@ class EPPPollResponse(EPPResponse):
         """
         if self.msgQ is None:
             return None
-        return int(self.msgQ.attrib['id'])
+        return int(self.msgQ.attrib["id"])
 
     @cached_property
     def queue_date(self):
@@ -119,16 +119,16 @@ class EPPPollResponse(EPPResponse):
         """
         if self.msgQ is None:
             return None
-        return get_node_date(self.msgQ, 'epp:qDate')
+        return get_node_date(self.msgQ, "epp:qDate")
 
     @cached_property
-    def message(self) -> str|None:
+    def message(self) -> str | None:
         """
         Textual content of the message (only for op="req")
         """
         if self.msgQ is None:
             return None
-        return get_node_text(self.msgQ, 'epp:msg')
+        return get_node_text(self.msgQ, "epp:msg")
 
     @cached_property
     def trnData(self) -> objects.TransferStatus:
@@ -136,8 +136,10 @@ class EPPPollResponse(EPPResponse):
         Return the object wrapped in the resData.
         """
         element = self.resData[0]  # type: ElementTree.Element
-        if element.tag == '{urn:ietf:params:xml:ns:domain-1.0}trnData':  # full qualified name for "domain:trnData"
-            trnData = self.resData.find('domain:trnData', XMLNS)
+        if (
+            element.tag == "{urn:ietf:params:xml:ns:domain-1.0}trnData"
+        ):  # full qualified name for "domain:trnData"
+            trnData = self.resData.find("domain:trnData", XMLNS)
             return objects.TransferStatus.from_xml(trnData)
         else:
             raise NotImplementedError(f"Unsupported extension node: {element.tag}")

@@ -1,6 +1,7 @@
 """
 Internal utils
 """
+
 from __future__ import annotations
 
 import re
@@ -13,11 +14,11 @@ import dateutil.parser
 
 from fury_registry.constants import XMLNS
 
-RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
-RE_PW = re.compile(r'<pw>[^<]+</pw>')
+RE_CL_ID = re.compile(r"<clID>[^<]+</clID>")
+RE_PW = re.compile(r"<pw>[^<]+</pw>")
 
 
-def xml_format(xml: str, **data: None|int|str) -> str:
+def xml_format(xml: str, **data: None | int | str) -> str:
     """
     Apply a str.format() format for XML, with data escaped.
     """
@@ -25,14 +26,14 @@ def xml_format(xml: str, **data: None|int|str) -> str:
     return xml.format(**data)
 
 
-def _xml_escape(**data: None|int|str):
+def _xml_escape(**data: None | int | str):
     """
     Escape the data for inclusion in XML
     """
     return {k: escape(v) for k, v in data.items()}
 
 
-def escape(value: None|int|str) -> str|None:
+def escape(value: None | int | str) -> str | None:
     """
     Escape a single value for XML
     """
@@ -45,8 +46,8 @@ def escape(value: None|int|str) -> str|None:
 
 
 def mask_sensitive_fields(cmd: str) -> str:
-    cmd = RE_CL_ID.sub('<clID>***</clID>', cmd)
-    cmd = RE_PW.sub('<pw>***</pw>', cmd)
+    cmd = RE_CL_ID.sub("<clID>***</clID>", cmd)
+    cmd = RE_PW.sub("<pw>***</pw>", cmd)
     return cmd
 
 
@@ -58,7 +59,9 @@ def int32_to_net(value: int) -> bytes:
     return struct.pack(">I", value)
 
 
-def get_node_text(parent_node: Element|None, node_name: str, default=None) -> str|None:
+def get_node_text(
+    parent_node: Element | None, node_name: str, default=None
+) -> str | None:
     """Get the text content for a child node."""
     if parent_node is None:
         return default
@@ -66,7 +69,7 @@ def get_node_text(parent_node: Element|None, node_name: str, default=None) -> st
     return parent_node.findtext(node_name, namespaces=XMLNS)
 
 
-def get_node_date(parent_node: Element|None, node_name: str) -> datetime | None:
+def get_node_date(parent_node: Element | None, node_name: str) -> datetime | None:
     """Read the date value for a child node."""
     # Dates like: 1995-12-10T23:00:00.000Z
     text = get_node_text(parent_node, node_name)

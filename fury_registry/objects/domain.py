@@ -21,6 +21,7 @@ class EppDomain(ParsedObject):
     """
     Domain data object
     """
+
     # Status values
     CLIENT_DELETE_PROHIBITED = "clientDeleteProhibited"
     CLIENT_HOLD = "clientHold"
@@ -42,39 +43,59 @@ class EppDomain(ParsedObject):
 
     @classmethod
     def parse_xml_fields(cls, resdata, extension=None):
-        infData = resdata.find('domain:infData', XMLNS)
-        authInfo = infData.find('domain:authInfo', XMLNS)
+        infData = resdata.find("domain:infData", XMLNS)
+        authInfo = infData.find("domain:authInfo", XMLNS)
 
         ns = []
-        for hostobj in infData.find('domain:ns', XMLNS).findall('domain:hostObj', XMLNS):
+        for hostobj in infData.find("domain:ns", XMLNS).findall(
+            "domain:hostObj", XMLNS
+        ):
             ns.append(hostobj.text)
 
         fields = dict(
-            name=idna.decode(get_node_text(infData, 'domain:name')),
-            roid=get_node_text(infData, 'domain:roid'),  # Repository object identifier (assigned on creation)
-            status=infData.find('domain:status', XMLNS).attrib['s'],
-            registrant=get_node_text(infData, 'domain:registrant'),
+            name=idna.decode(get_node_text(infData, "domain:name")),
+            roid=get_node_text(
+                infData, "domain:roid"
+            ),  # Repository object identifier (assigned on creation)
+            status=infData.find("domain:status", XMLNS).attrib["s"],
+            registrant=get_node_text(infData, "domain:registrant"),
             admin=get_node_text(infData, "domain:contact[@type='admin']"),
             tech=get_node_text(infData, "domain:contact[@type='tech']"),
             ns=ns,
-            clID=get_node_text(infData, 'domain:clID'),  # current registrar
-            crID=get_node_text(infData, 'domain:crID'),  # initial registrar
-            crDate=get_node_date(infData, 'domain:crDate'),
-            upDate=get_node_date(infData, 'domain:upDate'),
-            exDate=get_node_date(infData, 'domain:exDate'),
-            pw=get_node_text(authInfo, 'domain:pw'),
+            clID=get_node_text(infData, "domain:clID"),  # current registrar
+            crID=get_node_text(infData, "domain:crID"),  # initial registrar
+            crDate=get_node_date(infData, "domain:crDate"),
+            upDate=get_node_date(infData, "domain:upDate"),
+            exDate=get_node_date(infData, "domain:exDate"),
+            pw=get_node_text(authInfo, "domain:pw"),
         )
 
         # Parse extension fields
         if extension is not None:
-            dnssec = extension.find('secDNS:infData', XMLNS)
+            dnssec = extension.find("secDNS:infData", XMLNS)
 
             if dnssec is not None:
-                fields['dnssec'] = DNSSec.from_xml(dnssec)
+                fields["dnssec"] = DNSSec.from_xml(dnssec)
 
         return fields
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw, dnssec=None):
+    def __init__(
+        self,
+        name,
+        roid,
+        status,
+        registrant,
+        admin,
+        tech,
+        ns,
+        clID,
+        crID,
+        crDate,
+        upDate,
+        exDate,
+        pw,
+        dnssec=None,
+    ):
         """
         :type dnssec: fury_registry.objects.DNSSec
         """
@@ -104,7 +125,7 @@ class EppDomain(ParsedObject):
         self._epp = None  # type: EPP
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self}>'
+        return f"<{self.__class__.__name__} {self}>"
 
     def __str__(self):
         return f"[{self.name}] status: {self.status}, registrant: {self.registrant}, admin: {self.admin}, tech: {self.tech}"
@@ -125,7 +146,15 @@ class EppDomain(ParsedObject):
     def tech_contact(self):
         return self._epp.contacts.get(self.tech)
 
-    def update(self, registrant=None, admin=None, tech=None, ns=None, keydatas=None, dnssec_urgent=False):
+    def update(
+        self,
+        registrant=None,
+        admin=None,
+        tech=None,
+        ns=None,
+        keydatas=None,
+        dnssec_urgent=False,
+    ):
         """
         Update all domain settings at once.
         This operation only changes the fields which need to change.
@@ -134,31 +163,31 @@ class EppDomain(ParsedObject):
         kwargs = {}
 
         if registrant:
-            kwargs['registrant'] = registrant
+            kwargs["registrant"] = registrant
 
         if admin and admin != self.admin:
-            kwargs['remove_admins'] = (self.admin,)
-            kwargs['add_admins'] = (admin,)
+            kwargs["remove_admins"] = (self.admin,)
+            kwargs["add_admins"] = (admin,)
 
         if tech and tech != self.tech:
-            kwargs['remove_techs'] = (self.tech,)
-            kwargs['add_techs'] = (tech,)
+            kwargs["remove_techs"] = (self.tech,)
+            kwargs["add_techs"] = (tech,)
 
         if ns:
             current = set(self.ns)
             new = set(ns)
             if current != new:
-                kwargs['remove_ns'] = sorted(current - new)
-                kwargs['add_ns'] = sorted(new - current)
+                kwargs["remove_ns"] = sorted(current - new)
+                kwargs["add_ns"] = sorted(new - current)
 
         if keydatas:
             add = []
             remove = []
             if not self.dnssec:
                 # Add all.
-                kwargs['remove_all_keys'] = True
-                kwargs['add_keydatas'] = keydatas
-                kwargs['dnssec_urgent'] = dnssec_urgent
+                kwargs["remove_all_keys"] = True
+                kwargs["add_keydatas"] = keydatas
+                kwargs["dnssec_urgent"] = dnssec_urgent
             else:
                 # Try a partial add, only remove old keys.
                 for keydata in keydatas:
@@ -170,9 +199,9 @@ class EppDomain(ParsedObject):
                         remove.append(keydata)
 
                 if add or remove:
-                    kwargs['remove_keydatas'] = remove
-                    kwargs['add_keydatas'] = add
-                    kwargs['dnssec_urgent'] = dnssec_urgent
+                    kwargs["remove_keydatas"] = remove
+                    kwargs["add_keydatas"] = add
+                    kwargs["dnssec_urgent"] = dnssec_urgent
 
         if not kwargs:
             return None
@@ -194,7 +223,9 @@ class EppDomain(ParsedObject):
         if new_handle == self.admin:
             return None
         else:
-            response = self._epp.domains.update(self.name, remove_techs=(self.admin,), add_techs=(new_handle,))
+            response = self._epp.domains.update(
+                self.name, remove_techs=(self.admin,), add_techs=(new_handle,)
+            )
             self.admin = new_handle
             return response
 
@@ -205,7 +236,9 @@ class EppDomain(ParsedObject):
         if new_handle == self.tech:
             return None
         else:
-            response = self._epp.domains.update(self.name, remove_techs=(self.tech,), add_techs=(new_handle,))
+            response = self._epp.domains.update(
+                self.name, remove_techs=(self.tech,), add_techs=(new_handle,)
+            )
             self.tech = new_handle
             return response
 
@@ -218,12 +251,12 @@ class EppDomain(ParsedObject):
         response = self._epp.domains.update(
             name=self.name,
             remove_ns=sorted(current - new),
-            add_ns=sorted(new - current)
+            add_ns=sorted(new - current),
         )
         self.ns = ns
         return response
 
-    def renew(self, period, period_unit='y'):
+    def renew(self, period, period_unit="y"):
         """
         Renew the registration period of the domain.
 
@@ -231,13 +264,19 @@ class EppDomain(ParsedObject):
         :type period: int
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
-        return self._epp.domains.renew(self.name, expiration_date=self.expire_date, period=period, period_unit=period_unit)
+        return self._epp.domains.renew(
+            self.name,
+            expiration_date=self.expire_date,
+            period=period,
+            period_unit=period_unit,
+        )
 
 
 class FuryDomain(EppDomain):
     """
     Domain data object with SIDN extension fields
     """
+
     @classmethod
     def parse_xml_fields(cls, resdata, extension=None):
         # Base EPP base fields
@@ -246,18 +285,37 @@ class FuryDomain(EppDomain):
         # Parse extension fields
         if extension is not None:
             # Redemption Grace Period
-            rgp_status = extension.find('rgp:infData', XMLNS)
-            fury_rgp_info = extension.find('fury-rgp:rgpInfo', XMLNS)
+            rgp_status = extension.find("rgp:infData", XMLNS)
+            fury_rgp_info = extension.find("fury-rgp:rgpInfo", XMLNS)
 
             if rgp_status is not None:
-                fields['rgp_status'] = get_node_text(rgp_status, 'rgp:rgpStatus')
+                fields["rgp_status"] = get_node_text(rgp_status, "rgp:rgpStatus")
             if fury_rgp_info is not None:
-                fields['rgp_status_end'] = get_node_date(fury_rgp_info, 'fury-rgp:rgpStatusEnd') or None
+                fields["rgp_status_end"] = (
+                    get_node_date(fury_rgp_info, "fury-rgp:rgpStatusEnd") or None
+                )
 
         return fields
 
-    def __init__(self, name, roid, status, registrant, admin, tech, ns, clID, crID, crDate, upDate, exDate, pw,
-                 dnssec=None, rgp_status=None, rgp_status_end: datetime | None=None):
+    def __init__(
+        self,
+        name,
+        roid,
+        status,
+        registrant,
+        admin,
+        tech,
+        ns,
+        clID,
+        crID,
+        crDate,
+        upDate,
+        exDate,
+        pw,
+        dnssec=None,
+        rgp_status=None,
+        rgp_status_end: datetime | None = None,
+    ):
         super().__init__(
             name=name,
             roid=roid,
@@ -272,7 +330,7 @@ class FuryDomain(EppDomain):
             upDate=upDate,
             exDate=exDate,
             pw=pw,
-            dnssec=dnssec
+            dnssec=dnssec,
         )
 
         self.rgp_status = rgp_status  # Redemption Grace Status extension
@@ -283,6 +341,7 @@ class TransferStatus(ParsedObject):
     """
     EPP Transfer status response object
     """
+
     CLIENT_APPROVED = "clientApproved"
     CLIENT_CANCELLED = "clientCancelled"
     CLIENT_REJECTED = "clientRejected"
@@ -293,13 +352,13 @@ class TransferStatus(ParsedObject):
     @classmethod
     def parse_xml_fields(cls, trnData, extension=None):
         return dict(
-            name=get_node_text(trnData, 'domain:name'),
-            trStatus=get_node_text(trnData, 'domain:trStatus'),
-            reID=get_node_text(trnData, 'domain:reID'),  # requested client
-            reDate=get_node_date(trnData, 'domain:reDate'),
-            acID=get_node_text(trnData, 'domain:acID'),  # acting client
-            acDate=get_node_date(trnData, 'domain:acDate'),
-            exDate=get_node_date(trnData, 'domain:exDate'),
+            name=get_node_text(trnData, "domain:name"),
+            trStatus=get_node_text(trnData, "domain:trStatus"),
+            reID=get_node_text(trnData, "domain:reID"),  # requested client
+            reDate=get_node_date(trnData, "domain:reDate"),
+            acID=get_node_text(trnData, "domain:acID"),  # acting client
+            acDate=get_node_date(trnData, "domain:acDate"),
+            exDate=get_node_date(trnData, "domain:exDate"),
         )
 
     def __init__(self, name, trStatus, reID, reDate, acID, acDate, exDate=None):
@@ -333,9 +392,9 @@ class TransferStatus(ParsedObject):
 
     def __repr__(self):
         if self.is_pending:
-            return f'<TransferStatus {self.name}: {self.status} by {self.act_id} till {self.act_date}>'
+            return f"<TransferStatus {self.name}: {self.status} by {self.act_id} till {self.act_date}>"
         else:
-            return f'<TransferStatus {self.name}: {self.status} by {self.act_id} on {self.act_date}>'
+            return f"<TransferStatus {self.name}: {self.status} by {self.act_id} on {self.act_date}>"
 
     def __str__(self):
         return self.name
@@ -346,7 +405,11 @@ class TransferStatus(ParsedObject):
 
     @property
     def is_declined(self):
-        return self.status in (self.CLIENT_CANCELLED, self.SERVER_CANCELLED, self.CLIENT_REJECTED)
+        return self.status in (
+            self.CLIENT_CANCELLED,
+            self.SERVER_CANCELLED,
+            self.CLIENT_REJECTED,
+        )
 
     @property
     def is_pending(self):

@@ -15,14 +15,11 @@ class DNSSec(ParsedObject):
     def parse_xml_fields(cls, node, extension=None):
         keydatas = []
         dskeys = []
-        for node in node.findall('secDNS:keyData', XMLNS):
+        for node in node.findall("secDNS:keyData", XMLNS):
             keydatas.append(KeyData.from_xml(node))
-        for node in node.findall('secDNS:dsData', XMLNS):
+        for node in node.findall("secDNS:dsData", XMLNS):
             dskeys.append(DSKey.from_xml(node))
-        return dict(
-            keydatas=keydatas,
-            dskeys=dskeys
-        )
+        return dict(keydatas=keydatas, dskeys=dskeys)
 
     def __init__(self, keydatas=(), dskeys=()):
         self.keydatas = keydatas
@@ -32,7 +29,9 @@ class DNSSec(ParsedObject):
         return item in self.keydatas or item in self.dskeys
 
     def __repr__(self):
-        return '<DNSSec[{}]>'.format(", ".join(repr(x) for x in chain(self.dskeys, self.keydatas)))
+        return "<DNSSec[{}]>".format(
+            ", ".join(repr(x) for x in chain(self.dskeys, self.keydatas))
+        )
 
 
 class DSKey(ParsedObject):
@@ -46,11 +45,11 @@ class DSKey(ParsedObject):
     @classmethod
     def parse_xml_fields(cls, node, extension=None):
         return dict(
-            keyTag=get_node_text(node, 'secDNS:keyTag'),
-            alg=int(get_node_text(node, 'secDNS:alg')),
-            digestType=int(get_node_text(node, 'secDNS:digestType')),
-            digest=get_node_text(node, 'secDNS:digest'),
-            keyData=KeyData.from_xml(node.find('secDNS:keyData', XMLNS)),
+            keyTag=get_node_text(node, "secDNS:keyTag"),
+            alg=int(get_node_text(node, "secDNS:alg")),
+            digestType=int(get_node_text(node, "secDNS:digestType")),
+            digest=get_node_text(node, "secDNS:digest"),
+            keyData=KeyData.from_xml(node.find("secDNS:keyData", XMLNS)),
         )
 
     def __init__(self, keyTag, alg, digestType, digest, keyData=()):
@@ -69,19 +68,19 @@ class DSKey(ParsedObject):
         self.keyData = keyData  # secDNS:keyDataType
 
     def __repr__(self):
-        return f'<DSKey {self}>'
+        return f"<DSKey {self}>"
 
     def __str__(self):
         return self.digest
 
     def __eq__(self, other):
         return (
-            isinstance(other, DSKey) and
-            self.keyTag == other.keyTag and
-            self.alg == other.alg and
-            self.digestType == other.digestType and
-            self.digest == other.digest and
-            self.keyData == other.keyData
+            isinstance(other, DSKey)
+            and self.keyTag == other.keyTag
+            and self.alg == other.alg
+            and self.digestType == other.digestType
+            and self.digest == other.digest
+            and self.keyData == other.keyData
         )
 
     def __ne__(self, other):
@@ -92,6 +91,7 @@ class KeyData(ParsedObject):
     """
     DNSSec client key data
     """
+
     PROTOCOL3 = 3
 
     #: DSA/SHA-1
@@ -111,10 +111,10 @@ class KeyData(ParsedObject):
     @classmethod
     def parse_xml_fields(cls, node, extension=None):
         return dict(
-            flags=int(get_node_text(node, 'secDNS:flags')),
-            protocol=int(get_node_text(node, 'secDNS:protocol')),
-            alg=int(get_node_text(node, 'secDNS:alg')),
-            pubKey=get_node_text(node, 'secDNS:pubKey'),
+            flags=int(get_node_text(node, "secDNS:flags")),
+            protocol=int(get_node_text(node, "secDNS:protocol")),
+            alg=int(get_node_text(node, "secDNS:alg")),
+            pubKey=get_node_text(node, "secDNS:pubKey"),
         )
 
     def __init__(self, flags, protocol, alg, pubKey):
@@ -135,18 +135,18 @@ class KeyData(ParsedObject):
         self.pubKey = pubKey  # secDNS:keyType
 
     def __repr__(self):
-        return f'<KeyData: {self}>'
+        return f"<KeyData: {self}>"
 
     def __str__(self):
         return " ".join(map(str, (self.flags, self.protocol, self.alg, self.pubKey)))
 
     def __eq__(self, other):
         return (
-            isinstance(other, KeyData) and
-            self.flags == other.flags and
-            self.protocol == other.protocol and
-            self.alg == other.alg and
-            self.pubKey == other.pubKey
+            isinstance(other, KeyData)
+            and self.flags == other.flags
+            and self.protocol == other.protocol
+            and self.alg == other.alg
+            and self.pubKey == other.pubKey
         )
 
     def __ne__(self, other):

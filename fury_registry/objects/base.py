@@ -10,9 +10,9 @@ class ParsedObject:
     """
 
     @classmethod
-    def from_xml(cls, node: Element, extension: Element|None=None) -> Self:
+    def from_xml(cls, node: Element, extension: Element | None = None) -> Self:
         return cls(**cls.parse_xml_fields(node, extension=extension))
 
     @classmethod
-    def parse_xml_fields(cls, node: Element, extension:Element|None=None) -> dict:
+    def parse_xml_fields(cls, node: Element, extension: Element | None = None) -> dict:
         raise NotImplementedError("missing parse_xml_fields")

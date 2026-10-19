@@ -1,6 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
+
 from fury_registry import commands, objects
 from fury_registry.constants import (
     EPP_DATA_MGMT_POLICY,
@@ -20,13 +21,17 @@ class ContactHandler(BaseHandler):
         """
         Check if a given handle is available.
         """
-        xml = self._build_command('check', commands.contact.check_part(handle))
+        xml = self._build_command("check", commands.contact.check_part(handle))
 
         from fury_registry.client import EPPError
+
         try:
             response = self.epp.cmd(xml)
         except EPPError as e:
-            if e.code == EPP_DATA_MGMT_POLICY and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED:
+            if (
+                e.code == EPP_DATA_MGMT_POLICY
+                and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED
+            ):
                 return False
             raise
 
@@ -34,18 +39,32 @@ class ContactHandler(BaseHandler):
 
     @staticmethod
     def _parse_avail(response):
-        return response.resData.find('contact:chkData/contact:cd/contact:id', XMLNS).attrib['avail'] in ('1', 'true')
+        return response.resData.find(
+            "contact:chkData/contact:cd/contact:id", XMLNS
+        ).attrib["avail"] in ("1", "true")
 
     def get(self, handle):
         """
         Fetch contact data
         """
-        xml = self._build_command('info', commands.contact.info_part(handle))
+        xml = self._build_command("info", commands.contact.info_part(handle))
         response = self.epp.cmd(xml)
         return objects.EppContact.from_xml(response.resData, response.extension)
 
-    def create(self, id, name: str, organisation: str|None=None, street: str|None|list[str]=None, city: str|None=None, postcode: str|None=None, country_code: str|None=None,
-               phone: str|None=None, fax: str|None=None, email: str|None=None, properties: dict[str,str]|None=None) -> str:
+    def create(
+        self,
+        id,
+        name: str,
+        organisation: str | None = None,
+        street: str | None | list[str] = None,
+        city: str | None = None,
+        postcode: str | None = None,
+        country_code: str | None = None,
+        phone: str | None = None,
+        fax: str | None = None,
+        email: str | None = None,
+        properties: dict[str, str] | None = None,
+    ) -> str:
         """
         Create a contact.
 
@@ -72,14 +91,27 @@ class ContactHandler(BaseHandler):
             voice=phone,
             fax=fax,
             email=email,
-            properties=properties
+            properties=properties,
         )
         ext = (command.properties.create_part(properties),) if properties else ()
-        xml = self._build_command('create', command, command_extensions=ext)
+        xml = self._build_command("create", command, command_extensions=ext)
         res = self.epp.cmd(xml).resData
-        return res.find('contact:creData/contact:id', XMLNS).text
+        return res.find("contact:creData/contact:id", XMLNS).text
 
-    def update(self, handle, name, organisation: str|None=None, street: str|None=None, city: str|None=None, postcode: str|None=None, country_code: str|None=None, phone: str|None=None, fax: str|None=None, email: str|None=None, properties: dict[str,str]|None=None):
+    def update(
+        self,
+        handle,
+        name,
+        organisation: str | None = None,
+        street: str | None = None,
+        city: str | None = None,
+        postcode: str | None = None,
+        country_code: str | None = None,
+        phone: str | None = None,
+        fax: str | None = None,
+        email: str | None = None,
+        properties: dict[str, str] | None = None,
+    ):
         """
         Update an existing contact.
 
@@ -96,15 +128,15 @@ class ContactHandler(BaseHandler):
             voice=phone,
             fax=fax,
             email=email,
-            properties=properties
+            properties=properties,
         )
         ext = (commands.properties.update_part(properties),) if properties else ()
-        xml = self._build_command('update', command, command_extensions=ext)
+        xml = self._build_command("update", command, command_extensions=ext)
         self.epp.cmd(xml)
 
     def delete(self, name):
         """
         Delete a contact
         """
-        xml = self._build_command('delete', commands.contact.delete_part(name))
+        xml = self._build_command("delete", commands.contact.delete_part(name))
         return self.epp.cmd(xml)

@@ -157,16 +157,16 @@ EPP_AUTH_SESSION_LIMIT = 2502
 # ---- extended codes by SIDN ----
 
 # The specified domain name is not managed by you.
-SIDN_EXT_NOT_MANAGED_BY_ACCOUNT = 'C0038b'  # for 2308 (EPP_DATA_MGMT_POLICY)
+SIDN_EXT_NOT_MANAGED_BY_ACCOUNT = "C0038b"  # for 2308 (EPP_DATA_MGMT_POLICY)
 
 # The specified token did not originate from the specified domain name.
-SIDN_EXT_TRANSFER_TOKEN_INVALID = 'C0098a'  # for 2308 (EPP_DATA_MGMT_POLICY)
+SIDN_EXT_TRANSFER_TOKEN_INVALID = "C0098a"  # for 2308 (EPP_DATA_MGMT_POLICY)
 
 # No transfers are recorded for this domain name.
-SIDN_EXT_NO_XFR_RECORDED = 'C0100'  # for 2301 (EPP_OBJECT_NOT_PENDING_XFR)
+SIDN_EXT_NO_XFR_RECORDED = "C0100"  # for 2301 (EPP_OBJECT_NOT_PENDING_XFR)
 
 # The specified handle is not associated with this account.
-SIDN_EXT_HANDLE_NOT_ASSOCIATED = 'C0115'
+SIDN_EXT_HANDLE_NOT_ASSOCIATED = "C0115"
 
 # The specified domain name is unknown.
-SIDN_EXT_DOMAIN_DOES_NOT_EXIST = 'T0001'  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)
+SIDN_EXT_DOMAIN_DOES_NOT_EXIST = "T0001"  # for 2303 (EPP_OBJECT_DOES_NOT_EXIST)

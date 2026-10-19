@@ -1,6 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
+
 from fury_registry import commands, objects
 
 from .base import BaseHandler
@@ -21,7 +22,7 @@ class HostHandler(BaseHandler):
             ipv6=ipv6_addresses,
         )
 
-        xml = self._build_command('create', xml)
+        xml = self._build_command("create", xml)
         return self.epp.cmd(xml)
 
     def get(self, nameserver):
@@ -34,7 +35,7 @@ class HostHandler(BaseHandler):
         """
         Delete a contact
         """
-        xml = self._build_command('delete', commands.host.delete_part(name))
+        xml = self._build_command("delete", commands.host.delete_part(name))
         return self.epp.cmd(xml)
 
     # TODO: update()

@@ -45,7 +45,9 @@ class EPP:
     The EPP client
     """
 
-    def __init__(self, host, port=700, username=None, password=None, certfile=None, timeout=60):
+    def __init__(
+        self, host, port=700, username=None, password=None, certfile=None, timeout=60
+    ):
         """
         Initialize the client.
         This establishes a connection to a Fury registry server via EPP.
@@ -71,7 +73,9 @@ class EPP:
         try:
             return context.wrap_socket(self.socket, server_hostname=self.host)
         except OSError:
-            logger.error("ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.")
+            logger.error(
+                "ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host."
+            )
             raise
 
     def __repr__(self):
@@ -91,7 +95,7 @@ class EPP:
         except OSError:
             pass  # Server disconnected
 
-    def cmd(self, xml, silent=False, response_class: type[R]=EPPResponse) -> R:
+    def cmd(self, xml, silent=False, response_class: type[R] = EPPResponse) -> R:
         """
         Execute a raw request on the server.
         """
@@ -111,7 +115,11 @@ class EPP:
             logger.info("- [%d] %s", code, response.result_msg)
 
         # Check for 'Command failed; server closing connection'
-        if code in (EPP_FAILED_CLOSING, EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT):
+        if code in (
+            EPP_FAILED_CLOSING,
+            EPP_AUTH_FAILED_CLOSING,
+            EPP_AUTH_SESSION_LIMIT,
+        ):
             try:
                 self.socket.close()
             except OSError:
@@ -120,7 +128,7 @@ class EPP:
         return response
 
     @staticmethod
-    def _parse_response(raw_response, response_class:type[R]=EPPResponse) -> R:
+    def _parse_response(raw_response, response_class: type[R] = EPPResponse) -> R:
         # Standard wrapper:
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         #   <response>
@@ -130,16 +138,16 @@ class EPP:
         # </epp>
         #
         xml = ElementTree.XML(raw_response)
-        response = xml.find('epp:response', XMLNS)
+        response = xml.find("epp:response", XMLNS)
 
         # Check <result> node
         # Note for failures, multiple <result> nodes may be present for multiple error conditions.
-        result = response.find('epp:result', XMLNS)
-        result_code = int(result.attrib['code'])
+        result = response.find("epp:result", XMLNS)
+        result_code = int(result.attrib["code"])
         if result_code >= 2000:
-            msg = result.find('epp:msg', XMLNS)
-            ext_code = response.find('epp:extValue/epp:value/fury:ciraCode', XMLNS)
-            ext_reason = response.find('epp:extValue/epp:reason', XMLNS)
+            msg = result.find("epp:msg", XMLNS)
+            ext_code = response.find("epp:extValue/epp:value/fury:ciraCode", XMLNS)
+            ext_reason = response.find("epp:extValue/epp:reason", XMLNS)
 
             raise EPPError(result_code, msg.text, ext_code, ext_reason)
         return response_class(response)
@@ -151,12 +159,12 @@ class EPP:
         if size_field:
             size = int32_from_net(size_field) - 4
             remaining = size
-            xml_bytes = b''
+            xml_bytes = b""
             while remaining > 0:
                 xml_bytes += self.ssl.read(remaining)
                 remaining = size - len(xml_bytes)
 
-            logger.debug("Hello Response: %s", xml_bytes.decode('utf-8'))
+            logger.debug("Hello Response: %s", xml_bytes.decode("utf-8"))
             return xml_bytes  # raw result for ElementTree to convert.
         else:
             return None
@@ -164,7 +172,7 @@ class EPP:
     def _write(self, xml):
         # Convert to the raw data to be send.
         # utf-8 may take multiple bytes per character.
-        xml_bytes = (xml + "\r\n").encode('utf-8')
+        xml_bytes = (xml + "\r\n").encode("utf-8")
         # +4 for the length field itself (section 4 mandates that)
         length = int32_to_net(len(xml_bytes) + 4)
         self.ssl.send(length)
@@ -188,11 +196,11 @@ class EPP:
         #     </svcMenu>
         #   </greeting>
         # </epp>
-        greeting = xml.find('epp:greeting', XMLNS)
-        svcMenu = greeting.find('epp:svcMenu', XMLNS)
+        greeting = xml.find("epp:greeting", XMLNS)
+        svcMenu = greeting.find("epp:svcMenu", XMLNS)
 
-        svid = greeting.find('epp:svID', XMLNS).text
-        version = svcMenu.find('epp:version', XMLNS).text
+        svid = greeting.find("epp:svID", XMLNS).text
+        version = svcMenu.find("epp:version", XMLNS).text
         logger.info("Connected to %s (v%s)\n", svid, version)
 
     def login(self, username: str, password: str) -> EPPResponse:
@@ -210,7 +218,7 @@ class EPP:
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
-    def poll(self, transaction_id: str|None=None) -> EPPPollResponse:
+    def poll(self, transaction_id: str | None = None) -> EPPPollResponse:
         """
         Poll for service notification messages.
 
@@ -222,7 +230,9 @@ class EPP:
         cmd = commands.epp.poll_req(transaction_id=transaction_id)
         return self.cmd(cmd, response_class=EPPPollResponse)
 
-    def poll_ack(self, queue_id: str, transaction_id: str|None=None) -> EPPPollResponse:
+    def poll_ack(
+        self, queue_id: str, transaction_id: str | None = None
+    ) -> EPPPollResponse:
         """
         Acknowledge the processing of a message in the queue.
         """

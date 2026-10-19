@@ -13,6 +13,7 @@ class CommandTests(TestCase):
     """
     Simple test case for parsers
     """
+
     maxDiff = None
 
     @classmethod
@@ -22,18 +23,19 @@ class CommandTests(TestCase):
 
     def test_build_domain_create(self):
         xml = commands.domain.create_part(
-            name='example.nl',
-            ns=['ns1.example.nl', 'ns2.example.nl'],
-            registrant='REG',
+            name="example.nl",
+            ns=["ns1.example.nl", "ns2.example.nl"],
+            registrant="REG",
             contacts={
-                'admin': 'ADMIN',
-                'tech': 'TECH',
-            }
+                "admin": "ADMIN",
+                "tech": "TECH",
+            },
         )
 
-        xml = DomainHandler(None)._build_command('create', xml)
+        xml = DomainHandler(None)._build_command("create", xml)
         self.assertEqual(
-            xml, '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            xml,
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <create>
@@ -53,16 +55,19 @@ class CommandTests(TestCase):
     </create>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
+</epp>""",
+        )
 
     def test_build_domain_get(self):
         """
         Parse contact info response
         """
-        xml = DomainHandler(None)._build_command('info', commands.domain.info_part(name='example.nl'))
+        xml = DomainHandler(None)._build_command(
+            "info", commands.domain.info_part(name="example.nl")
+        )
         self.assertEqual(
             xml,
-            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <info>
@@ -72,16 +77,19 @@ class CommandTests(TestCase):
     </info>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
+</epp>""",
+        )
 
     def test_build_domain_check(self):
         """
         Parse contact info response
         """
-        xml = DomainHandler(None)._build_command('check', commands.domain.check_part(name='example.nl'))
+        xml = DomainHandler(None)._build_command(
+            "check", commands.domain.check_part(name="example.nl")
+        )
         self.assertEqual(
             xml,
-            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <check>
@@ -91,16 +99,19 @@ class CommandTests(TestCase):
     </check>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
+</epp>""",
+        )
 
     def test_build_domain_delete(self):
         """
         Parse contact info response
         """
-        xml = DomainHandler(None)._build_command('delete', commands.domain.delete_part(name='example.nl'))
+        xml = DomainHandler(None)._build_command(
+            "delete", commands.domain.delete_part(name="example.nl")
+        )
         self.assertEqual(
             xml,
-            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <delete>
@@ -110,17 +121,19 @@ class CommandTests(TestCase):
     </delete>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
-
+</epp>""",
+        )
 
     def test_build_contact_get(self):
         """
         Parse contact info response
         """
-        xml = ContactHandler(None)._build_command('info', commands.contact.info_part(handle='CONTACT'))
+        xml = ContactHandler(None)._build_command(
+            "info", commands.contact.info_part(handle="CONTACT")
+        )
         self.assertEqual(
             xml,
-            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <info>
@@ -130,16 +143,19 @@ class CommandTests(TestCase):
     </info>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
+</epp>""",
+        )
 
     def test_build_contact_delete(self):
         """
         Parse contact info response
         """
-        xml = ContactHandler(None)._build_command('delete', commands.contact.delete_part(handle='CONTACT'))
+        xml = ContactHandler(None)._build_command(
+            "delete", commands.contact.delete_part(handle="CONTACT")
+        )
         self.assertEqual(
             xml,
-            '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <delete>
@@ -149,4 +165,5 @@ class CommandTests(TestCase):
     </delete>
     <clTRID>unused</clTRID>
   </command>
-</epp>''')
+</epp>""",
+        )

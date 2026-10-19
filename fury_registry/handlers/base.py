@@ -12,7 +12,15 @@ class BaseHandler:
         """
         self.epp = epp
 
-    def _build_command(self, command_name, command_xml, command_extensions=(), op=None, transaction_id=None, epp_extensions=()):
+    def _build_command(
+        self,
+        command_name,
+        command_xml,
+        command_extensions=(),
+        op=None,
+        transaction_id=None,
+        epp_extensions=(),
+    ):
         """
         Build a generic command
         """
@@ -22,5 +30,5 @@ class BaseHandler:
             command_extensions=command_extensions,
             op=op,
             clTRID=transaction_id,
-            epp_extensions=epp_extensions
+            epp_extensions=epp_extensions,
         )

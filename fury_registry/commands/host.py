@@ -2,17 +2,26 @@ from fury_registry.utils import xml_format
 
 
 def create_part(name, ipv4, ipv6):
-    xml = xml_format("""
+    xml = xml_format(
+        """
       <host:create xmlns:host="urn:ietf:params:xml:ns:host-1.0">
-        <host:name>{name}</host:name>""", name=name)
+        <host:name>{name}</host:name>""",
+        name=name,
+    )
 
     for addr in ipv4:
-        xml += xml_format("""
-        <host:addr ip="v4">{addr}</host:addr>""", addr=addr)
+        xml += xml_format(
+            """
+        <host:addr ip="v4">{addr}</host:addr>""",
+            addr=addr,
+        )
 
     for addr in ipv6:
-        xml += xml_format("""
-        <host:addr ip="v6">{addr}</host:addr>""", addr=addr)
+        xml += xml_format(
+            """
+        <host:addr ip="v6">{addr}</host:addr>""",
+            addr=addr,
+        )
 
     xml += """
       </host:create>"""

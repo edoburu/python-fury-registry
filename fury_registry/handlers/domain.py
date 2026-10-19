@@ -1,6 +1,7 @@
 """
 All specialized commands are performed by these handlers.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -27,7 +28,7 @@ class DomainHandler(BaseHandler):
         * the domain is managed by other accounts: code 2308 (``EPP_DATA_MGMT_POLICY``, with ``SIDN_EXT_NOT_MANAGED_BY_ACCOUNT``)
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
-        xml = self._build_command('info', commands.domain.info_part(name=domain_name))
+        xml = self._build_command("info", commands.domain.info_part(name=domain_name))
         response = self.epp.cmd(xml)
 
         domain = objects.FuryDomain.from_xml(response.resData, response.extension)
@@ -39,7 +40,7 @@ class DomainHandler(BaseHandler):
         Check if a domain is available.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
-        xml = self._build_command('check', commands.domain.check_part(name=domain_name))
+        xml = self._build_command("check", commands.domain.check_part(name=domain_name))
         response = self.epp.cmd(xml)
         return self._parse_avail(response)
 
@@ -47,9 +48,19 @@ class DomainHandler(BaseHandler):
     def _parse_avail(response) -> bool:
         # Note that the domain:cd element may be repeated
         # The element may also contain a <domain:reason> element.
-        return response.resData.find('domain:chkData/domain:cd/domain:name', XMLNS).attrib['avail'] in ('1', 'true')
+        return response.resData.find(
+            "domain:chkData/domain:cd/domain:name", XMLNS
+        ).attrib["avail"] in ("1", "true")
 
-    def create(self, name: str, registrant: str, contacts: dict[str, str], ns: list[str], dskeys: Iterable[objects.DSKey]=(), keyData: Iterable[objects.KeyData]=()) -> EPPResponse:
+    def create(
+        self,
+        name: str,
+        registrant: str,
+        contacts: dict[str, str],
+        ns: list[str],
+        dskeys: Iterable[objects.DSKey] = (),
+        keyData: Iterable[objects.KeyData] = (),
+    ) -> EPPResponse:
         """
         Create a domain
 
@@ -76,14 +87,24 @@ class DomainHandler(BaseHandler):
         else:
             extensions = ()
 
-        xml = self._build_command('create', xml, command_extensions=extensions)
+        xml = self._build_command("create", xml, command_extensions=extensions)
         return self.epp.cmd(xml)
 
-    def update(self, name, registrant=None,
-               remove_contacts=None, remove_statuses=(), remove_ns=(),
-               remove_all_keys=False, remove_keydatas=(),
-               add_contacts=None, add_statuses=(), add_ns=(),
-               add_keydatas=(), dnssec_urgent=False):
+    def update(
+        self,
+        name,
+        registrant=None,
+        remove_contacts=None,
+        remove_statuses=(),
+        remove_ns=(),
+        remove_all_keys=False,
+        remove_keydatas=(),
+        add_contacts=None,
+        add_statuses=(),
+        add_ns=(),
+        add_keydatas=(),
+        dnssec_urgent=False,
+    ):
         """
         Update the domain.
 
@@ -101,28 +122,41 @@ class DomainHandler(BaseHandler):
         """
         command_extensions = ()
         if remove_all_keys or remove_keydatas or add_keydatas or dnssec_urgent:
-            command_extensions = (commands.secdns.update(
-                remove_all=remove_all_keys,
-                remove_keydatas=remove_keydatas,
-                add_keydatas=add_keydatas,
-                urgent=dnssec_urgent
-            ),)
+            command_extensions = (
+                commands.secdns.update(
+                    remove_all=remove_all_keys,
+                    remove_keydatas=remove_keydatas,
+                    add_keydatas=add_keydatas,
+                    urgent=dnssec_urgent,
+                ),
+            )
 
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.5
         # https://tools.ietf.org/html/rfc5731#section-3.2.5
-        xml = self._build_command('update', commands.domain.update_part(
-            name=name,
-            registrant=registrant,
-            remove_ns=remove_ns,
-            remove_contacts=remove_contacts,
-            remove_statuses=remove_statuses,
-            add_ns=add_ns,
-            add_contacts=add_contacts,
-            add_statuses=add_statuses,
-        ), command_extensions=command_extensions)
+        xml = self._build_command(
+            "update",
+            commands.domain.update_part(
+                name=name,
+                registrant=registrant,
+                remove_ns=remove_ns,
+                remove_contacts=remove_contacts,
+                remove_statuses=remove_statuses,
+                add_ns=add_ns,
+                add_contacts=add_contacts,
+                add_statuses=add_statuses,
+            ),
+            command_extensions=command_extensions,
+        )
         return self.epp.cmd(xml)
 
-    def update_keys(self, name: str, remove_all: bool=False, remove_keydatas: Iterable[objects.DSKey]=(), add_keydatas: Iterable[objects.DSKey]=(), urgent: bool=False):
+    def update_keys(
+        self,
+        name: str,
+        remove_all: bool = False,
+        remove_keydatas: Iterable[objects.DSKey] = (),
+        add_keydatas: Iterable[objects.DSKey] = (),
+        urgent: bool = False,
+    ):
         """
         Update the DNSSec keys in a domain
         """
@@ -132,10 +166,14 @@ class DomainHandler(BaseHandler):
             remove_all=remove_all,
             remove_keydatas=remove_keydatas,
             add_keydatas=add_keydatas,
-            urgent=urgent
+            urgent=urgent,
         )
 
-        xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(secdns_ext,))
+        xml = self._build_command(
+            "update",
+            commands.domain.update_part(name),
+            command_extensions=(secdns_ext,),
+        )
         return self.epp.cmd(xml)
 
     def delete(self, name: str) -> EPPResponse:
@@ -144,7 +182,7 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.2
         # https://tools.ietf.org/html/rfc5731#section-3.2.2
-        xml = self._build_command('delete', commands.domain.delete_part(name))
+        xml = self._build_command("delete", commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
     def restore(self, name: str) -> EPPResponse:
@@ -152,10 +190,16 @@ class DomainHandler(BaseHandler):
         Cancel deletion
         """
         # Fury extension
-        xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(commands.domain.restore_part(name),))
+        xml = self._build_command(
+            "update",
+            commands.domain.update_part(name),
+            command_extensions=(commands.domain.restore_part(name),),
+        )
         return self.epp.cmd(xml)
 
-    def renew(self, name: str, expiration_date: date, period: int, period_unit: str='y') -> EPPResponse:
+    def renew(
+        self, name: str, expiration_date: date, period: int, period_unit: str = "y"
+    ) -> EPPResponse:
         """
         Renew the registration period of the domain.
 
@@ -165,7 +209,10 @@ class DomainHandler(BaseHandler):
         :type period: int
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
-        xml = self._build_command('renew', commands.domain.renew_part(name, expiration_date, period, period_unit))
+        xml = self._build_command(
+            "renew",
+            commands.domain.renew_part(name, expiration_date, period, period_unit),
+        )
         return self.epp.cmd(xml)
 
     def transfer(self, name: str, token: str) -> EPPResponse:
@@ -173,7 +220,9 @@ class DomainHandler(BaseHandler):
         Initiate the domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.4
-        xml = self._build_command('transfer', commands.domain.transfer_req_part(name, token), op='request')
+        xml = self._build_command(
+            "transfer", commands.domain.transfer_req_part(name, token), op="request"
+        )
         return self.epp.cmd(xml)
 
     def get_transfer_status(self, name: str) -> objects.TransferStatus:
@@ -184,7 +233,9 @@ class DomainHandler(BaseHandler):
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
+        xml = self._build_command(
+            "transfer", commands.domain.transfer_query_part(name), op="query"
+        )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
@@ -193,7 +244,9 @@ class DomainHandler(BaseHandler):
         Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
+        xml = self._build_command(
+            "transfer", commands.domain.transfer_query_part(name), op="approve"
+        )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
@@ -202,11 +255,13 @@ class DomainHandler(BaseHandler):
         Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')
+        xml = self._build_command(
+            "transfer", commands.domain.transfer_query_part(name), op="reject"
+        )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
     @staticmethod
     def _parse_transfer_status(response: EPPResponse) -> objects.TransferStatus:
-        trnData = response.resData.find('domain:trnData', XMLNS)
+        trnData = response.resData.find("domain:trnData", XMLNS)
         return objects.TransferStatus.from_xml(trnData)

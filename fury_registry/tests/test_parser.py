@@ -28,7 +28,7 @@ class ParserTests(TestCase):
         """
         Parse contact info response
         """
-        contact_info = '''
+        contact_info = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
         <response>
             <result code="1000">
@@ -63,17 +63,17 @@ class ParserTests(TestCase):
                 <svTRID>6442820A-3393-5B84-422B-9ED566B6042B</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
         response = EPP._parse_response(contact_info)
         contact = EppContact.from_xml(response.resData, response.extension)
-        self.assertEqual(contact.handle, 'WAL002352-NLCOM')
-        self.assertEqual(contact.name, 'S.J. de Wal')
+        self.assertEqual(contact.handle, "WAL002352-NLCOM")
+        self.assertEqual(contact.name, "S.J. de Wal")
 
     def test_parse_domain(self):
         """
         Parse domain info response.
         """
-        domain_info = '''
+        domain_info = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
         <response>
             <result code="1000">
@@ -120,22 +120,22 @@ class ParserTests(TestCase):
                 </secDNS:infData>
             </extension>
         </response>
-    </epp>'''
+    </epp>"""
 
         response = EPP._parse_response(domain_info)
         domain = FuryDomain.from_xml(response.resData, response.extension)
-        self.assertEqual(domain.name, 'computel.nl')
-        self.assertEqual(domain.ns, ['ns2.computel.nl', 'ns1.computel.nl'])
-        self.assertEqual(domain.admin, 'COM017325-NLCOM')
-        self.assertEqual(domain.tech, 'WAL002352-NLCOM')
+        self.assertEqual(domain.name, "computel.nl")
+        self.assertEqual(domain.ns, ["ns2.computel.nl", "ns1.computel.nl"])
+        self.assertEqual(domain.admin, "COM017325-NLCOM")
+        self.assertEqual(domain.tech, "WAL002352-NLCOM")
         self.assertEqual(domain.opt_out, False)
         self.assertEqual(domain.limited, False)
         self.assertEqual(domain.period, 3)
         self.assertEqual(domain.dnssec.keydatas[0].alg, KeyData.ALG_SHA256)
         self.assertEqual(domain.dnssec.keydatas[0].protocol, KeyData.PROTOCOL3)
         self.assertEqual(domain.dnssec.keydatas[0].flags, KeyData.FLAG_KSK)
-        self.assertTrue(domain.dnssec.keydatas[0].pubKey.startswith('AwEAAao2zeD'))
-        self.assertEqual(domain.rgp_status_end.isoformat(), '2020-12-28T22:00:00+00:00')
+        self.assertTrue(domain.dnssec.keydatas[0].pubKey.startswith("AwEAAao2zeD"))
+        self.assertEqual(domain.rgp_status_end.isoformat(), "2020-12-28T22:00:00+00:00")
 
         # testing DNSSec.__contains() and KeyData.__eq__().
         # This is also used for EppDomain.update()
@@ -146,7 +146,7 @@ class ParserTests(TestCase):
         """
         Handle avail response for contacts.
         """
-        avail_response = '''<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        avail_response = """<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <response>
             <result code="1000">
                 <msg>The availability of the contact person has been checked.</msg>
@@ -163,14 +163,14 @@ class ParserTests(TestCase):
                 <svTRID>DBD51C56-8635-544F-E1AF-0AA7501C04F4</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
 
         response = EPP._parse_response(avail_response)
         is_available = ContactHandler._parse_avail(response)
         self.assertFalse(is_available)
 
     def test_parse_host(self):
-        raw_response = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        raw_response = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <response>
         <result code="1000">
@@ -193,20 +193,20 @@ class ParserTests(TestCase):
           <svTRID>116890</svTRID>
         </trID>
       </response>
-    </epp>'''
+    </epp>"""
         response = EPP._parse_response(raw_response)
         host = EppHost.from_xml(response.resData, response.extension)
-        self.assertEqual(host.name, 'ns0.epp-example.co.uk.')
-        self.assertEqual(host.addr, ['123.123.123.123', '1080:0:0:0:8:800:200C:417B'])
-        self.assertEqual(host.cl_id, 'EXAMPLE_TAG')
-        self.assertEqual(host.cr_id, 'epp-user')
+        self.assertEqual(host.name, "ns0.epp-example.co.uk.")
+        self.assertEqual(host.addr, ["123.123.123.123", "1080:0:0:0:8:800:200C:417B"])
+        self.assertEqual(host.cl_id, "EXAMPLE_TAG")
+        self.assertEqual(host.cr_id, "epp-user")
         self.assertEqual(host.created_date, datetime(2008, 6, 12, 6, 46, tzinfo=UTC))
 
     def test_parse_epp_error_ext(self):
         """
         Make sure EPP errors are handled, and extensions are read.
         """
-        response = '''
+        response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
         <response>
             <result code="2308">
@@ -224,14 +224,17 @@ class ParserTests(TestCase):
                 <svTRID>AB95B312-96C6-A2C8-C174-A250A960D016</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
         try:
             EPP._parse_response(response)
         except EPPError as e:
             self.assertEqual(e.code, 2308)
-            self.assertEqual(e.message, 'Validation of the transaction failed.')
-            self.assertEqual(e.ext_code, 'C0115')
-            self.assertEqual(e.ext_reason, 'The specified handle is not associated with this account.')
+            self.assertEqual(e.message, "Validation of the transaction failed.")
+            self.assertEqual(e.ext_code, "C0115")
+            self.assertEqual(
+                e.ext_reason,
+                "The specified handle is not associated with this account.",
+            )
         else:
             self.assertTrue(False, "EPPError not raised")
 
@@ -239,7 +242,7 @@ class ParserTests(TestCase):
         """
         Test parsing for poll responses
         """
-        raw_response = '''
+        raw_response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
       <response>
         <result code="1301">
@@ -265,23 +268,29 @@ class ParserTests(TestCase):
           <svTRID>54321-XYZ</svTRID>
         </trID>
       </response>
-    </epp>'''
+    </epp>"""
         response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.queue_count, 5)
-        self.assertEqual(response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC))
-        self.assertEqual(response.message, 'Transfer requested.')
-        self.assertEqual(response.result_msg, 'Command completed successfully; ack to dequeue')
-        self.assertEqual(get_node_text(response.resData, 'obj:trnData/obj:name'), 'example.com')
-        self.assertEqual(response.clTRID, 'ABC-12345')
-        self.assertEqual(response.svTRID, '54321-XYZ')
+        self.assertEqual(
+            response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC)
+        )
+        self.assertEqual(response.message, "Transfer requested.")
+        self.assertEqual(
+            response.result_msg, "Command completed successfully; ack to dequeue"
+        )
+        self.assertEqual(
+            get_node_text(response.resData, "obj:trnData/obj:name"), "example.com"
+        )
+        self.assertEqual(response.clTRID, "ABC-12345")
+        self.assertEqual(response.svTRID, "54321-XYZ")
         self.assertTrue(bool(response))
 
     def test_parse_poll_ext_transfer_start(self):
         """
         Test the SIDN extended message that a poll on DRS returns.
         """
-        raw_response = '''<?xml version="1.0" encoding="utf-8"?>
+        raw_response = """<?xml version="1.0" encoding="utf-8"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0"
         xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <response>
@@ -322,20 +331,24 @@ class ParserTests(TestCase):
                 <svTRID>C54BF9AD-907C-4C5C-F791-AE0CB997716E</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
 
-        response: EPPPollResponse = EPP._parse_response(raw_response, response_class=EPPPollResponse)
+        response: EPPPollResponse = EPP._parse_response(
+            raw_response, response_class=EPPPollResponse
+        )
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
-        self.assertEqual(response.pollData.command, 'domain:transfer-start')
+        self.assertEqual(response.pollData.command, "domain:transfer-start")
         self.assertEqual(response.pollData.code, 1000)
-        self.assertEqual(response.pollData.message, "Transfer of the domain name has begun.")
-        self.assertEqual(response.pollData.object.name, 'for-transfer-03.nl')
+        self.assertEqual(
+            response.pollData.message, "Transfer of the domain name has begun."
+        )
+        self.assertEqual(response.pollData.object.name, "for-transfer-03.nl")
 
     def test_parse_poll_ext_transfer(self):
         """
         Test poll notification that a transfer was completed.
         """
-        raw_response = '''<?xml version="1.0" encoding="UTF-8"?>
+        raw_response = """<?xml version="1.0" encoding="UTF-8"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
         <response>
             <result code="1301">
@@ -373,26 +386,32 @@ class ParserTests(TestCase):
                 <svTRID>BF3075DF-05CD-2000-E2DC-126BB1758597</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
 
         response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
-        self.assertEqual(response.pollData.command, 'domain:transfer')
+        self.assertEqual(response.pollData.command, "domain:transfer")
         self.assertEqual(response.pollData.code, 1000)
         self.assertEqual(response.pollData.message, "De domeinnaam is verhuisd.")
         self.assertEqual(response.pollData.object.name, "for-transfer-05.nl")
         self.assertEqual(response.pollData.object.status, "serverApproved")
         self.assertEqual(response.pollData.object.request_id, "TRAIP")  # TransIP
-        self.assertEqual(response.pollData.object.request_date, datetime(2016, 10, 21, 11, 44, 58, tzinfo=UTC))
+        self.assertEqual(
+            response.pollData.object.request_date,
+            datetime(2016, 10, 21, 11, 44, 58, tzinfo=UTC),
+        )
         self.assertEqual(response.pollData.object.act_id, "NLCOM")  # Computel Standby
-        self.assertEqual(response.pollData.object.act_date, datetime(2016, 10, 21, 11, 45, 0, 111000, tzinfo=UTC))
+        self.assertEqual(
+            response.pollData.object.act_date,
+            datetime(2016, 10, 21, 11, 45, 0, 111000, tzinfo=UTC),
+        )
         self.assertTrue(bool(response))
 
     def test_parse_empty_poll(self):
         """
         Handle nodes without msgQ element.
         """
-        raw_response = '''
+        raw_response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         <response>
             <result code="1300">
@@ -403,11 +422,11 @@ class ParserTests(TestCase):
                 <svTRID>5A220D87-F00D-A8B3-BE74-076FE7B50149</svTRID>
             </trID>
         </response>
-    </epp>'''
+    </epp>"""
         response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
         self.assertEqual(response.result_code, EPP_QUEUE_EMPTY)
         self.assertEqual(response.queue_count, 0)
         self.assertEqual(response.queue_date, None)
         self.assertEqual(response.queue_id, None)
-        self.assertEqual(response.result_msg, 'There are no messages in the queue.')
+        self.assertEqual(response.result_msg, "There are no messages in the queue.")
         self.assertFalse(bool(response))
