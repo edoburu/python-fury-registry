@@ -1,8 +1,14 @@
 """
 All specialized commands are performed by these handlers.
 """
+from __future__ import annotations
+
+from datetime import date
+from typing import Iterable, Iterator
+
 from fury_registry import commands, objects
 from fury_registry.constants import XMLNS
+from fury_registry.response import EPPResponse
 
 from .base import BaseHandler
 
@@ -12,7 +18,7 @@ class DomainHandler(BaseHandler):
     Actions for domains.
     """
 
-    def get(self, domain_name):
+    def get(self, domain_name: str) -> objects.FuryDomain:
         """
         Request the info of a domain
 
@@ -28,7 +34,7 @@ class DomainHandler(BaseHandler):
         domain._epp = self.epp  # Sneak it in
         return domain
 
-    def check(self, domain_name):
+    def check(self, domain_name: str) -> bool:
         """
         Check if a domain is available.
         """
@@ -38,25 +44,21 @@ class DomainHandler(BaseHandler):
         return self._parse_avail(response)
 
     @staticmethod
-    def _parse_avail(response):
+    def _parse_avail(response) -> bool:
         # Note that the domain:cd element may be repeated
         # The element may also contain a <domain:reason> element.
         return response.resData.find('domain:chkData/domain:cd/domain:name', XMLNS).attrib['avail'] in ('1', 'true')
 
-    def create(self, name, registrant, contacts, ns, dskeys=(), keyData=()):
+    def create(self, name: str, registrant: str, contacts: dict[str, str], ns: list[str], dskeys: Iterable[objects.DSKey]=(), keyData: Iterable[objects.KeyData]=()) -> EPPResponse:
         """
         Create a domain
 
         :param domain_name: Domain name to register.
         :param registrant: Registrant contact handle
         :param contacts: Contact handles (only supports admin and tech)
-        :type contacts: dict
         :param ns: List of nameserver host names
-        :type ns: list
         :param dskeys: DNSSec keys (values not read by SIDN, only keyData field is used.)
-        :type dskeys: Iterator[fury_registry.objects.DSKey]
         :param keyData: DNSSec keydata, as alternative for ``keys``, max 4 with SIDN.
-        :type keyData: Iterator[fury_registry.objects.KeyData]
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.1
         # https://tools.ietf.org/html/rfc5731#section-3.2.1
@@ -120,11 +122,9 @@ class DomainHandler(BaseHandler):
         ), command_extensions=command_extensions)
         return self.epp.cmd(xml)
 
-    def update_keys(self, name, remove_all=False, remove_keydatas=(), add_keydatas=(), urgent=False):
+    def update_keys(self, name: str, remove_all: bool=False, remove_keydatas: Iterable[objects.DSKey]=(), add_keydatas: Iterable[objects.DSKey]=(), urgent: bool=False):
         """
         Update the DNSSec keys in a domain
-        :type remove_keydatas: Iterator[fury_registry.objects.DSKey]
-        :type add_keydatas: Iterator[fury_registry.objects.DSKey]
         """
         # SIDN only looks at the keydata fields.
         # https://tools.ietf.org/html/rfc5910#section-5.2.5
@@ -138,7 +138,7 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(secdns_ext,))
         return self.epp.cmd(xml)
 
-    def delete(self, name):
+    def delete(self, name: str) -> EPPResponse:
         """
         Delete a domain
         """
@@ -147,7 +147,7 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('delete', commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
-    def restore(self, name):
+    def restore(self, name: str) -> EPPResponse:
         """
         Cancel deletion
         """
@@ -155,7 +155,7 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('update', commands.domain.update_part(name), command_extensions=(commands.domain.restore_part(name),))
         return self.epp.cmd(xml)
 
-    def renew(self, name, expiration_date, period, period_unit='y'):
+    def renew(self, name: str, expiration_date: date, period: int, period_unit: str='y') -> EPPResponse:
         """
         Renew the registration period of the domain.
 
@@ -168,7 +168,7 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('renew', commands.domain.renew_part(name, expiration_date, period, period_unit))
         return self.epp.cmd(xml)
 
-    def transfer(self, name, token):
+    def transfer(self, name: str, token: str) -> EPPResponse:
         """
         Initiate the domain transfer.
         """
@@ -176,36 +176,30 @@ class DomainHandler(BaseHandler):
         xml = self._build_command('transfer', commands.domain.transfer_req_part(name, token), op='request')
         return self.epp.cmd(xml)
 
-    def get_transfer_status(self, name):
+    def get_transfer_status(self, name: str) -> objects.TransferStatus:
         """
         Query the status of current domain transfer.
 
         When the domain is not in transfer, an :class:`~fury_registry.client.EPPError` will be raised,
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
-
-        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='query')
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
-    def approve_transfer(self, name):
+    def approve_transfer(self, name: str) -> objects.TransferStatus:
         """
         Query the status of current domain transfer.
-
-        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='approve')
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
-    def reject_transfer(self, name):
+    def reject_transfer(self, name: str) -> objects.TransferStatus:
         """
         Query the status of current domain transfer.
-
-        :rtype: fury_registry.objects.TransferStatus
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command('transfer', commands.domain.transfer_query_part(name), op='reject')
@@ -213,6 +207,6 @@ class DomainHandler(BaseHandler):
         return self._parse_transfer_status(response)
 
     @staticmethod
-    def _parse_transfer_status(response):
+    def _parse_transfer_status(response: EPPResponse) -> objects.TransferStatus:
         trnData = response.resData.find('domain:trnData', XMLNS)
         return objects.TransferStatus.from_xml(trnData)

@@ -1,16 +1,17 @@
 """
 Serialize DNSSec objects to EPP XML
 """
+from __future__ import annotations
 
+from collections.abc import Iterable
+
+from fury_registry.objects import DSKey, KeyData
 from fury_registry.utils import xml_format
 
 
-def create(dskeys=(), keyData=()):
+def create(dskeys: Iterable[DSKey]=(), keyData: Iterable[KeyData]=()):
     """
     The DNSSec create extension
-
-    :type dskeys: Iterator[fury_registry.objects.DSKey]
-    :type keyData: Iterator[fury_registry.objects.KeyData]
     """
     xml = """
           <secDNS:create xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
@@ -86,7 +87,7 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
     return xml
 
 
-def dskey_to_xml(dskey):
+def dskey_to_xml(dskey: DSKey):
     """
     :type dskey: fury_registry.objects.DSKey
     """
@@ -114,7 +115,7 @@ def dskey_to_xml(dskey):
     return xml
 
 
-def keydata_to_xml(keyData):
+def keydata_to_xml(keyData: KeyData):
     """
     :type keyData: fury_registry.objects.KeyData
     """

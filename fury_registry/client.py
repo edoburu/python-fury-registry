@@ -1,6 +1,7 @@
 import logging
 import socket
 import ssl
+from typing import TypeVar
 from xml.etree import ElementTree
 
 from fury_registry.constants import EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT, EPP_FAILED_CLOSING, EPP_LOGOUT_OK, EPP_OK, \
@@ -9,6 +10,8 @@ from fury_registry.response import EPPResponse, EPPPollResponse
 from fury_registry.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 from . import commands, handlers
+
+R = TypeVar("R", bound=EPPResponse)
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +84,9 @@ class EPP:
         except OSError:
             pass  # Server disconnected
 
-    def cmd(self, xml, silent=False, response_class=EPPResponse):
+    def cmd(self, xml, silent=False, response_class: type[R]=EPPResponse) -> R:
         """
         Execute a raw request on the server.
-
-        :rtype: fury_registry.response.EPPResponse
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("EPP request: %s", mask_sensitive_fields(xml))
@@ -112,10 +113,7 @@ class EPP:
         return response
 
     @staticmethod
-    def _parse_response(raw_response, response_class=EPPResponse):
-        """
-        :rtype: EPPResponse
-        """
+    def _parse_response(raw_response, response_class:type[R]=EPPResponse) -> R:
         # Standard wrapper:
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         #   <response>
@@ -190,7 +188,7 @@ class EPP:
         version = svcMenu.find('epp:version', XMLNS).text
         logger.info("Connected to %s (v%s)\n", svid, version)
 
-    def login(self, username, password):
+    def login(self, username: str, password: str) -> EPPResponse:
         """
         Perform the login.
         """
@@ -205,49 +203,36 @@ class EPP:
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
-    def poll(self, transaction_id=None):
+    def poll(self, transaction_id: str|None=None) -> EPPPollResponse:
         """
         Poll for service notification messages.
 
         It returns the first message.
         Call :meth:`poll_ack` afterwards with the message ID to remove it from the queue.
         The next call to :meth:`poll` will return the next available message.
-
-        :param transaction_id:
-        :rtype: fury_registry.response.EPPPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         cmd = commands.epp.poll_req(transaction_id=transaction_id)
         return self.cmd(cmd, response_class=EPPPollResponse)
 
-    def poll_ack(self, queue_id, transaction_id=None):
+    def poll_ack(self, queue_id: str, transaction_id: str|None=None) -> EPPPollResponse:
         """
         Acknowledge the processing of a message in the queue.
-        :rtype: fury_registry.response.EPPPollResponse
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         cmd = commands.epp.poll_ack(queue_id, transaction_id=transaction_id)
         return self.cmd(cmd, response_class=EPPPollResponse)
 
     @property
-    def domains(self):
-        """
-        :rtype: fury_registry.handlers.DomainHandler
-        """
+    def domains(self) -> handlers.DomainHandler:
         # These are not assigned to the class, to avoid circular references.
         # Only keep references temporary, so __del__ will be called.
         return handlers.DomainHandler(self)
 
     @property
-    def contacts(self):
-        """
-        :rtype: fury_registry.handlers.ContactHandler
-        """
+    def contacts(self) -> handlers.ContactHandler:
         return handlers.ContactHandler(self)
 
     @property
-    def hosts(self):
-        """
-        :rtype: fury_registry.handlers.HostHandler
-        """
+    def hosts(self) -> handlers.HostHandler:
         return handlers.HostHandler(self)

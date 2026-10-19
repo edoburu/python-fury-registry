@@ -1,18 +1,23 @@
 """
 Internal utils
 """
+from __future__ import annotations
+
 import re
 import struct
+from datetime import datetime
+from xml.etree.ElementTree import Element
 from xml.sax import saxutils
 
 import dateutil.parser
+
 from fury_registry.constants import XMLNS
 
 RE_CL_ID = re.compile(r'<clID>[^<]+</clID>')
 RE_PW = re.compile(r'<pw>[^<]+</pw>')
 
 
-def xml_format(xml, **data):
+def xml_format(xml: str, **data: None|int|str) -> str:
     """
     Apply a str.format() format for XML, with data escaped.
     """
@@ -20,14 +25,14 @@ def xml_format(xml, **data):
     return xml.format(**data)
 
 
-def _xml_escape(**data):
+def _xml_escape(**data: None|int|str):
     """
     Escape the data for inclusion in XML
     """
     return {k: escape(v) for k, v in data.items()}
 
 
-def escape(value):
+def escape(value: None|int|str) -> str|None:
     """
     Escape a single value for XML
     """
@@ -39,42 +44,30 @@ def escape(value):
         return saxutils.escape(value)
 
 
-def mask_sensitive_fields(cmd):
+def mask_sensitive_fields(cmd: str) -> str:
     cmd = RE_CL_ID.sub('<clID>***</clID>', cmd)
     cmd = RE_PW.sub('<pw>***</pw>', cmd)
     return cmd
 
 
-def int32_from_net(data):
+def int32_from_net(data: bytes) -> int:
     return struct.unpack(">I", data)[0]
 
 
-def int32_to_net(value):
+def int32_to_net(value: int) -> bytes:
     return struct.pack(">I", value)
 
 
-def get_node_text(parent_node, node_name, default=None):
-    """
-    Get the text content for a child node.
-
-    :type parent_node: xml.etree.ElementTree.Element
-    :type node_name: str
-    :rtype: unicode|None
-    """
+def get_node_text(parent_node: Element|None, node_name: str, default=None) -> str|None:
+    """Get the text content for a child node."""
     if parent_node is None:
         return default
     # Handling of optional fields
     return parent_node.findtext(node_name, namespaces=XMLNS)
 
 
-def get_node_date(parent_node, node_name):
-    """
-    Read the date value for a child node.
-
-    :type parent_node: xml.etree.ElementTree.Element
-    :type node_name: str
-    :rtype: datetime|None
-    """
+def get_node_date(parent_node: Element|None, node_name: str) -> datetime | None:
+    """Read the date value for a child node."""
     # Dates like: 1995-12-10T23:00:00.000Z
     text = get_node_text(parent_node, node_name)
     return dateutil.parser.parse(text) if text else None

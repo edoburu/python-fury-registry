@@ -323,7 +323,7 @@ class ParserTests(TestCase):
         </response>
     </epp>'''
 
-        response = EPP._parse_response(raw_response, response_class=EPPPollResponse)  # type: EPPPollResponse
+        response: EPPPollResponse = EPP._parse_response(raw_response, response_class=EPPPollResponse)
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.pollData.command, 'domain:transfer-start')
         self.assertEqual(response.pollData.code, 1000)

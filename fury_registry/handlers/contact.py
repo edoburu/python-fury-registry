@@ -40,8 +40,8 @@ class ContactHandler(BaseHandler):
         response = self.epp.cmd(xml)
         return objects.EppContact.from_xml(response.resData, response.extension)
 
-    def create(self, id, name, organisation=None, street=None, city=None, postcode=None, country_code=None,
-               phone=None, fax=None, email=None, properties=None):
+    def create(self, id, name: str, organisation: str|None=None, street: str|None|list[str]=None, city: str|None=None, postcode: str|None=None, country_code: str|None=None,
+               phone: str|None=None, fax: str|None=None, email: str|None=None, properties: dict[str,str]|None=None) -> str:
         """
         Create a contact.
 
@@ -75,7 +75,7 @@ class ContactHandler(BaseHandler):
         res = self.epp.cmd(xml).resData
         return res.find('contact:creData/contact:id', XMLNS).text
 
-    def update(self, handle, name, organisation=None, street=None, city=None, postcode=None, country_code=None, phone=None, fax=None, email=None, properties=None):
+    def update(self, handle, name, organisation: str|None=None, street: str|None=None, city: str|None=None, postcode: str|None=None, country_code: str|None=None, phone: str|None=None, fax: str|None=None, email: str|None=None, properties: dict[str,str]|None=None):
         """
         Update an existing contact.
 

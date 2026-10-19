@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cached_property
 from xml.etree import ElementTree
 
@@ -21,10 +23,7 @@ class XmlObject:
     Wrapper object for EPP responses
     """
 
-    def __init__(self, element):
-        """
-        :type element: xml.etree.ElementTree.Element
-        """
+    def __init__(self, element: ElementTree.Element):
         self.element = element
 
     def __str__(self):
@@ -48,27 +47,22 @@ class EPPResponse(XmlObject):
     """
 
     @cached_property
-    def result(self):
-        """
-        :rtype: xml.etree.ElementTree.Element
-        """
+    def result(self) -> ElementTree.Element|None:
         return self.element.find('epp:result', XMLNS)
 
     @cached_property
-    def result_code(self):
+    def result_code(self) -> int:
         return int(self.result.attrib['code'])
 
     @cached_property
-    def result_msg(self):
+    def result_msg(self) -> str|None:
         return self.result.find('epp:msg', XMLNS).text
 
     @cached_property
-    def resData(self):
+    def resData(self) -> ElementTree.Element:
         """
         Return the resdata node from the response.
         Use `:meth:`~xml.etree.ElementTree.Element.find` to find child nodes.
-
-        :rtype: xml.etree.ElementTree.Element
         """
         resData = self.element.find('epp:resData', XMLNS)
         if resData is None:
@@ -128,7 +122,7 @@ class EPPPollResponse(EPPResponse):
         return get_node_date(self.msgQ, 'epp:qDate')
 
     @cached_property
-    def message(self):
+    def message(self) -> str|None:
         """
         Textual content of the message (only for op="req")
         """
@@ -137,7 +131,7 @@ class EPPPollResponse(EPPResponse):
         return get_node_text(self.msgQ, 'epp:msg')
 
     @cached_property
-    def trnData(self):
+    def trnData(self) -> objects.TransferStatus:
         """
         Return the object wrapped in the resData.
         """
