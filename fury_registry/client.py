@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class EPPError(RuntimeError):
-    """
-    Error response returned by the server.
+    """Error response returned by the server.
     """
 
     def __init__(self, code, message, ext_code=None, ext_reason=None):
@@ -41,19 +40,16 @@ class EPPError(RuntimeError):
 
 
 class EPP:
-    """
-    The EPP client
+    """The EPP client
     """
 
     def __init__(
-        self, host, port=700, username=None, password=None, certfile=None, timeout=60
+        self, host, port=700, username=None, password=None, certfile=None, timeout: float=60,
     ):
-        """
-        Initialize the client.
+        """Initialize the client.
         This establishes a connection to a Fury registry server via EPP.
 
         :param timeout: The timeout in seconds
-        :type timeout: Optional[float]
         :raises socket.error: In case the connection failed.
         """
         self.ssl = None
@@ -64,7 +60,7 @@ class EPP:
         if username and password:
             self.login(username, password)
 
-    def _connect(self, certfile=None, timeout=60):
+    def _connect(self, certfile=None, timeout: float=60):
         context = ssl.create_default_context(cafile=certfile)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,7 +70,7 @@ class EPP:
             return context.wrap_socket(self.socket, server_hostname=self.host)
         except OSError:
             logger.error(
-                "ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host."
+                "ERROR: Could not setup a secure connection. Check whether your IP is allowed to connect to the host.",
             )
             raise
 
@@ -96,8 +92,7 @@ class EPP:
             pass  # Server disconnected
 
     def cmd(self, xml, silent=False, response_class: type[R] = EPPResponse) -> R:
-        """
-        Execute a raw request on the server.
+        """Execute a raw request on the server.
         """
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("EPP request: %s", mask_sensitive_fields(xml))
@@ -166,8 +161,7 @@ class EPP:
 
             logger.debug("Hello Response: %s", xml_bytes.decode("utf-8"))
             return xml_bytes  # raw result for ElementTree to convert.
-        else:
-            return None
+        return None
 
     def _write(self, xml):
         # Convert to the raw data to be send.
@@ -204,23 +198,20 @@ class EPP:
         logger.info("Connected to %s (v%s)\n", svid, version)
 
     def login(self, username: str, password: str) -> EPPResponse:
-        """
-        Perform the login.
+        """Perform the login.
         """
         # Login
         xml = commands.epp.login(username, password)
         return self.cmd(xml, silent=True)
 
     def logout(self):
-        """
-        Perform the logout, happens automatically on ``__del__`.
+        """Perform the logout, happens automatically on ``__del__`.
         """
         cmd = commands.epp.logout
         return self.cmd(cmd, silent=True)
 
     def poll(self, transaction_id: str | None = None) -> EPPPollResponse:
-        """
-        Poll for service notification messages.
+        """Poll for service notification messages.
 
         It returns the first message.
         Call :meth:`poll_ack` afterwards with the message ID to remove it from the queue.
@@ -231,10 +222,9 @@ class EPP:
         return self.cmd(cmd, response_class=EPPPollResponse)
 
     def poll_ack(
-        self, queue_id: str, transaction_id: str | None = None
+        self, queue_id: str, transaction_id: str | None = None,
     ) -> EPPPollResponse:
-        """
-        Acknowledge the processing of a message in the queue.
+        """Acknowledge the processing of a message in the queue.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.3
         cmd = commands.epp.poll_ack(queue_id, transaction_id=transaction_id)

@@ -1,5 +1,4 @@
-"""
-All specialized commands are performed by these handlers.
+"""All specialized commands are performed by these handlers.
 """
 
 from fury_registry import commands, objects
@@ -8,8 +7,7 @@ from .base import BaseHandler
 
 
 class HostHandler(BaseHandler):
-    """
-    Handler for host data
+    """Handler for host data
 
     This is used to register nameservers, with their IPv4 and IPv6 addresses.
     Currently those commands are not implemented, it's assumed the values are configured manually in DRS5.
@@ -32,8 +30,7 @@ class HostHandler(BaseHandler):
         return objects.EppHost.from_xml(response.resData)
 
     def delete(self, name):
-        """
-        Delete a contact
+        """Delete a contact
         """
         xml = self._build_command("delete", commands.host.delete_part(name))
         return self.epp.cmd(xml)

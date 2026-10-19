@@ -5,8 +5,7 @@ from xml.etree.ElementTree import Element
 
 
 class ParsedObject:
-    """
-    Base interface to parse XML nodes.
+    """Base interface to parse XML nodes.
     """
 
     @classmethod

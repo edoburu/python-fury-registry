@@ -5,8 +5,7 @@ from .base import ParsedObject
 
 
 class EppHost(ParsedObject):
-    """
-    Host data object (e.g. for nameservers)
+    """Host data object (e.g. for nameservers)
     """
 
     @classmethod
@@ -20,7 +19,7 @@ class EppHost(ParsedObject):
         return dict(
             name=get_node_text(infData, "host:name"),
             roid=get_node_text(
-                infData, "host:roid"
+                infData, "host:roid",
             ),  # Repository object identifier (assigned on creation)
             status=infData.find("host:status", XMLNS).attrib["s"],
             addr=ips,

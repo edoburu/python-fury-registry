@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import logging
 import typing
+from collections.abc import Iterable
 from datetime import datetime
 
 import idna
 
+from fury_registry import objects
 from fury_registry.constants import XMLNS
 from fury_registry.utils import get_node_date, get_node_text
 
@@ -18,8 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class EppDomain(ParsedObject):
-    """
-    Domain data object
+    """Domain data object
     """
 
     # Status values
@@ -48,14 +51,14 @@ class EppDomain(ParsedObject):
 
         ns = []
         for hostobj in infData.find("domain:ns", XMLNS).findall(
-            "domain:hostObj", XMLNS
+            "domain:hostObj", XMLNS,
         ):
             ns.append(hostobj.text)
 
         fields = dict(
             name=idna.decode(get_node_text(infData, "domain:name")),
             roid=get_node_text(
-                infData, "domain:roid"
+                infData, "domain:roid",
             ),  # Repository object identifier (assigned on creation)
             status=infData.find("domain:status", XMLNS).attrib["s"],
             registrant=get_node_text(infData, "domain:registrant"),
@@ -81,24 +84,21 @@ class EppDomain(ParsedObject):
 
     def __init__(
         self,
-        name,
-        roid,
-        status,
-        registrant,
-        admin,
-        tech,
-        ns,
-        clID,
-        crID,
-        crDate,
-        upDate,
-        exDate,
-        pw,
-        dnssec=None,
+        name: str,
+        roid: str,
+        status: str,
+        registrant: str,
+        admin: str,
+        tech: str,
+        ns: list[str],
+        clID: str,
+        crID: str,
+        crDate: datetime,
+        upDate: datetime,
+        exDate: datetime,
+        pw: str,
+        dnssec: DNSSec|None=None,
     ):
-        """
-        :type dnssec: fury_registry.objects.DNSSec
-        """
         # This may look really stupid, yet it makes tests and self-documentation and code-completion much easier.
         # Before all parameters were magically assigned, making it really hard to use it from other code.
         #
@@ -131,32 +131,31 @@ class EppDomain(ParsedObject):
         return f"[{self.name}] status: {self.status}, registrant: {self.registrant}, admin: {self.admin}, tech: {self.tech}"
 
     @property
-    def token(self):
+    def token(self) -> str:
         return self.pw
 
     @property
-    def registrant_contact(self):
+    def registrant_contact(self) -> objects.EppContact:
         return self._epp.contacts.get(self.registrant)
 
     @property
-    def admin_contact(self):
+    def admin_contact(self) -> objects.EppContact:
         return self._epp.contacts.get(self.admin)
 
     @property
-    def tech_contact(self):
+    def tech_contact(self) -> objects.EppContact:
         return self._epp.contacts.get(self.tech)
 
     def update(
         self,
-        registrant=None,
-        admin=None,
-        tech=None,
-        ns=None,
-        keydatas=None,
-        dnssec_urgent=False,
+        registrant: str|None=None,
+        admin: str|None=None,
+        tech: str|None=None,
+        ns: list[str]|None=None,
+        keydatas: Iterable[objects.DSKey]|None=None,
+        dnssec_urgent: bool=False,
     ):
-        """
-        Update all domain settings at once.
+        """Update all domain settings at once.
         This operation only changes the fields which need to change.
         Returns ``None`` when no settings had to be changed.
         """
@@ -208,43 +207,37 @@ class EppDomain(ParsedObject):
 
         return self._epp.domains.update(self.name, **kwargs)
 
-    def update_registrant(self, new_handle):
+    def update_registrant(self, new_handle: str):
         # This could also be done by property assignment,
         # but instead it's a bit more explicit that something big happens due to an assignment.
         if self.registrant == new_handle:
             return None
-        else:
-            return self._epp.domains.update(self.name, registrant=new_handle)
+        return self._epp.domains.update(self.name, registrant=new_handle)
 
-    def update_admin(self, new_handle):
-        """
-        Replace the admin handle for the domain (DRS5 only allows one admin handle)
+    def update_admin(self, new_handle: str):
+        """Replace the admin handle for the domain (DRS5 only allows one admin handle)
         """
         if new_handle == self.admin:
             return None
-        else:
-            response = self._epp.domains.update(
-                self.name, remove_techs=(self.admin,), add_techs=(new_handle,)
-            )
-            self.admin = new_handle
-            return response
+        response = self._epp.domains.update(
+            self.name, remove_techs=(self.admin,), add_techs=(new_handle,),
+        )
+        self.admin = new_handle
+        return response
 
-    def update_tech(self, new_handle):
-        """
-        Replace the tech handle for the domain.
+    def update_tech(self, new_handle: str):
+        """Replace the tech handle for the domain.
         """
         if new_handle == self.tech:
             return None
-        else:
-            response = self._epp.domains.update(
-                self.name, remove_techs=(self.tech,), add_techs=(new_handle,)
-            )
-            self.tech = new_handle
-            return response
+        response = self._epp.domains.update(
+            self.name, remove_techs=(self.tech,), add_techs=(new_handle,),
+        )
+        self.tech = new_handle
+        return response
 
-    def update_nameservers(self, ns):
-        """
-        Assign new nameservers to the domain
+    def update_nameservers(self, ns: Iterable[str]):
+        """Assign new nameservers to the domain
         """
         current = set(self.ns)
         new = set(ns)
@@ -256,12 +249,10 @@ class EppDomain(ParsedObject):
         self.ns = ns
         return response
 
-    def renew(self, period, period_unit="y"):
-        """
-        Renew the registration period of the domain.
+    def renew(self, period: int, period_unit: str="y"):
+        """Renew the registration period of the domain.
 
         :param period: integer, the number of months or years depending on the ``period_unit``.
-        :type period: int
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
         return self._epp.domains.renew(
@@ -273,8 +264,7 @@ class EppDomain(ParsedObject):
 
 
 class FuryDomain(EppDomain):
-    """
-    Domain data object with SIDN extension fields
+    """Domain data object with SIDN extension fields
     """
 
     @classmethod
@@ -338,8 +328,7 @@ class FuryDomain(EppDomain):
 
 
 class TransferStatus(ParsedObject):
-    """
-    EPP Transfer status response object
+    """EPP Transfer status response object
     """
 
     CLIENT_APPROVED = "clientApproved"
@@ -361,9 +350,8 @@ class TransferStatus(ParsedObject):
             exDate=get_node_date(trnData, "domain:exDate"),
         )
 
-    def __init__(self, name, trStatus, reID, reDate, acID, acDate, exDate=None):
-        """
-        :param name: the fully qualified name of the domain object.
+    def __init__(self, name: str, trStatus: str, reID: str, reDate: datetime, acID: str, acDate: datetime, exDate: datetime|None=None):
+        """:param name: the fully qualified name of the domain object.
         :param trStatus: the state of the most recent transfer request.
         :param reID: the identifier of the client that requested the object transfer.
         :param reDate: date and time that the transfer was requested.
@@ -393,18 +381,17 @@ class TransferStatus(ParsedObject):
     def __repr__(self):
         if self.is_pending:
             return f"<TransferStatus {self.name}: {self.status} by {self.act_id} till {self.act_date}>"
-        else:
-            return f"<TransferStatus {self.name}: {self.status} by {self.act_id} on {self.act_date}>"
+        return f"<TransferStatus {self.name}: {self.status} by {self.act_id} on {self.act_date}>"
 
     def __str__(self):
         return self.name
 
     @property
-    def is_approved(self):
+    def is_approved(self) -> bool:
         return self.status in (self.CLIENT_APPROVED, self.SERVER_APPROVED)
 
     @property
-    def is_declined(self):
+    def is_declined(self) -> bool:
         return self.status in (
             self.CLIENT_CANCELLED,
             self.SERVER_CANCELLED,
@@ -412,5 +399,5 @@ class TransferStatus(ParsedObject):
         )
 
     @property
-    def is_pending(self):
+    def is_pending(self) -> bool:
         return self.status == self.PENDING

@@ -10,8 +10,7 @@ from . import objects
 
 
 def register_namespaces():
-    """
-    Register the namespaces in the ElementTree globals.
+    """Register the namespaces in the ElementTree globals.
     This improves the output for debugging, but will override any previously registered prefixes.
     """
     for prefix, uri in XMLNS.items():
@@ -19,16 +18,14 @@ def register_namespaces():
 
 
 class XmlObject:
-    """
-    Wrapper object for EPP responses
+    """Wrapper object for EPP responses
     """
 
     def __init__(self, element: ElementTree.Element):
         self.element = element
 
     def __str__(self):
-        """
-        Display the element as XML.
+        """Display the element as XML.
 
         Call :func:`register_namespaces` in case you like to have readable XML prefixes.
         """
@@ -42,8 +39,7 @@ class XmlObject:
 
 
 class EPPResponse(XmlObject):
-    """
-    Wrapper object for EPP responses
+    """Wrapper object for EPP responses
     """
 
     @cached_property
@@ -60,8 +56,7 @@ class EPPResponse(XmlObject):
 
     @cached_property
     def resData(self) -> ElementTree.Element:
-        """
-        Return the resdata node from the response.
+        """Return the resdata node from the response.
         Use `:meth:`~xml.etree.ElementTree.Element.find` to find child nodes.
         """
         resData = self.element.find("epp:resData", XMLNS)
@@ -83,8 +78,7 @@ class EPPResponse(XmlObject):
 
 
 class EPPPollResponse(EPPResponse):
-    """
-    Wrapper object for the EPP Poll response
+    """Wrapper object for the EPP Poll response
     """
 
     def __bool__(self):
@@ -96,8 +90,7 @@ class EPPPollResponse(EPPResponse):
 
     @cached_property
     def queue_count(self):
-        """
-        Number of messages in the queue.
+        """Number of messages in the queue.
         """
         if self.msgQ is None:
             return 0
@@ -105,8 +98,7 @@ class EPPPollResponse(EPPResponse):
 
     @cached_property
     def queue_id(self):
-        """
-        ID of the currently fetched message.
+        """ID of the currently fetched message.
         """
         if self.msgQ is None:
             return None
@@ -114,8 +106,7 @@ class EPPPollResponse(EPPResponse):
 
     @cached_property
     def queue_date(self):
-        """
-        Date of the currently fetched message (only for op="req")
+        """Date of the currently fetched message (only for op="req")
         """
         if self.msgQ is None:
             return None
@@ -123,8 +114,7 @@ class EPPPollResponse(EPPResponse):
 
     @cached_property
     def message(self) -> str | None:
-        """
-        Textual content of the message (only for op="req")
+        """Textual content of the message (only for op="req")
         """
         if self.msgQ is None:
             return None
@@ -132,8 +122,7 @@ class EPPPollResponse(EPPResponse):
 
     @cached_property
     def trnData(self) -> objects.TransferStatus:
-        """
-        Return the object wrapped in the resData.
+        """Return the object wrapped in the resData.
         """
         element = self.resData[0]  # type: ElementTree.Element
         if (
@@ -141,5 +130,4 @@ class EPPPollResponse(EPPResponse):
         ):  # full qualified name for "domain:trnData"
             trnData = self.resData.find("domain:trnData", XMLNS)
             return objects.TransferStatus.from_xml(trnData)
-        else:
-            raise NotImplementedError(f"Unsupported extension node: {element.tag}")
+        raise NotImplementedError(f"Unsupported extension node: {element.tag}")

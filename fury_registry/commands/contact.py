@@ -38,8 +38,7 @@ def create_part(handle, **data):
 
 
 def update_parts(handle, **data):
-    """
-    Update an contact.
+    """Update an contact.
     """
     xml = xml_format(
         """
@@ -56,12 +55,12 @@ def update_parts(handle, **data):
 
 
 def _contact_info(**data):
-    if data.get("voice", None):
+    if data.get("voice"):
         data["voice"] = _fix_phone(data["voice"])
     else:
         data["voice"] = ""
 
-    if data.get("fax", None):
+    if data.get("fax"):
         data["fax"] = _fix_phone(data["fax"])
     else:
         data["fax"] = ""

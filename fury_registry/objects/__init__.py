@@ -1,5 +1,4 @@
-"""
-All data objects, returned by the EPP responses.
+"""All data objects, returned by the EPP responses.
 """
 
 from .contact import EppContact

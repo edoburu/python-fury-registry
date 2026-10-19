@@ -15,8 +15,7 @@ UTC = tzutc()
 
 
 class ParserTests(TestCase):
-    """
-    Simple test case for parsers
+    """Simple test case for parsers
     """
 
     @classmethod
@@ -25,8 +24,7 @@ class ParserTests(TestCase):
         register_namespaces()
 
     def test_parse_contact(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         contact_info = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
@@ -70,8 +68,7 @@ class ParserTests(TestCase):
         self.assertEqual(contact.name, "S.J. de Wal")
 
     def test_parse_domain(self):
-        """
-        Parse domain info response.
+        """Parse domain info response.
         """
         domain_info = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
@@ -143,8 +140,7 @@ class ParserTests(TestCase):
         self.assertTrue(copy(dnssec.keydatas[0]) in domain.dnssec)
 
     def test_parse_contact_avail(self):
-        """
-        Handle avail response for contacts.
+        """Handle avail response for contacts.
         """
         avail_response = """<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
         <response>
@@ -203,8 +199,7 @@ class ParserTests(TestCase):
         self.assertEqual(host.created_date, datetime(2008, 6, 12, 6, 46, tzinfo=UTC))
 
     def test_parse_epp_error_ext(self):
-        """
-        Make sure EPP errors are handled, and extensions are read.
+        """Make sure EPP errors are handled, and extensions are read.
         """
         response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
@@ -239,8 +234,7 @@ class ParserTests(TestCase):
             self.assertTrue(False, "EPPError not raised")
 
     def test_parse_poll(self):
-        """
-        Test parsing for poll responses
+        """Test parsing for poll responses
         """
         raw_response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -273,22 +267,21 @@ class ParserTests(TestCase):
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.queue_count, 5)
         self.assertEqual(
-            response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC)
+            response.queue_date, datetime(2000, 6, 8, 22, 0, 0, tzinfo=UTC),
         )
         self.assertEqual(response.message, "Transfer requested.")
         self.assertEqual(
-            response.result_msg, "Command completed successfully; ack to dequeue"
+            response.result_msg, "Command completed successfully; ack to dequeue",
         )
         self.assertEqual(
-            get_node_text(response.resData, "obj:trnData/obj:name"), "example.com"
+            get_node_text(response.resData, "obj:trnData/obj:name"), "example.com",
         )
         self.assertEqual(response.clTRID, "ABC-12345")
         self.assertEqual(response.svTRID, "54321-XYZ")
         self.assertTrue(bool(response))
 
     def test_parse_poll_ext_transfer_start(self):
-        """
-        Test the SIDN extended message that a poll on DRS returns.
+        """Test the SIDN extended message that a poll on DRS returns.
         """
         raw_response = """<?xml version="1.0" encoding="utf-8"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0"
@@ -334,19 +327,18 @@ class ParserTests(TestCase):
     </epp>"""
 
         response: EPPPollResponse = EPP._parse_response(
-            raw_response, response_class=EPPPollResponse
+            raw_response, response_class=EPPPollResponse,
         )
         self.assertEqual(response.result_code, EPP_QUEUE_NOT_EMPTY)
         self.assertEqual(response.pollData.command, "domain:transfer-start")
         self.assertEqual(response.pollData.code, 1000)
         self.assertEqual(
-            response.pollData.message, "Transfer of the domain name has begun."
+            response.pollData.message, "Transfer of the domain name has begun.",
         )
         self.assertEqual(response.pollData.object.name, "for-transfer-03.nl")
 
     def test_parse_poll_ext_transfer(self):
-        """
-        Test poll notification that a transfer was completed.
+        """Test poll notification that a transfer was completed.
         """
         raw_response = """<?xml version="1.0" encoding="UTF-8"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
@@ -408,8 +400,7 @@ class ParserTests(TestCase):
         self.assertTrue(bool(response))
 
     def test_parse_empty_poll(self):
-        """
-        Handle nodes without msgQ element.
+        """Handle nodes without msgQ element.
         """
         raw_response = """
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">

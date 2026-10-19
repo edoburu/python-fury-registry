@@ -1,5 +1,4 @@
-"""
-Serialize DNSSec objects to EPP XML
+"""Serialize DNSSec objects to EPP XML
 """
 
 from __future__ import annotations
@@ -11,8 +10,7 @@ from fury_registry.utils import xml_format
 
 
 def create(dskeys: Iterable[DSKey] = (), keyData: Iterable[KeyData] = ()):
-    """
-    The DNSSec create extension
+    """The DNSSec create extension
     """
     xml = """
           <secDNS:create xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
@@ -101,9 +99,6 @@ def update(
 
 
 def dskey_to_xml(dskey: DSKey):
-    """
-    :type dskey: fury_registry.objects.DSKey
-    """
     # Delegation Signer key information
     xml = """
           <secDNS:dsData>
@@ -129,9 +124,6 @@ def dskey_to_xml(dskey: DSKey):
 
 
 def keydata_to_xml(keyData: KeyData):
-    """
-    :type keyData: fury_registry.objects.KeyData
-    """
     # Client key information
     xml = """
             <secDNS:keyData>

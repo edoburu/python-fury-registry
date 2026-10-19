@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from fury_registry.utils import escape, xml_format
 
 # EPP: https://tools.ietf.org/html/rfc5730
@@ -23,15 +25,14 @@ LOGIN_EXTENSIONS = (
 
 
 def build_command(
-    command_name,
-    command_xml=None,
-    op=None,
-    command_extensions=(),
-    clTRID=None,
-    epp_extensions=(),
+    command_name: str,
+    command_xml: str|None=None,
+    op: str|None=None,
+    command_extensions: Iterable[str]=(),
+    clTRID: str|None=None,
+    epp_extensions: Iterable[str]=(),
 ):
-    """
-    Construct an EPP command from it's parts.
+    """Construct an EPP command from it's parts.
 
     :param command_name: The command to send, e.g. ``create``, ``info``, ``check``, ``delete``.
     :param command_xml: The XML contents of the command.
@@ -52,7 +53,7 @@ def build_command(
         )
         if command_extensions:
             command_ext += ("    <extension>{}\n    </extension>\n").format(
-                "\n".join(command_extensions)
+                "\n".join(command_extensions),
             )
 
         main_xml = (
@@ -74,7 +75,7 @@ def build_command(
         # Exceptions at top-level.
         # Note an <extension> block can also occur inside the command_xml.
         main_xml += ("  <extension>{}\n  </extension>\n").format(
-            "\n".join(extensions_xml)
+            "\n".join(extensions_xml),
         )
 
     return (

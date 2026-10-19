@@ -7,8 +7,7 @@ from .base import ParsedObject
 
 
 class DNSSec(ParsedObject):
-    """
-    DNSSec info
+    """DNSSec info
     """
 
     @classmethod
@@ -30,13 +29,12 @@ class DNSSec(ParsedObject):
 
     def __repr__(self):
         return "<DNSSec[{}]>".format(
-            ", ".join(repr(x) for x in chain(self.dskeys, self.keydatas))
+            ", ".join(repr(x) for x in chain(self.dskeys, self.keydatas)),
         )
 
 
 class DSKey(ParsedObject):
-    """
-    Delegation Signer key
+    """Delegation Signer key
 
     SIDN doesn't use the ``dsData`` fields.
     It only reads the ``keyData`` field.
@@ -53,8 +51,7 @@ class DSKey(ParsedObject):
         )
 
     def __init__(self, keyTag, alg, digestType, digest, keyData=()):
-        """
-        :type keyTag: int
+        """:type keyTag: int
         :type alg: int
         :param digestType: See https://tools.ietf.org/html/rfc4034#appendix-A.2
         :type digestType: int
@@ -88,8 +85,7 @@ class DSKey(ParsedObject):
 
 
 class KeyData(ParsedObject):
-    """
-    DNSSec client key data
+    """DNSSec client key data
     """
 
     PROTOCOL3 = 3
@@ -118,8 +114,7 @@ class KeyData(ParsedObject):
         )
 
     def __init__(self, flags, protocol, alg, pubKey):
-        """
-        :param flags: Values 256 (ZSK) en 257 (KSK) are allowed.
+        """:param flags: Values 256 (ZSK) en 257 (KSK) are allowed.
         :type flags: int
         :param protocol: Fixed value 3, see
         :type protocol: int

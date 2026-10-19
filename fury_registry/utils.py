@@ -1,5 +1,4 @@
-"""
-Internal utils
+"""Internal utils
 """
 
 from __future__ import annotations
@@ -18,31 +17,27 @@ RE_CL_ID = re.compile(r"<clID>[^<]+</clID>")
 RE_PW = re.compile(r"<pw>[^<]+</pw>")
 
 
-def xml_format(xml: str, **data: None | int | str) -> str:
-    """
-    Apply a str.format() format for XML, with data escaped.
+def xml_format(xml: str, **data: int | str | None) -> str:
+    """Apply a str.format() format for XML, with data escaped.
     """
     data = _xml_escape(**data)
     return xml.format(**data)
 
 
-def _xml_escape(**data: None | int | str):
-    """
-    Escape the data for inclusion in XML
+def _xml_escape(**data: int | str | None):
+    """Escape the data for inclusion in XML
     """
     return {k: escape(v) for k, v in data.items()}
 
 
-def escape(value: None | int | str) -> str | None:
-    """
-    Escape a single value for XML
+def escape(value: int | str | None) -> str | None:
+    """Escape a single value for XML
     """
     if value is None:
         return None
-    elif isinstance(value, int):
+    if isinstance(value, int):
         return str(value)
-    else:
-        return saxutils.escape(value)
+    return saxutils.escape(value)
 
 
 def mask_sensitive_fields(cmd: str) -> str:
@@ -60,7 +55,7 @@ def int32_to_net(value: int) -> bytes:
 
 
 def get_node_text(
-    parent_node: Element | None, node_name: str, default=None
+    parent_node: Element | None, node_name: str, default=None,
 ) -> str | None:
     """Get the text content for a child node."""
     if parent_node is None:

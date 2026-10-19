@@ -5,8 +5,7 @@ from .base import ParsedObject
 
 
 class EppContact(ParsedObject):
-    """
-    Contact data object
+    """Contact data object
     """
 
     @classmethod

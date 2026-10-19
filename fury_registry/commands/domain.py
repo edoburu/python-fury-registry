@@ -199,8 +199,7 @@ def update_part(
 
 
 def _ns_list(ns):
-    """
-    Produce a list of nameservers.
+    """Produce a list of nameservers.
     """
     xml = ""
     xml += """
@@ -237,8 +236,7 @@ def transfer_query_part(name):
 
 
 def restore_part(op="request"):
-    """
-    :param op: Either "request or "report"
+    """:param op: Either "request or "report"
     """
     return xml_format(
         """

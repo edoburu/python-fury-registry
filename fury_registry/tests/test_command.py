@@ -10,8 +10,7 @@ UTC = tzutc()
 
 
 class CommandTests(TestCase):
-    """
-    Simple test case for parsers
+    """Simple test case for parsers
     """
 
     maxDiff = None
@@ -59,11 +58,10 @@ class CommandTests(TestCase):
         )
 
     def test_build_domain_get(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         xml = DomainHandler(None)._build_command(
-            "info", commands.domain.info_part(name="example.nl")
+            "info", commands.domain.info_part(name="example.nl"),
         )
         self.assertEqual(
             xml,
@@ -81,11 +79,10 @@ class CommandTests(TestCase):
         )
 
     def test_build_domain_check(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         xml = DomainHandler(None)._build_command(
-            "check", commands.domain.check_part(name="example.nl")
+            "check", commands.domain.check_part(name="example.nl"),
         )
         self.assertEqual(
             xml,
@@ -103,11 +100,10 @@ class CommandTests(TestCase):
         )
 
     def test_build_domain_delete(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         xml = DomainHandler(None)._build_command(
-            "delete", commands.domain.delete_part(name="example.nl")
+            "delete", commands.domain.delete_part(name="example.nl"),
         )
         self.assertEqual(
             xml,
@@ -125,11 +121,10 @@ class CommandTests(TestCase):
         )
 
     def test_build_contact_get(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         xml = ContactHandler(None)._build_command(
-            "info", commands.contact.info_part(handle="CONTACT")
+            "info", commands.contact.info_part(handle="CONTACT"),
         )
         self.assertEqual(
             xml,
@@ -147,11 +142,10 @@ class CommandTests(TestCase):
         )
 
     def test_build_contact_delete(self):
-        """
-        Parse contact info response
+        """Parse contact info response
         """
         xml = ContactHandler(None)._build_command(
-            "delete", commands.contact.delete_part(handle="CONTACT")
+            "delete", commands.contact.delete_part(handle="CONTACT"),
         )
         self.assertEqual(
             xml,

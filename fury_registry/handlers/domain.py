@@ -1,5 +1,4 @@
-"""
-All specialized commands are performed by these handlers.
+"""All specialized commands are performed by these handlers.
 """
 
 from __future__ import annotations
@@ -15,13 +14,11 @@ from .base import BaseHandler
 
 
 class DomainHandler(BaseHandler):
-    """
-    Actions for domains.
+    """Actions for domains.
     """
 
     def get(self, domain_name: str) -> objects.FuryDomain:
-        """
-        Request the info of a domain
+        """Request the info of a domain
 
         It raises an :class:`~fury_registry.client.EPPError` when:
         * the domain does not exist: code 2303 (``EPP_OBJECT_DOES_NOT_EXIST``, with ``SIDN_EXT_DOMAIN_DOES_NOT_EXIST``).
@@ -36,8 +33,7 @@ class DomainHandler(BaseHandler):
         return domain
 
     def check(self, domain_name: str) -> bool:
-        """
-        Check if a domain is available.
+        """Check if a domain is available.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
         xml = self._build_command("check", commands.domain.check_part(name=domain_name))
@@ -49,7 +45,7 @@ class DomainHandler(BaseHandler):
         # Note that the domain:cd element may be repeated
         # The element may also contain a <domain:reason> element.
         return response.resData.find(
-            "domain:chkData/domain:cd/domain:name", XMLNS
+            "domain:chkData/domain:cd/domain:name", XMLNS,
         ).attrib["avail"] in ("1", "true")
 
     def create(
@@ -61,8 +57,7 @@ class DomainHandler(BaseHandler):
         dskeys: Iterable[objects.DSKey] = (),
         keyData: Iterable[objects.KeyData] = (),
     ) -> EPPResponse:
-        """
-        Create a domain
+        """Create a domain
 
         :param domain_name: Domain name to register.
         :param registrant: Registrant contact handle
@@ -105,8 +100,7 @@ class DomainHandler(BaseHandler):
         add_keydatas=(),
         dnssec_urgent=False,
     ):
-        """
-        Update the domain.
+        """Update the domain.
 
         :param name: The domain name
         :param registrant: New registrant handle, if given.
@@ -157,8 +151,7 @@ class DomainHandler(BaseHandler):
         add_keydatas: Iterable[objects.DSKey] = (),
         urgent: bool = False,
     ):
-        """
-        Update the DNSSec keys in a domain
+        """Update the DNSSec keys in a domain
         """
         # SIDN only looks at the keydata fields.
         # https://tools.ietf.org/html/rfc5910#section-5.2.5
@@ -177,8 +170,7 @@ class DomainHandler(BaseHandler):
         return self.epp.cmd(xml)
 
     def delete(self, name: str) -> EPPResponse:
-        """
-        Delete a domain
+        """Delete a domain
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.2
         # https://tools.ietf.org/html/rfc5731#section-3.2.2
@@ -186,8 +178,7 @@ class DomainHandler(BaseHandler):
         return self.epp.cmd(xml)
 
     def restore(self, name: str) -> EPPResponse:
-        """
-        Cancel deletion
+        """Cancel deletion
         """
         # Fury extension
         xml = self._build_command(
@@ -198,15 +189,13 @@ class DomainHandler(BaseHandler):
         return self.epp.cmd(xml)
 
     def renew(
-        self, name: str, expiration_date: date, period: int, period_unit: str = "y"
+        self, name: str, expiration_date: date, period: int, period_unit: str = "y",
     ) -> EPPResponse:
-        """
-        Renew the registration period of the domain.
+        """Renew the registration period of the domain.
 
         :param name: Domain name
         :param expiration_date: The expiration date of the domain.
         :param period: integer, the number of months or years depending on the ``period_unit``.
-        :type period: int
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
         xml = self._build_command(
@@ -216,47 +205,43 @@ class DomainHandler(BaseHandler):
         return self.epp.cmd(xml)
 
     def transfer(self, name: str, token: str) -> EPPResponse:
-        """
-        Initiate the domain transfer.
+        """Initiate the domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.4
         xml = self._build_command(
-            "transfer", commands.domain.transfer_req_part(name, token), op="request"
+            "transfer", commands.domain.transfer_req_part(name, token), op="request",
         )
         return self.epp.cmd(xml)
 
     def get_transfer_status(self, name: str) -> objects.TransferStatus:
-        """
-        Query the status of current domain transfer.
+        """Query the status of current domain transfer.
 
         When the domain is not in transfer, an :class:`~fury_registry.client.EPPError` will be raised,
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command(
-            "transfer", commands.domain.transfer_query_part(name), op="query"
+            "transfer", commands.domain.transfer_query_part(name), op="query",
         )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
     def approve_transfer(self, name: str) -> objects.TransferStatus:
-        """
-        Query the status of current domain transfer.
+        """Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command(
-            "transfer", commands.domain.transfer_query_part(name), op="approve"
+            "transfer", commands.domain.transfer_query_part(name), op="approve",
         )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
 
     def reject_transfer(self, name: str) -> objects.TransferStatus:
-        """
-        Query the status of current domain transfer.
+        """Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
         xml = self._build_command(
-            "transfer", commands.domain.transfer_query_part(name), op="reject"
+            "transfer", commands.domain.transfer_query_part(name), op="reject",
         )
         response = self.epp.cmd(xml)
         return self._parse_transfer_status(response)
