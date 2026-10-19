@@ -53,7 +53,7 @@ def renew_part(name, curExpDate, period, unit):
     )
 
 
-def create_part(name, ns, registrant="agreed2", contacts=PRIVATE, pw="unused"):
+def create_part(name: str, ns: list[str], registrant: str="agreed2", contacts:dict[str, str]=PRIVATE, pw: str="unused"):
     """Use admin/tech/ns="agreed2" to create the privacy domain."""
     xml = xml_format(
         """
@@ -74,7 +74,7 @@ def create_part(name, ns, registrant="agreed2", contacts=PRIVATE, pw="unused"):
     for key, value in contacts.items():
         xml += xml_format(
             """
-            <domain:contact type="admin">{admin}</domain:contact>""",
+        <domain:contact type="{key}">{value}</domain:contact>""",
             key=key,
             value=value,
         )
@@ -203,14 +203,14 @@ def _ns_list(ns):
     """
     xml = ""
     xml += """
-          <domain:ns>"""
+        <domain:ns>"""
 
     for host in ns:
         xml += f"""
-            <domain:hostObj>{escape(host)}</domain:hostObj>"""
+          <domain:hostObj>{escape(host)}</domain:hostObj>"""
 
     xml += """
-          </domain:ns>"""
+        </domain:ns>"""
 
     return xml
 

@@ -22,7 +22,7 @@ XMLNS = {
     "mark": "urn:ietf:params:xml:ns:mark-1.0",  # Trademarks https://www.rfc-editor.org/info/rfc7848/
     "smd": "urn:ietf:params:xml:ns:signedMark-1.0",  # Signed Trademarks https://www.rfc-editor.org/info/rfc7848/
     # Fury extensions:
-    "fury": "urn:ietf:params:xml:ns:fury-2.0",  # Fury extension; https://www.cira.ca/en/resources/documents/registry/cira-fury-21-epp-extension/
+    "fury": "urn:ietf:params:xml:ns:fury-2.1",  # Fury extension; https://www.cira.ca/en/resources/documents/registry/cira-fury-21-epp-extension/
     "fury-rgp": "urn:ietf:params:xml:ns:fury-rgp-1.0",  # Fury Redemption Grace Period extension https://www.cira.ca/en/resources/documents/registry/cira-fury-rgp-1-epp-extension
     "idn": "urn:ietf:params:xml:ns:idn-1.0",  # Internationalized Domain names; https://www.cira.ca/en/resources/documents/registry/cira-idn-1-epp-extension/
 }

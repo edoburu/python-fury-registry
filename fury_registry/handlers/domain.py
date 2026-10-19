@@ -25,7 +25,7 @@ class DomainHandler(BaseHandler):
         * the domain is managed by other accounts: code 2308 (``EPP_DATA_MGMT_POLICY``, with ``SIDN_EXT_NOT_MANAGED_BY_ACCOUNT``)
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.2
-        xml = self._build_command("info", commands.domain.info_part(name=domain_name))
+        xml = commands.epp.build_command("info", commands.domain.info_part(name=domain_name))
         response = self.epp.cmd(xml)
 
         domain = objects.FuryDomain.from_xml(response.resData, response.extension)
@@ -36,7 +36,7 @@ class DomainHandler(BaseHandler):
         """Check if a domain is available.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
-        xml = self._build_command("check", commands.domain.check_part(name=domain_name))
+        xml = commands.epp.build_command("check", commands.domain.check_part(name=domain_name))
         response = self.epp.cmd(xml)
         return self._parse_avail(response)
 
@@ -82,7 +82,7 @@ class DomainHandler(BaseHandler):
         else:
             extensions = ()
 
-        xml = self._build_command("create", xml, command_extensions=extensions)
+        xml = commands.epp.build_command("create", xml, command_extensions=extensions)
         return self.epp.cmd(xml)
 
     def update(
@@ -127,7 +127,7 @@ class DomainHandler(BaseHandler):
 
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.5
         # https://tools.ietf.org/html/rfc5731#section-3.2.5
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "update",
             commands.domain.update_part(
                 name=name,
@@ -162,7 +162,7 @@ class DomainHandler(BaseHandler):
             urgent=urgent,
         )
 
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "update",
             commands.domain.update_part(name),
             command_extensions=(secdns_ext,),
@@ -174,14 +174,14 @@ class DomainHandler(BaseHandler):
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.2
         # https://tools.ietf.org/html/rfc5731#section-3.2.2
-        xml = self._build_command("delete", commands.domain.delete_part(name))
+        xml = commands.epp.build_command("delete", commands.domain.delete_part(name))
         return self.epp.cmd(xml)
 
     def restore(self, name: str) -> EPPResponse:
         """Cancel deletion
         """
         # Fury extension
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "update",
             commands.domain.update_part(name),
             command_extensions=(commands.domain.restore_part(name),),
@@ -198,7 +198,7 @@ class DomainHandler(BaseHandler):
         :param period: integer, the number of months or years depending on the ``period_unit``.
         :param period_unit: ``y`` (years) or ``m`` (months)
         """
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "renew",
             commands.domain.renew_part(name, expiration_date, period, period_unit),
         )
@@ -208,7 +208,7 @@ class DomainHandler(BaseHandler):
         """Initiate the domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.3.4
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "transfer", commands.domain.transfer_req_part(name, token), op="request",
         )
         return self.epp.cmd(xml)
@@ -220,7 +220,7 @@ class DomainHandler(BaseHandler):
         with code 2301 (``EPP_OBJECT_NOT_PENDING_XFR``).
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "transfer", commands.domain.transfer_query_part(name), op="query",
         )
         response = self.epp.cmd(xml)
@@ -230,7 +230,7 @@ class DomainHandler(BaseHandler):
         """Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "transfer", commands.domain.transfer_query_part(name), op="approve",
         )
         response = self.epp.cmd(xml)
@@ -240,7 +240,7 @@ class DomainHandler(BaseHandler):
         """Query the status of current domain transfer.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.4
-        xml = self._build_command(
+        xml = commands.epp.build_command(
             "transfer", commands.domain.transfer_query_part(name), op="reject",
         )
         response = self.epp.cmd(xml)

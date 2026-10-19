@@ -8,7 +8,7 @@ from fury_registry.utils import escape, xml_format
 
 LOGIN_EXTENSIONS = (
     # See constants.XMLNS for descriptions of these namespaces
-    "urn:ietf:params:xml:ns:fury-2.0",
+    "urn:ietf:params:xml:ns:fury-2.1",
     "urn:ietf:params:xml:ns:fury-rgp-1.0",
     "urn:ietf:params:xml:ns:idn-1.0",
     "urn:ietf:params:xml:ns:secDNS-1.1",
@@ -25,14 +25,14 @@ LOGIN_EXTENSIONS = (
 
 
 def build_command(
-    command_name: str,
+    command_name: str|None,
     command_xml: str|None=None,
     op: str|None=None,
     command_extensions: Iterable[str]=(),
     clTRID: str|None=None,
     epp_extensions: Iterable[str]=(),
 ):
-    """Construct an EPP command from it's parts.
+    """Construct an EPP command from its parts.
 
     :param command_name: The command to send, e.g. ``create``, ``info``, ``check``, ``delete``.
     :param command_xml: The XML contents of the command.

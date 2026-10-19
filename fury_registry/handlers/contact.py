@@ -18,7 +18,7 @@ class ContactHandler(BaseHandler):
     def check(self, handle: str) -> bool:
         """Check if a given handle is available.
         """
-        xml = self._build_command("check", commands.contact.check_part(handle))
+        xml = commands.epp.build_command("check", commands.contact.check_part(handle))
 
         from fury_registry.client import EPPError
 
@@ -43,7 +43,7 @@ class ContactHandler(BaseHandler):
     def get(self, handle) -> objects.EppContact:
         """Fetch contact data
         """
-        xml = self._build_command("info", commands.contact.info_part(handle))
+        xml = commands.epp.build_command("info", commands.contact.info_part(handle))
         response = self.epp.cmd(xml)
         return objects.EppContact.from_xml(response.resData, response.extension)
 
@@ -89,7 +89,7 @@ class ContactHandler(BaseHandler):
             properties=properties,
         )
         ext = (command.properties.create_part(properties),) if properties else ()
-        xml = self._build_command("create", command, command_extensions=ext)
+        xml = commands.epp.build_command("create", command, command_extensions=ext)
         res = self.epp.cmd(xml).resData
         return res.find("contact:creData/contact:id", XMLNS).text
 
@@ -125,11 +125,11 @@ class ContactHandler(BaseHandler):
             properties=properties,
         )
         ext = (commands.properties.update_part(properties),) if properties else ()
-        xml = self._build_command("update", command, command_extensions=ext)
+        xml = commands.epp.build_command("update", command, command_extensions=ext)
         self.epp.cmd(xml)
 
     def delete(self, name: str):
         """Delete a contact
         """
-        xml = self._build_command("delete", commands.contact.delete_part(name))
+        xml = commands.epp.build_command("delete", commands.contact.delete_part(name))
         return self.epp.cmd(xml)

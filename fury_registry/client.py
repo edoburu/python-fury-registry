@@ -83,7 +83,7 @@ class EPP:
         if self.ssl is not None:
             try:
                 self.logout()
-            except EPPError:
+            except (EPPError, ssl.SSLError):
                 pass  # Will occur when not properly connected
 
         try:
@@ -123,7 +123,7 @@ class EPP:
         return response
 
     @staticmethod
-    def _parse_response(raw_response, response_class: type[R] = EPPResponse) -> R:
+    def _parse_response(raw_response: str|bytes, response_class: type[R] = EPPResponse) -> R:
         # Standard wrapper:
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
         #   <response>
@@ -141,44 +141,14 @@ class EPP:
         result_code = int(result.attrib["code"])
         if result_code >= 2000:
             msg = result.find("epp:msg", XMLNS)
-            ext_code = response.find("epp:extValue/epp:value/fury:ciraCode", XMLNS)
-            ext_reason = response.find("epp:extValue/epp:reason", XMLNS)
+            ext_code = response.findtext("epp:extValue/epp:value/fury:ciraCode", namespaces=XMLNS)
+            ext_reason = response.findtext("epp:extValue/epp:reason", namespaces=XMLNS)
 
             raise EPPError(result_code, msg.text, ext_code, ext_reason)
         return response_class(response)
 
-    def _read(self):
-        # The first 4 bytes indicate the size.
-        # Read then, then read N bytes.
-        size_field = self.ssl.read(4)
-        if size_field:
-            size = int32_from_net(size_field) - 4
-            remaining = size
-            xml_bytes = b""
-            while remaining > 0:
-                xml_bytes += self.ssl.read(remaining)
-                remaining = size - len(xml_bytes)
-
-            logger.debug("Hello Response: %s", xml_bytes.decode("utf-8"))
-            return xml_bytes  # raw result for ElementTree to convert.
-        return None
-
-    def _write(self, xml):
-        # Convert to the raw data to be send.
-        # utf-8 may take multiple bytes per character.
-        xml_bytes = (xml + "\r\n").encode("utf-8")
-        # +4 for the length field itself (section 4 mandates that)
-        length = int32_to_net(len(xml_bytes) + 4)
-        self.ssl.send(length)
-        return self.ssl.send(xml_bytes)
-
-    def _read_greeting(self):
-        # Read greeting
-        raw_response = self._read()
-        if raw_response is None:
-            logger.debug("No greeting message found, disconnected?")
-            return
-
+    @staticmethod
+    def _parse_greeting(raw_response: str|bytes):
         xml = ElementTree.XML(raw_response)
 
         # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -196,6 +166,41 @@ class EPP:
         svid = greeting.find("epp:svID", XMLNS).text
         version = svcMenu.find("epp:version", XMLNS).text
         logger.info("Connected to %s (v%s)\n", svid, version)
+        return (svid, version)
+
+    def _read(self):
+        # The first 4 bytes indicate the size.
+        # Read then, then read N bytes.
+        size_field = self.ssl.read(4)
+        if size_field:
+            size = int32_from_net(size_field) - 4
+            remaining = size
+            xml_bytes = b""
+            while remaining > 0:
+                xml_bytes += self.ssl.read(remaining)
+                remaining = size - len(xml_bytes)
+
+            logger.debug("EPP response: %s", xml_bytes.decode("utf-8"))
+            return xml_bytes  # raw result for ElementTree to convert.
+        return None
+
+    def _write(self, xml):
+        # Convert to the raw data to be send.
+        # utf-8 may take multiple bytes per character.
+        xml_bytes = (xml + "\r\n").encode("utf-8")
+        # +4 for the length field itself (section 4 mandates that)
+        length = int32_to_net(len(xml_bytes) + 4)
+        self.ssl.send(length)
+        return self.ssl.send(xml_bytes)
+
+    def _read_greeting(self):
+        # Read greeting
+        raw_response = self._read()
+        if raw_response is None:
+            logger.error("No greeting message found, server disconnected")
+            raise OSError("Server disconnected - check the whitelist settings for this host.")
+
+        return self._parse_greeting(raw_response)
 
     def login(self, username: str, password: str) -> EPPResponse:
         """Perform the login.

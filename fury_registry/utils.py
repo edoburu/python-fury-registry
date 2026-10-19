@@ -20,14 +20,8 @@ RE_PW = re.compile(r"<pw>[^<]+</pw>")
 def xml_format(xml: str, **data: int | str | None) -> str:
     """Apply a str.format() format for XML, with data escaped.
     """
-    data = _xml_escape(**data)
+    data = {k: escape(v) for k, v in data.items()}
     return xml.format(**data)
-
-
-def _xml_escape(**data: int | str | None):
-    """Escape the data for inclusion in XML
-    """
-    return {k: escape(v) for k, v in data.items()}
 
 
 def escape(value: int | str | None) -> str | None:

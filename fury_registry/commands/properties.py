@@ -4,7 +4,7 @@ from fury_registry.utils import xml_format
 def create_part(properties: dict[str, str]) -> str:
     xml_properties = _fury_properties(properties)
     return f"""
-    <fury:create xmlns:fury="urn:ietf:params:xml:ns:fury-2.0">
+    <fury:create xmlns:fury="urn:ietf:params:xml:ns:fury-2.1">
       {xml_properties}
     </fury:create>"""
 
@@ -26,7 +26,7 @@ def update_part(properties: dict[str, str]) -> str:
 
     xml_properties = _fury_properties(properties)
     ext = f"""
-    <fury:update xmlns:fury="urn:ietf:params:xml:ns:fury-2.0">
+    <fury:update xmlns:fury="urn:ietf:params:xml:ns:fury-2.1">
       <fury:rem>
         <fury:properties>{old_xml_properties}</fury:properties>
       </fury:rem>
