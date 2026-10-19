@@ -2,7 +2,11 @@
 All specialized commands are performed by these handlers.
 """
 from fury_registry import commands, objects
-from fury_registry.constants import EPP_DATA_MGMT_POLICY, SIDN_EXT_HANDLE_NOT_ASSOCIATED, XMLNS
+from fury_registry.constants import (
+    EPP_DATA_MGMT_POLICY,
+    SIDN_EXT_HANDLE_NOT_ASSOCIATED,
+    XMLNS,
+)
 
 from .base import BaseHandler
 

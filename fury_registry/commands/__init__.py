@@ -1,15 +1,10 @@
-from . import epp
-from . import contact
-from . import domain
-from . import host
-from . import secdns
-from . import properties
+from . import contact, domain, epp, host, properties, secdns
 
 __all__ = (
-    'epp',
     'contact',
     'domain',
+    'epp',
     'host',
-    'secdns',
     'properties',
+    'secdns',
 )

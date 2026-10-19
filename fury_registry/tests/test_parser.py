@@ -3,10 +3,11 @@ from datetime import datetime
 from unittest import TestCase
 
 from dateutil.tz import tzutc
+
 from fury_registry.client import EPP, EPPError, EPPPollResponse
 from fury_registry.constants import EPP_QUEUE_EMPTY, EPP_QUEUE_NOT_EMPTY
 from fury_registry.handlers import ContactHandler
-from fury_registry.objects import EppContact, EppHost, KeyData, FuryDomain
+from fury_registry.objects import EppContact, EppHost, FuryDomain, KeyData
 from fury_registry.response import register_namespaces
 from fury_registry.utils import get_node_text
 

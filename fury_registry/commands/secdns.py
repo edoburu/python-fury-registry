@@ -43,8 +43,8 @@ def update(remove_all=False, remove_dskeys=(), remove_keydatas=(), add_dskeys=()
     if urgent:
         urgent_attr = ' urgent="true"'
 
-    xml = """
-      <secDNS:update{urgent} xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">""".format(urgent=urgent_attr)
+    xml = f"""
+      <secDNS:update{urgent_attr} xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">"""
 
     # the server MUST first remove the existing elements prior to adding the new elements.
     if remove_dskeys or remove_keydatas or remove_all:

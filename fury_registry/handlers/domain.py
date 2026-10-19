@@ -3,8 +3,8 @@ All specialized commands are performed by these handlers.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
-from typing import Iterable, Iterator
 
 from fury_registry import commands, objects
 from fury_registry.constants import XMLNS

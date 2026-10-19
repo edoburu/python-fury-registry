@@ -54,11 +54,4 @@ class EppContact(ParsedObject):
         return f'<Contact {self}>'
 
     def __str__(self):
-        return "[{handle}] {name}, {street}, {postcode} {city} ({country_code})".format(
-            handle=self.handle,
-            name=self.name,
-            street=self.street,
-            postcode=self.postcode,
-            city=self.city,
-            country_code=self.country_code
-        )
+        return f"[{self.handle}] {self.name}, {self.street}, {self.postcode} {self.city} ({self.country_code})"

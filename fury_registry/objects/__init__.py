@@ -7,12 +7,12 @@ from .host import EppHost
 from .secdns import DNSSec, DSKey, KeyData
 
 __all__ = (
-    'EppContact',
-    'EppDomain',
-    'FuryDomain',
-    'TransferStatus',
-    'EppHost',
     'DNSSec',
     'DSKey',
+    'EppContact',
+    'EppDomain',
+    'EppHost',
+    'FuryDomain',
     'KeyData',
+    'TransferStatus',
 )

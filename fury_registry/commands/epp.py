@@ -66,9 +66,7 @@ def build_command(command_name, command_xml=None, op=None, command_extensions=()
                      "  </extension>\n").format("\n".join(extensions_xml))
 
     return """<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n""" \
-           """<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">\n{main_xml}</epp>""".format(
-               main_xml=main_xml
-           )
+           f"""<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">\n{main_xml}</epp>"""
 
 
 def login(username, password):

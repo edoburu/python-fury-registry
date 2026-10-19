@@ -3,7 +3,7 @@ from unittest import TestCase
 from dateutil.tz import tzutc
 
 from fury_registry import commands
-from fury_registry.handlers import DomainHandler, ContactHandler
+from fury_registry.handlers import ContactHandler, DomainHandler
 from fury_registry.response import register_namespaces
 
 UTC = tzutc()

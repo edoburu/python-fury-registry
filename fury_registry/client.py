@@ -4,9 +4,16 @@ import ssl
 from typing import TypeVar
 from xml.etree import ElementTree
 
-from fury_registry.constants import EPP_AUTH_FAILED_CLOSING, EPP_AUTH_SESSION_LIMIT, EPP_FAILED_CLOSING, EPP_LOGOUT_OK, EPP_OK, \
-    EPP_QUEUE_EMPTY, XMLNS
-from fury_registry.response import EPPResponse, EPPPollResponse
+from fury_registry.constants import (
+    EPP_AUTH_FAILED_CLOSING,
+    EPP_AUTH_SESSION_LIMIT,
+    EPP_FAILED_CLOSING,
+    EPP_LOGOUT_OK,
+    EPP_OK,
+    EPP_QUEUE_EMPTY,
+    XMLNS,
+)
+from fury_registry.response import EPPPollResponse, EPPResponse
 from fury_registry.utils import int32_from_net, int32_to_net, mask_sensitive_fields
 
 from . import commands, handlers

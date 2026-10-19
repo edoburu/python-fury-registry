@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import idna
+
 from fury_registry.utils import escape, xml_format
 
 PRIVATE = {"admin": "agreed2", "tech": "agreed2"}  # TODO: frozendict() in Python 3.15
@@ -153,8 +154,8 @@ def _ns_list(ns):
           <domain:ns>"""
 
     for host in ns:
-        xml += """
-            <domain:hostObj>{ns}</domain:hostObj>""".format(ns=escape(host))
+        xml += f"""
+            <domain:hostObj>{escape(host)}</domain:hostObj>"""
 
     xml += """
           </domain:ns>"""

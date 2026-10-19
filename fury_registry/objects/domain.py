@@ -3,6 +3,7 @@ import typing
 from datetime import datetime
 
 import idna
+
 from fury_registry.constants import XMLNS
 from fury_registry.utils import get_node_date, get_node_text
 
@@ -106,13 +107,7 @@ class EppDomain(ParsedObject):
         return f'<{self.__class__.__name__} {self}>'
 
     def __str__(self):
-        return "[{domain}] status: {status}, registrant: {registrant}, admin: {admin}, tech: {tech}".format(
-            domain=self.name,
-            status=self.status,
-            registrant=self.registrant,
-            admin=self.admin,
-            tech=self.tech
-        )
+        return f"[{self.name}] status: {self.status}, registrant: {self.registrant}, admin: {self.admin}, tech: {self.tech}"
 
     @property
     def token(self):
