@@ -8,6 +8,14 @@ The communication happens over the generic EPP protocol, which each registrar ca
 This package has the potential to be generic, but currently the EPP commands are written
 with Fury registry variations in mind.
 
+Features:
+
+* Base EP objects (domains, contacts, hosts)
+* Domain transfers, polling
+* DNSSec
+* Fury properties
+
+
 Usage
 -----
 
@@ -27,7 +35,6 @@ Code:
         host='epp.ote.nic.nl',
         username='...',  # your EPP user name
         password='...',  # your EPP password
-        certfile="/path/to/certfile.pem",  # Optional parameter
     )
 
     handle = client.contacts.create(
@@ -52,7 +59,7 @@ Code:
     )
 
     domain = client.domains.get('example.nl')
-    print domain.token
+    print(domain.token)
 
     contact = client.contacts.get(handle="FOOBAR01")
-    print contact.name
+    print(contact.name)
