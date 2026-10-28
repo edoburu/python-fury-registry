@@ -1,8 +1,8 @@
 EPP Python client for Fury Registries
 =====================================
 
-This is a Python client to communicate with the Fury EPP registry interfaces,
-used by SIDN (the Dutch domain registrar) and others.
+This is a Python client to communicate with the Fury EPP registry interfaces (such as "Hello registry"),
+used by the Dutch domain registrar (SIDN) and others.
 
 The communication happens over the generic EPP protocol, which each registrar can extend.
 This package has the potential to be generic, but currently the EPP commands are written
@@ -10,7 +10,7 @@ with Fury registry variations in mind.
 
 Features:
 
-* Base EP objects (domains, contacts, hosts)
+* Base EPP objects (domains, contacts, hosts)
 * Domain transfers, polling
 * International domain name decoding (IDNA)
 * DNSSec
