@@ -12,6 +12,7 @@ Features:
 
 * Base EP objects (domains, contacts, hosts)
 * Domain transfers, polling
+* International domain name decoding (IDNA)
 * DNSSec
 * Fury properties
 
