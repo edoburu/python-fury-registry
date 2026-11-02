@@ -1,7 +1,15 @@
 from fury_registry.constants import XMLNS
 from fury_registry.utils import get_node_date, get_node_text
 
-from .base import ParsedObject
+from .base import BaseCheckData, ParsedObject
+
+
+class EppHostCheckData(BaseCheckData):
+    """Availability check data object."""
+
+    @property
+    def name(self) -> str:
+        return self._identifier
 
 
 class EppHost(ParsedObject):

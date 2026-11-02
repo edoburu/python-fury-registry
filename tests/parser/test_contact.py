@@ -1,6 +1,5 @@
 from fury_registry.client import EPP
-from fury_registry.handlers import ContactHandler
-from fury_registry.objects import EppContact
+from fury_registry.objects import EppContactCheckData, EppContact
 
 
 def test_parse_contact():
@@ -68,5 +67,7 @@ def test_parse_contact_avail():
         </response>
     </epp>"""
     response = EPP._parse_response(avail_response)
-    is_available = ContactHandler._parse_avail(response)
-    assert not is_available
+    check = EppContactCheckData.from_xml(response.resData[0])
+    assert check.id == "WAL002352-NLCOM"
+    assert not check
+    assert check.avail == False

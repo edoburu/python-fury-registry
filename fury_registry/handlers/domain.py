@@ -11,6 +11,7 @@ from fury_registry.constants import XMLNS
 from fury_registry.response import EPPResponse
 
 from .base import BaseHandler
+from ..objects.base import ParsedObject
 
 
 class DomainHandler(BaseHandler):
@@ -32,21 +33,13 @@ class DomainHandler(BaseHandler):
         domain._epp = self.epp  # Sneak it in
         return domain
 
-    def check(self, domain_name: str) -> bool:
+    def check(self, domain_name: str) -> objects.EppDomainCheckData:
         """Check if a domain is available.
         """
         # https://tools.ietf.org/html/rfc5730#section-2.9.2.1
         xml = commands.epp.build_command("check", commands.domain.check_part(name=domain_name))
         response = self.epp.cmd(xml)
-        return self._parse_avail(response)
-
-    @staticmethod
-    def _parse_avail(response) -> bool:
-        # Note that the domain:cd element may be repeated
-        # The element may also contain a <domain:reason> element.
-        return response.resData.find(
-            "domain:chkData/domain:cd/domain:name", XMLNS,
-        ).attrib["avail"] in ("1", "true")
+        return objects.EppDomainCheckData.from_xml(response.resData.find("domain:chkData", XMLNS))
 
     def create(
         self,

@@ -11,7 +11,7 @@ from fury_registry import objects
 from fury_registry.constants import XMLNS
 from fury_registry.utils import get_node_date, get_node_text
 
-from .base import ParsedObject
+from .base import BaseCheckData, ParsedObject
 from .secdns import DNSSec
 
 if typing.TYPE_CHECKING:
@@ -19,6 +19,14 @@ if typing.TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+class EppDomainCheckData(BaseCheckData):
+    """Availability check data object."""
+
+    @property
+    def name(self) -> str:
+        return self._identifier
 
 
 class EppDomain(ParsedObject):

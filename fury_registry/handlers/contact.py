@@ -14,7 +14,7 @@ class ContactHandler(BaseHandler):
     """Actions for contacts
     """
 
-    def check(self, handle: str) -> bool:
+    def check(self, handle: str) -> objects.EppContactCheckData:
         """Check if a given handle is available.
         """
         xml = commands.epp.build_command("check", commands.contact.check_part(handle))
@@ -28,13 +28,7 @@ class ContactHandler(BaseHandler):
                 raise NotImplementedError("Unhandled data management policy") from e
             raise
 
-        return self._parse_avail(response)
-
-    @staticmethod
-    def _parse_avail(response) -> bool:
-        return response.resData.find(
-            "contact:chkData/contact:cd/contact:id", XMLNS,
-        ).attrib["avail"] in ("1", "true")
+        return objects.EppContactCheckData.from_xml(response.resData.find("contact:chkData", XMLNS))
 
     def get(self, handle) -> objects.EppContact:
         """Fetch contact data

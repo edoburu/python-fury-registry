@@ -2,6 +2,7 @@
 """
 
 from fury_registry import commands, objects
+from fury_registry.constants import XMLNS
 
 from .base import BaseHandler
 
@@ -29,8 +30,14 @@ class HostHandler(BaseHandler):
         # TODO: complete this.
         return objects.EppHost.from_xml(response.resData)
 
+    def check(self, name: str) -> objects.EppHostCheckData:
+        """Check if a host exists."""
+        xml = commands.epp.build_command("check", commands.host.check_part(name=name))
+        response = self.epp.cmd(xml)
+        return objects.EppHostCheckData.from_xml(response.resData.find("host:chkData", XMLNS))
+
     def delete(self, name):
-        """Delete a contact
+        """Delete a host
         """
         xml = commands.epp.build_command("delete", commands.host.delete_part(name))
         return self.epp.cmd(xml)

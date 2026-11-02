@@ -29,6 +29,15 @@ def create_part(name, ipv4, ipv6):
     return xml
 
 
+def check_part(name):
+    # Note that the <host:name> may be repeated in EPP to check multiple objects at once.
+    xml = """
+      <host:check xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>{name}</host:name>
+      </host:check>"""
+    return xml_format(xml, name=name)
+
+
 def info_part(name):
     xml = """
       <host:info xmlns:host="urn:ietf:params:xml:ns:host-1.0">

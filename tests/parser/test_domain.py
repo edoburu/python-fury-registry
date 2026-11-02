@@ -1,7 +1,34 @@
 from copy import copy
 
 from fury_registry.client import EPP
-from fury_registry.objects import FuryDomain, KeyData
+from fury_registry.objects import EppDomainCheckData, FuryDomain, KeyData
+
+
+def test_parse_check():
+    domain_check = """<?xml version="1.0" encoding="UTF-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">
+    <response>
+        <result code="1000">
+            <msg>Command completed successfully</msg>
+        </result>
+        <resData>
+            <domain:chkData>
+                <domain:cd>
+                    <domain:name avail="true">testexample.nl</domain:name>
+                </domain:cd>
+            </domain:chkData>
+        </resData>
+        <trID>
+            <clTRID>unused</clTRID>
+            <svTRID>SIDN-000058970855-0000000002</svTRID>
+        </trID>
+    </response>
+</epp>"""
+    response = EPP._parse_response(domain_check)
+    check = EppDomainCheckData.from_xml(response.resData[0])
+    assert check
+    assert check.avail
+    assert check.reason is None
 
 
 def test_parse_domain():
