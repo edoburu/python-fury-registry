@@ -129,8 +129,9 @@ def delete_part(handle):
 def _fix_phone(value):
     # A fax or phone number is a string that starts with a '+', followed by the country code, followed by a '.'
     # and then followed by a series of numbers being the fax or telephone.
+    orig = value
     value = RE_PHONE_COUNTRY.sub(r"+\g<country>.", value)
     value = value.replace(" ", "").replace("-", "")
     if not RE_PHONE.match(value):
-        raise ValueError(f"Could not format the phone number {value}")
+        raise ValueError(f"Could not format the phone number {orig}")
     return value
