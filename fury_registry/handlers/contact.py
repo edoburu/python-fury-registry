@@ -4,7 +4,6 @@
 from fury_registry import commands, objects
 from fury_registry.constants import (
     EPP_DATA_MGMT_POLICY,
-    SIDN_EXT_HANDLE_NOT_ASSOCIATED,
     XMLNS,
 )
 
@@ -25,11 +24,8 @@ class ContactHandler(BaseHandler):
         try:
             response = self.epp.cmd(xml)
         except EPPError as e:
-            if (
-                e.code == EPP_DATA_MGMT_POLICY
-                and e.ext_code == SIDN_EXT_HANDLE_NOT_ASSOCIATED
-            ):
-                return False
+            if e.code == EPP_DATA_MGMT_POLICY:
+                raise NotImplementedError("Unhandled data management policy") from e
             raise
 
         return self._parse_avail(response)
