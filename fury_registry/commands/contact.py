@@ -79,8 +79,11 @@ def _contact_info(**data):
 
     xml = """
         <contact:postalInfo type="loc">
-          <contact:name>{name}</contact:name>
-          <contact:org>{org}</contact:org>
+          <contact:name>{name}</contact:name>"""
+    if data.get('org') is not None:
+        xml += """
+              <contact:org>{org}</contact:org>"""
+    xml += """
           <contact:addr>"""
 
     street = data["street"]
