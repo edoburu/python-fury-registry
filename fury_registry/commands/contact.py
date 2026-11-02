@@ -111,10 +111,14 @@ def _contact_info(**data):
         <contact:fax>{fax}</contact:fax>"""
 
     xml += """
-        <contact:email>{email}</contact:email>
+        <contact:email>{email}</contact:email>"""
+
+    if data.get('pw'):
+        xml += """
         <contact:authInfo>
-          <contact:pw>2fooBAR</contact:pw>
+          <contact:pw>{pw}</contact:pw>
         </contact:authInfo>"""
+
     return xml_format(xml, **data)
 
 
