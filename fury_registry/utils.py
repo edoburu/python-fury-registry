@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
+import random
 import re
+import secrets
+import string
 import struct
 from datetime import datetime
 from xml.etree.ElementTree import Element
@@ -15,6 +18,28 @@ from fury_registry.constants import XMLNS
 
 RE_CL_ID = re.compile(r"<clID>[^<]+</clID>")
 RE_PW = re.compile(r"<pw>[^<]+</pw>")
+
+
+def generate_password(length=10):
+    # check length must be at least 6
+    if length < 8:
+        raise ValueError("Password length must be at least 6")
+
+    # Ensure at least one of each type
+    password = []
+    for i in range(2):
+        password +=[
+            secrets.choice(string.ascii_lowercase),
+            secrets.choice(string.ascii_uppercase),
+            secrets.choice(string.digits),
+            secrets.choice(string.punctuation),
+        ]
+
+    password += [secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(length - 4)]
+
+    # Shuffle the result
+    secrets.SystemRandom().shuffle(password)
+    return "".join(password)
 
 
 def xml_format(xml: str, **data: int | str | None) -> str:

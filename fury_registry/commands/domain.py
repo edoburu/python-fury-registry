@@ -12,15 +12,21 @@ def _idna_encode(name):
     return idna.encode(name).decode()
 
 
-def info_part(name, password="unused"):
+def info_part(name, pw:str|None=None):
     xml = """
       <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name hosts="all">{name}</domain:name>
+        <domain:name hosts="all">{name}</domain:name>"""
+
+    if pw is not None:
+        xml += """
         <domain:authInfo>
-          <domain:pw>{password}</domain:pw>
-        </domain:authInfo>
+          <domain:pw>{pw}</domain:pw>
+        </domain:authInfo>"""
+
+    xml += """
       </domain:info>"""
-    return xml_format(xml, name=_idna_encode(name), password=password)
+
+    return xml_format(xml, name=_idna_encode(name), pw=pw)
 
 
 def check_part(name):
